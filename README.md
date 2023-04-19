@@ -14,7 +14,7 @@ Research Institute for Nature and Forest (INBO)[^cph][^fnd]
 [^fnd]: funder
 [^aut]: author
 [^cre]: contact person
-[^cre2]: contact person Github repo
+[^cre2]: contact person GitHub repo
 [^INBO]: Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw, Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium
 
 **keywords**: macro-moths; Flanders; species change index; multi-species index; traits; pollinators; conservation; threatened species
