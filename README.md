@@ -24,3 +24,27 @@ Research Institute for Nature and Forest (INBO)[^cph][^fnd]
 <!-- description: start -->
 Investigation of species traits as a guidance for moth conservation in the highly anthropogenic European region of Flanders based on multi-species change indices.
 <!-- description: end -->
+
+**Repo structure**:
+
+```bash
+├── .github                        │ 
+│   ├── workflows                  │ 
+│   │   └── checklist_project.yml  ├ GitHub repo settings
+│   ├── CODE_OF_CONDUCT.md         │ 
+│   └── CONTRIBUTING.md            │
+├── data
+│   └── ...                        ├ data files (*.csv)
+├── inst
+│   └── en_gb.dic                  ├ dictionary with words that should not be checked
+├── media                          ├ folder to store media
+├── output                         ├ folder to store outputs
+├── source
+│   ├── ...                        ├ markdown and R files
+│   └── references.json            ├ references markdown files
+├── checklist.yml                  ├ options checklist package (https://github.com/inbo/checklist)
+├── LICENSE.md                     ├ licence
+├── macro-moths-msci.Rproj         ├ R project
+├── README.md                      ├ project description
+└── .gitignore                     ├ files to ignore
+```
