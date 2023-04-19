@@ -1,0 +1,199 @@
+[
+    {
+        "DOI": "10.1016/j.ecolind.2022.109005",
+        "ISSN": "1470-160X",
+        "URL": "http://dx.doi.org/10.1016/j.ecolind.2022.109005",
+        "article-number": "109005",
+        "author": [
+            {
+                "family": "Korner-Nievergelt",
+                "given": "Fränzi"
+            },
+            {
+                "family": "Strebel",
+                "given": "Nicolas"
+            },
+            {
+                "family": "Buckland",
+                "given": "Stephen T."
+            },
+            {
+                "family": "Freeman",
+                "given": "Robin"
+            },
+            {
+                "family": "Gregory",
+                "given": "Richard D."
+            },
+            {
+                "family": "Guélat",
+                "given": "Jérôme"
+            },
+            {
+                "family": "Isaac",
+                "given": "Nick J.B."
+            },
+            {
+                "family": "Mc Rae",
+                "given": "Louise"
+            },
+            {
+                "family": "Roth",
+                "given": "Tobias"
+            },
+            {
+                "family": "Schirmer",
+                "given": "Saskia"
+            },
+            {
+                "family": "Soldaat",
+                "given": "Leo L."
+            },
+            {
+                "family": "Voříšek",
+                "given": "Petr"
+            },
+            {
+                "family": "Sattler",
+                "given": "Thomas"
+            }
+        ],
+        "container-title": "Ecological Indicators",
+        "container-title-short": "Ecological Indicators",
+        "id": "korner-nievergelt2022",
+        "is-referenced-by-count": "1",
+        "issued": {
+            "date-parts": [
+                [
+                    2022,
+                    7
+                ]
+            ]
+        },
+        "language": "en",
+        "member": "78",
+        "page": "109005",
+        "prefix": "10.1016",
+        "providerkey": "doi",
+        "publisher": "Elsevier BV",
+        "reference-count": "62",
+        "references-count": "62",
+        "score": "1",
+        "source": "Crossref",
+        "subject": "Ecology",
+        "title": "Multi-species population indices for sets of species including rare, disappearing or newly occurring species",
+        "type": "article-journal",
+        "update-policy": "http://dx.doi.org/10.1016/elsevier_cm_policy",
+        "volume": "140"
+    },
+    {
+        "DOI": "10.1016/j.ecolind.2017.05.033",
+        "ISSN": "1470-160X",
+        "URL": "http://dx.doi.org/10.1016/j.ecolind.2017.05.033",
+        "author": [
+            {
+                "family": "Soldaat",
+                "given": "Leo L."
+            },
+            {
+                "family": "Pannekoek",
+                "given": "Jeroen"
+            },
+            {
+                "family": "Verweij",
+                "given": "Richard J.T."
+            },
+            {
+                "family": "Turnhout",
+                "given": "Chris A.M.",
+                "non-dropping-particle": "van"
+            },
+            {
+                "family": "Strien",
+                "given": "Arco J.",
+                "non-dropping-particle": "van"
+            }
+        ],
+        "container-title": "Ecological Indicators",
+        "container-title-short": "Ecological Indicators",
+        "id": "soldaat2017",
+        "is-referenced-by-count": "30",
+        "issued": {
+            "date-parts": [
+                [
+                    2017,
+                    10
+                ]
+            ]
+        },
+        "language": "en",
+        "member": "78",
+        "page": "340-347",
+        "prefix": "10.1016",
+        "providerkey": "doi",
+        "publisher": "Elsevier BV",
+        "reference-count": "32",
+        "references-count": "32",
+        "score": "1",
+        "source": "Crossref",
+        "subject": "Ecology",
+        "title": "A Monte Carlo method to account for sampling error in multi-species indicators",
+        "type": "article-journal",
+        "update-policy": "http://dx.doi.org/10.1016/elsevier_cm_policy",
+        "volume": "81"
+    },
+    {
+        "DOI": "10.1890/es11-00186.1",
+        "ISSN": "2150-8925",
+        "URL": "http://dx.doi.org/10.1890/ES11-00186.1",
+        "author": [
+            {
+                "family": "Buckland",
+                "given": "Stephen T."
+            },
+            {
+                "family": "Studeny",
+                "given": "Angelika C."
+            },
+            {
+                "family": "Magurran",
+                "given": "Anne E."
+            },
+            {
+                "family": "Illian",
+                "given": "Janine B."
+            },
+            {
+                "family": "Newson",
+                "given": "Stuart E."
+            }
+        ],
+        "container-title": "Ecosphere",
+        "container-title-short": "Ecosphere",
+        "id": "buckland2011",
+        "is-referenced-by-count": "58",
+        "issue": "9",
+        "issued": {
+            "date-parts": [
+                [
+                    2011,
+                    9
+                ]
+            ]
+        },
+        "language": "en",
+        "member": "311",
+        "page": "art100",
+        "prefix": "10.1002",
+        "providerkey": "doi",
+        "publisher": "Wiley",
+        "reference-count": "30",
+        "references-count": "30",
+        "score": "1",
+        "source": "Crossref",
+        "subject": "Ecology",
+        "title": "The geometric mean of relative abundance indices: a biodiversity measure with a difference",
+        "type": "article-journal",
+        "volume": "2"
+    }
+]
