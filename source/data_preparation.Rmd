@@ -53,3 +53,55 @@ presence_data <- read_delim(
     delim = ";")
 ```
 
+We merge the species list and presence list and count the number of occupied UTM grids per species per period. We store both a dataset with and without zero counts.
+
+```{r}
+# Join dataframes
+joined_df <- left_join(check_list_flanders, presence_data, by = "species_nl")
+
+# Number of grids per species per period
+df_lang <- joined_df %>% 
+  rename(Year = year,
+         Species = species_nl) %>% 
+  distinct(Species,
+           Year,
+           Utm5km) %>% 
+  filter(Year >= 1980 & Year <= 2022) %>%
+  mutate(period = case_when(Year >= 1980 & Year <= 2012 ~ "p1980_2012",
+                            Year >= 2013 & Year <= 2022 ~ "p2013_2022")) %>% 
+  distinct(Species,
+           Utm5km,
+           period) %>%
+  group_by(period) %>%
+  mutate(som_per_periode = n()) %>%
+  group_by(Species, period, som_per_periode) %>% 
+  summarise(n_hokken = n())
+
+# Save number of grids
+aantal_hokken <- df_lang %>%
+  ungroup() %>%
+  distinct(period, som_per_periode)
+
+
+# Wide format
+df_breed <- df_lang %>% 
+  pivot_wider(id_cols = Species,
+              names_from = period,
+              values_from = n_hokken)
+
+df_breed[c("p1980_2012", "p2013_2022")][is.na(df_breed[c("p1980_2012", 
+                                                       "p2013_2022")])] <- 0
+
+# Save dataframe without zeroes
+df_breed_som_nul <- df_breed %>% 
+  filter(p1980_2012 > 0 & p2013_2022 > 0) %>%
+  mutate(sum = p1980_2012 + p2013_2022)
+
+# Save dataframe with zeroes
+df_breed_som <- df_breed %>%
+  mutate(sum = p1980_2012 + p2013_2022)
+
+head(df_breed_som, 10) %>%
+  kable()
+```
+
