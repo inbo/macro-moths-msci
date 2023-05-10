@@ -102,7 +102,10 @@ df_breed_som_nul <- df_breed %>%
 # Save dataframe with zeroes
 df_breed_som <- df_breed %>%
   mutate(sum = p1980_2012 + p2013_2022)
+```
 
+```{r}
+# Visualise
 head(df_breed_som, 10) %>%
   kable()
 ```
@@ -145,7 +148,117 @@ prop_df1 <- df_breed_som %>%
     ) %>%
   ungroup() %>%
   select(soort = Species, n_hokken, periode, som_per_periode, rel_prop)
+```
 
+```{r}
+# Visualise
 head(prop_df1, 10) %>%
+  kable()
+```
+
+# Add species traits
+
+We add species traits to the dataframes.
+
+```{r}
+species_traits <- read_delim(
+    file.path(data_path, "tblMacromoths_Traits_v2022.csv"),
+    delim = ";")
+
+species_traits$EllenbergN <- as.factor(species_traits$EllenbergN)
+species_traits$nGenerations <- as.factor(species_traits$nGenerations)
+
+species_traits2 <- species_traits %>% 
+  rename(soort = nameDutch)
+
+# Biotope is in it 2 times, so we have to split up
+species_traits_df1 <- species_traits2 %>%
+  select(soort,
+                Biotope1,
+                colourVariation,
+                Activity,
+                OverwinteringStage,
+                Phagy,
+                LarvalFoodSource2,
+                EllenbergN,
+                nGenerations,
+                Seasonality,
+                WingDevelopment,
+                Distribution,
+                Migration,
+                Size,
+                TempHum,
+                HabitatTemperature,
+                HabitatHumidity) %>% 
+  rename(Biotope = Biotope1) %>% 
+  filter(!is.na(soort))
+
+species_traits_df2 <- species_traits2 %>% 
+  filter(!is.na(Biotope2))
+
+species_traits_df2 <- species_traits_df2 %>%
+  select(soort,
+                Biotope2,
+                colourVariation,
+                Activity,
+                OverwinteringStage,
+                Phagy,
+                LarvalFoodSource2,
+                EllenbergN,
+                nGenerations,
+                Seasonality,
+                WingDevelopment,
+                Distribution,
+                Migration,
+                Size,
+                TempHum,
+                HabitatTemperature,
+                HabitatHumidity) %>% 
+  rename(Biotope = Biotope2)
+
+species_traits_complete <- rbind(species_traits_df1,
+                                 species_traits_df2)
+
+# Without zeroes
+species_traits_joined_nul <- inner_join(prop_df1_nul, species_traits_complete,
+                                        by = "soort", 
+                                        relationship = "many-to-many")
+
+species_traits_final_nul <- species_traits_joined_nul %>%
+  pivot_longer(cols = Biotope:HabitatHumidity,
+               names_to = "trait_name",
+               values_to = "trait_value",
+               values_transform = as.character) %>%
+  distinct()
+
+# With zeroes
+species_traits_joined <- inner_join(prop_df1, species_traits_complete,
+                                    by = "soort", 
+                                    relationship = "many-to-many")
+
+species_traits_final <- species_traits_joined %>%
+  pivot_longer(cols = Biotope:HabitatHumidity,
+               names_to = "trait_name",
+               values_to = "trait_value",
+               values_transform = as.character) %>%
+  distinct()
+```
+
+```{r}
+# Visualise
+head(species_traits_final, 10) %>%
+    kable()
+```
+
+We do not know all the traits for the following species.
+
+```{r}
+species_traits_final %>% 
+  filter(is.na(trait_value)) %>%
+  distinct(soort, trait_name) %>%
+  mutate(val = 1) %>%
+  pivot_wider(names_from = trait_name, values_from = val) %>%
+  mutate(across(-c(soort), ~replace(.x, .x == 1, cur_column()))) %>%
+  unite("trait_name", -c(soort), sep = ", ", na.rm = TRUE) %>%
   kable()
 ```
