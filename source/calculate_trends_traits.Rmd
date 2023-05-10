@@ -27,11 +27,12 @@ opts_knit$set(root.dir = here::here())
 
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
+conflicted::conflicts_prefer(dplyr::lag)
+conflicted::conflicts_prefer(brms::ar)
 
 # Packages
 library(tidyverse)
-library(INBOtheme)
-library(cplm)
+library(INBOmd)
 library(brms)
 ```
 
@@ -51,3 +52,27 @@ species_traits_final <- read_csv(file.path(out_path, "prop_data_per_trait.csv"))
 # Data exploration
 
 # Model specification
+
+We assume a multinomial distribution per period.
+
+$$
+\{n_{1j}, ...n_{2j}\} \sim Multinom(\sum_{i=1}^S n_{ij}, \{p_{1j}, ...p_{2j}\})
+$$
+
+```{r}
+dat <- species_traits_final %>%
+  distinct(species_nl, n_grids, period) %>%
+  pivot_wider(names_from = species_nl, values_from = n_grids)
+
+specs <- dat %>%
+  select(where(is.numeric)) %>%
+  as.matrix()
+
+dat <- dat %>%
+  mutate(size = rowSums(across(where(is.numeric))),
+         y = specs)
+
+fit <- brm(bf(y | trials(size) ~ period), data = dat, 
+           family = multinomial())
+```
+
