@@ -113,9 +113,11 @@ head(df_wide_sum, 10) %>%
 
 We calculate the relative proportion $p$ of species $i$ in period $j$ as the number of UTM grids $n$ per species ($i = 1, ..., S$) in each period ($j = 1, 2$) divided by the sum of the total number of grids per period, namely `r pull(number_of_grids[1, 2])` in the reference period 1980-2012 ($j = 1$) and `r pull(number_of_grids[2, 2])` in the period 2013-2022 ($j = 2$).
 
+<!-- spell-check: ignore:start -->
 $$
 \hat{p}_{ij} = \frac{n_{ij}}{\sum_{i=1}^S n_{ij}}
 $$
+<!-- spell-check: ignore:end -->
 
 ```{r}
 # Without zeroes
