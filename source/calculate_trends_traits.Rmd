@@ -21,7 +21,8 @@ library(here)
 opts_chunk$set(
   echo = TRUE,
   message = FALSE,
-  warning = FALSE)
+  warning = FALSE
+)
 opts_knit$set(root.dir = here::here())
 
 conflicted::conflicts_prefer(dplyr::filter)
@@ -41,10 +42,10 @@ library(brms)
 ```{r}
 out_path <- file.path("data", "processed")
 
-species_traits_final_nozero <- read_csv(file.path(out_path, 
-                                          "prop_data_per_trait_nozero.csv"))
-species_traits_final<- read_csv(file.path(out_path, 
-                                  "prop_data_per_trait.csv"))
+species_traits_final_nozero <- read_csv(
+  file.path(out_path, "prop_data_per_trait_nozero.csv")
+)
+species_traits_final <- read_csv(file.path(out_path, "prop_data_per_trait.csv"))
 ```
 
 # Data exploration

@@ -21,7 +21,8 @@ library(here)
 opts_chunk$set(
   echo = TRUE,
   message = FALSE,
-  warning = FALSE)
+  warning = FALSE
+)
 opts_knit$set(root.dir = here::here())
 
 conflicted::conflicts_prefer(dplyr::filter)
@@ -44,17 +45,21 @@ data_path <- file.path("data", "raw")
 
 # Species list
 check_list_flanders <- read_delim(
-    file.path(data_path, "tblChecklistFlanders.csv"),
-    delim = ";") %>% 
-  filter(Status == "Standvlinder" | Status == "Trekvlinder") %>% 
+  file.path(data_path, "tblChecklistFlanders.csv"),
+  delim = ";"
+) %>%
+  filter(Status == "Standvlinder" | Status == "Trekvlinder") %>%
   select(species_nl)
 
 # Presences
 presence_data <- read_delim(
-    file.path(data_path, "tblAllCondensUtm5km_v2022.csv"),
-    delim = ";") %>%
-  rename(id = Id,
-         utm_5km = Utm5km)
+  file.path(data_path, "tblAllCondensUtm5km_v2022.csv"),
+  delim = ";"
+) %>%
+  rename(
+    id = Id,
+    utm_5km = Utm5km
+  )
 ```
 
 # Data processing
@@ -66,19 +71,25 @@ We merge the species list and presence list and count the number of occupied UTM
 joined_df <- left_join(check_list_flanders, presence_data, by = "species_nl")
 
 # Number of grids per species per period
-df_long <- joined_df %>% 
-  distinct(species_nl,
-           year,
-           utm_5km) %>% 
+df_long <- joined_df %>%
+  distinct(
+    species_nl,
+    year,
+    utm_5km
+  ) %>%
   filter(year >= 1980 & year <= 2022) %>%
-  mutate(period = case_when(year >= 1980 & year <= 2012 ~ "p1980_2012",
-                            year >= 2013 & year <= 2022 ~ "p2013_2022")) %>% 
-  distinct(species_nl,
-           utm_5km,
-           period) %>%
+  mutate(period = case_when(
+    year >= 1980 & year <= 2012 ~ "p1980_2012",
+    year >= 2013 & year <= 2022 ~ "p2013_2022"
+  )) %>%
+  distinct(
+    species_nl,
+    utm_5km,
+    period
+  ) %>%
   group_by(period) %>%
   mutate(sum_per_period = n()) %>%
-  group_by(species_nl, period, sum_per_period) %>% 
+  group_by(species_nl, period, sum_per_period) %>%
   summarise(n_grids = n())
 
 # Save number of grids
@@ -87,16 +98,20 @@ number_of_grids <- df_long %>%
   distinct(period, sum_per_period)
 
 # Wide format
-df_wide <- df_long %>% 
-  pivot_wider(id_cols = species_nl,
-              names_from = period,
-              values_from = n_grids)
+df_wide <- df_long %>%
+  pivot_wider(
+    id_cols = species_nl,
+    names_from = period,
+    values_from = n_grids
+  )
 
-df_wide[c("p1980_2012", "p2013_2022")][is.na(df_wide[c("p1980_2012", 
-                                                       "p2013_2022")])] <- 0
+df_wide[c("p1980_2012", "p2013_2022")][is.na(df_wide[c(
+  "p1980_2012",
+  "p2013_2022"
+)])] <- 0
 
 # Save dataframe without zeroes
-df_wide_sum_nozero <- df_wide %>% 
+df_wide_sum_nozero <- df_wide %>%
   filter(p1980_2012 > 0 & p2013_2022 > 0) %>%
   mutate(sum = p1980_2012 + p2013_2022)
 
@@ -122,33 +137,39 @@ $$
 ```{r}
 # Without zeroes
 prop_df_nozero <- df_wide_sum_nozero %>%
-  mutate(p2013_2022 = ifelse(p1980_2012 == 0 & p2013_2022 == 0, NA, 
-                             p2013_2022)) %>%
-  pivot_longer(cols = c(p1980_2012:p2013_2022),
-               names_to = "period",
-               values_to = "n_grids") %>%
+  mutate(p2013_2022 = ifelse(p1980_2012 == 0 & p2013_2022 == 0, NA,
+    p2013_2022
+  )) %>%
+  pivot_longer(
+    cols = c(p1980_2012:p2013_2022),
+    names_to = "period",
+    values_to = "n_grids"
+  ) %>%
   group_by(period) %>%
   filter(!is.na(n_grids)) %>%
   mutate(
     sum_per_period = sum(n_grids),
     rel_prop = (n_grids) / sum_per_period
-    ) %>%
+  ) %>%
   ungroup() %>%
   select(species_nl, n_grids, period, sum_per_period, rel_prop)
 
 # With zeroes
 prop_df <- df_wide_sum %>%
-  mutate(p2013_2022 = ifelse(p1980_2012 == 0 & p2013_2022 == 0, NA, 
-                             p2013_2022)) %>%
-  pivot_longer(cols = c(p1980_2012:p2013_2022),
-               names_to = "period",
-               values_to = "n_grids") %>%
+  mutate(p2013_2022 = ifelse(p1980_2012 == 0 & p2013_2022 == 0, NA,
+    p2013_2022
+  )) %>%
+  pivot_longer(
+    cols = c(p1980_2012:p2013_2022),
+    names_to = "period",
+    values_to = "n_grids"
+  ) %>%
   group_by(period) %>%
   filter(!is.na(n_grids)) %>%
   mutate(
     sum_per_period = sum(n_grids),
     rel_prop = (n_grids) / sum_per_period
-    ) %>%
+  ) %>%
   ungroup() %>%
   select(species_nl, n_grids, period, sum_per_period, rel_prop)
 ```
@@ -166,8 +187,9 @@ We add species traits to the dataframes.
 ```{r}
 # Read in data
 species_traits <- read_delim(
-    file.path(data_path, "tblMacromoths_Traits_v2022.csv"),
-    delim = ";") %>% 
+  file.path(data_path, "tblMacromoths_Traits_v2022.csv"),
+  delim = ";"
+) %>%
   rename(species_nl = nameDutch)
 
 species_traits$EllenbergN <- as.factor(species_traits$EllenbergN)
@@ -175,92 +197,106 @@ species_traits$nGenerations <- as.factor(species_traits$nGenerations)
 
 # Biotope is in it 2 times, so we have to split up
 species_traits_df1 <- species_traits %>%
-  select(species_nl,
-          Biotope1,
-          colourVariation,
-          Activity,
-          OverwinteringStage,
-          Phagy,
-          LarvalFoodSource2,
-          EllenbergN,
-          nGenerations,
-          Seasonality,
-          WingDevelopment,
-          Distribution,
-          Migration,
-          Size,
-          TempHum,
-          HabitatTemperature,
-          HabitatHumidity) %>% 
-  rename(Biotope = Biotope1) %>% 
+  select(
+    species_nl,
+    Biotope1,
+    colourVariation,
+    Activity,
+    OverwinteringStage,
+    Phagy,
+    LarvalFoodSource2,
+    EllenbergN,
+    nGenerations,
+    Seasonality,
+    WingDevelopment,
+    Distribution,
+    Migration,
+    Size,
+    TempHum,
+    HabitatTemperature,
+    HabitatHumidity
+  ) %>%
+  rename(Biotope = Biotope1) %>%
   filter(!is.na(species_nl))
 
-species_traits_df2 <- species_traits %>% 
+species_traits_df2 <- species_traits %>%
   filter(!is.na(Biotope2))
 
 species_traits_df2 <- species_traits_df2 %>%
-  select(species_nl,
-          Biotope2,
-          colourVariation,
-          Activity,
-          OverwinteringStage,
-          Phagy,
-          LarvalFoodSource2,
-          EllenbergN,
-          nGenerations,
-          Seasonality,
-          WingDevelopment,
-          Distribution,
-          Migration,
-          Size,
-          TempHum,
-          HabitatTemperature,
-          HabitatHumidity) %>% 
+  select(
+    species_nl,
+    Biotope2,
+    colourVariation,
+    Activity,
+    OverwinteringStage,
+    Phagy,
+    LarvalFoodSource2,
+    EllenbergN,
+    nGenerations,
+    Seasonality,
+    WingDevelopment,
+    Distribution,
+    Migration,
+    Size,
+    TempHum,
+    HabitatTemperature,
+    HabitatHumidity
+  ) %>%
   rename(Biotope = Biotope2)
 
-species_traits_complete <- rbind(species_traits_df1,
-                                 species_traits_df2)
+species_traits_complete <- rbind(
+  species_traits_df1,
+  species_traits_df2
+)
 
 # Without zeroes
 species_traits_joined_nozero <- prop_df_nozero %>%
-  inner_join(species_traits_complete, by = "species_nl", 
-             relationship = "many-to-many")
+  inner_join(species_traits_complete,
+    by = "species_nl",
+    relationship = "many-to-many"
+  )
 
 species_traits_final_nozero <- species_traits_joined_nozero %>%
-  pivot_longer(cols = Biotope:HabitatHumidity,
-               names_to = "trait_name",
-               values_to = "trait_value",
-               values_transform = as.character) %>%
+  pivot_longer(
+    cols = Biotope:HabitatHumidity,
+    names_to = "trait_name",
+    values_to = "trait_value",
+    values_transform = as.character
+  ) %>%
   distinct()
 
 # With zeroes
 species_traits_joined <- prop_df %>%
-  inner_join(species_traits_complete, by = "species_nl", 
-             relationship = "many-to-many")
+  inner_join(species_traits_complete,
+    by = "species_nl",
+    relationship = "many-to-many"
+  )
 
 species_traits_final <- species_traits_joined %>%
-  pivot_longer(cols = Biotope:HabitatHumidity,
-               names_to = "trait_name",
-               values_to = "trait_value",
-               values_transform = as.character) %>%
+  pivot_longer(
+    cols = Biotope:HabitatHumidity,
+    names_to = "trait_name",
+    values_to = "trait_value",
+    values_transform = as.character
+  ) %>%
   distinct()
 ```
 
 ```{r}
 # Visualise
 head(species_traits_final, 10) %>%
-    kable()
+  kable()
 ```
 
 We do not know all the traits for the following species.
 
 ```{r}
-species_traits_final %>% 
+species_traits_final %>%
   filter(is.na(trait_value)) %>%
   distinct(species_nl, trait_name) %>%
   mutate(val = 1) %>%
   pivot_wider(names_from = trait_name, values_from = val) %>%
-  mutate(across(-c(species_nl), ~replace(.x, .x == 1, cur_column()))) %>%
+  mutate(across(-c(species_nl), ~ replace(.x, .x == 1, cur_column()))) %>%
   unite("trait_name", -c(species_nl), sep = ", ", na.rm = TRUE) %>%
   kable()
 ```
@@ -272,8 +308,12 @@ We write out the datasets.
 ```{r}
 out_path <- file.path("data", "processed")
 
-write_csv(species_traits_final_nozero, 
-          file.path(out_path, "prop_data_per_trait_nozero.csv"))
-write_csv(species_traits_final, 
-          file.path(out_path, "prop_data_per_trait.csv"))
+write_csv(
+  species_traits_final_nozero,
+  file.path(out_path, "prop_data_per_trait_nozero.csv")
+)
+write_csv(
+  species_traits_final,
+  file.path(out_path, "prop_data_per_trait.csv")
+)
 ```
