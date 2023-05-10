@@ -262,3 +262,14 @@ species_traits_final %>%
   unite("trait_name", -c(soort), sep = ", ", na.rm = TRUE) %>%
   kable()
 ```
+
+We write out the datasets.
+
+```{r}
+out_path <- file.path("data", "processed")
+
+write_csv(species_traits_final_nul, 
+          file.path(out_path, "prop_data_per_trait_nozero.csv"))
+write_csv(species_traits_final, 
+          file.path(out_path, "prop_data_per_trait.csv"))
+```
