@@ -53,6 +53,8 @@ presence_data <- read_delim(
     delim = ";")
 ```
 
+# Data processing
+
 We merge the species list and presence list and count the number of occupied UTM grids per species per period. We store both a dataset with and without zero counts.
 
 ```{r}
@@ -105,3 +107,45 @@ head(df_breed_som, 10) %>%
   kable()
 ```
 
+We calculate the relative proportion $p$ of species $i$ in period $j$ as the number of UTM grids $n$ per species ($i = 1, ..., S$) in each period ($j = 1, 2$) divided by the sum of the total number of grids per period, namely `r pull(aantal_hokken[1, 2])` in the reference period 1980-2012 ($j = 1$) and `r pull(aantal_hokken[2, 2])` in the period 2013-2022 ($j = 2$).
+
+$$
+\hat{p}_{ij} = \frac{n_{ij}}{\sum_{i=1}^S n_{ij}}
+$$
+
+```{r}
+# Without zeroes
+prop_df1_nul <- df_breed_som_nul %>%
+  mutate(p2013_2022 = ifelse(p1980_2012 == 0 & p2013_2022 == 0, NA, 
+                             p2013_2022)) %>%
+  pivot_longer(cols = c(p1980_2012:p2013_2022),
+               names_to = "periode",
+               values_to = "n_hokken") %>%
+  group_by(periode) %>%
+  filter(!is.na(n_hokken)) %>%
+  mutate(
+    som_per_periode = sum(n_hokken),
+    rel_prop = (n_hokken) / som_per_periode
+    ) %>%
+  ungroup() %>%
+  select(soort = Species, n_hokken, periode, som_per_periode, rel_prop)
+
+# With zeroes
+prop_df1 <- df_breed_som %>%
+  mutate(p2013_2022 = ifelse(p1980_2012 == 0 & p2013_2022 == 0, NA, 
+                             p2013_2022)) %>%
+  pivot_longer(cols = c(p1980_2012:p2013_2022),
+               names_to = "periode",
+               values_to = "n_hokken") %>%
+  group_by(periode) %>%
+  filter(!is.na(n_hokken)) %>%
+  mutate(
+    som_per_periode = sum(n_hokken),
+    rel_prop = (n_hokken) / som_per_periode
+    ) %>%
+  ungroup() %>%
+  select(soort = Species, n_hokken, periode, som_per_periode, rel_prop)
+
+head(prop_df1, 10) %>%
+  kable()
+```
