@@ -38,6 +38,15 @@ library(brms)
 
 # Load data
 
+```{r}
+out_path <- file.path("data", "processed")
+
+species_traits_final_nozero <- read_csv(file.path(out_path, 
+                                          "prop_data_per_trait_nozero.csv"))
+species_traits_final<- read_csv(file.path(out_path, 
+                                  "prop_data_per_trait.csv"))
+```
+
 # Data exploration
 
 # Model specification
