@@ -33,6 +33,8 @@ library(tidyverse)
 
 # Goal
 
+Process and merge data to use for modelling. Write out final dataframe(s).
+
 # Load data
 
 We read in the data and prepare it for further processing. We select stationary and migratory species.
@@ -260,6 +262,8 @@ species_traits_final %>%
   unite("trait_name", -c(species_nl), sep = ", ", na.rm = TRUE) %>%
   kable()
 ```
+
+# Write out data
 
 We write out the datasets.
 
