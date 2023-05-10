@@ -34,7 +34,8 @@ Investigation of species traits as a guidance for moth conservation in the highl
 │   ├── CODE_OF_CONDUCT.md         │ 
 │   └── CONTRIBUTING.md            │
 ├── data
-│   └── ...                        ├ data files (*.csv)
+│   ├── raw                        │
+│   └── processed                  ├ data files (*.csv)
 ├── inst
 │   └── en_gb.dic                  ├ dictionary with words that should not be checked
 ├── media                          ├ folder to store media
