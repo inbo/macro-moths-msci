@@ -29,11 +29,27 @@ conflicted::conflicts_prefer(dplyr::select)
 
 # Packages
 library(tidyverse)
-library(INBOtheme)
-library(cplm)
-library(brms)
 ```
 
 # Goal
 
 # Load data
+
+We read in the data and prepare it for further processing. We select stationary and migratory species.
+
+```{r}
+data_path <- file.path("data", "raw")
+
+# Species list
+check_list_flanders <- read_delim(
+    file.path(data_path, "tblChecklistFlanders.csv"),
+    delim = ";") %>% 
+  filter(Status == "Standvlinder" | Status == "Trekvlinder") %>% 
+  select(species_nl)
+
+# Presences
+presence_data <- read_delim(
+    file.path(data_path, "tblAllCondensUtm5km_v2022.csv"),
+    delim = ";")
+```
+
