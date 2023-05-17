@@ -62,6 +62,7 @@ $\{n_{1j}, ...n_{2j}\}$ can be interpreted as independent Poisson random variabl
 $$
 n_{ij} \sim Poisson(\lambda_{ij})
 $$
+
 Such that we can specify the model
 
 $$
@@ -79,7 +80,7 @@ Where
 
 We set $corr(b_0, b_1) = 0$ since we want a separate (uncorrelated) deviation for both periods.
 
-Example for trait 'Activity'. First for traitvalue 'DayActive'.
+Example for trait 'Activity'. First for trait value 'DayActive'.
 
 ```{r}
 dat <- species_traits_final %>%
