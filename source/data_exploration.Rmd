@@ -62,17 +62,39 @@ species_traits_final %>%
   kable()
 ```
 
-Some species occur for more than one trait value within the same trait.
+Some species have more than one trait value within the same trait.
 
 ```{r}
-species_traits_final %>%
+dubbles <- species_traits_final %>%
   count(species_nl, period, trait_name) %>%
   filter(n > 1) %>%
   distinct(species_nl, trait_name) %>%
   inner_join(distinct(species_traits_final, species_nl, trait_name, trait_value), 
-             by = join_by(species_nl, trait_name)) %>%
+             by = join_by(species_nl, trait_name))
+
+dubbles %>%
   kable()
 ```
 
+## Resolve issues
+
+We avoid problems by giving a suffix number to the species such. We also filter out `NA`'s.
+
+```{r}
+design_df <- dubbles %>%
+  rowid_to_column("id") %>%
+  mutate(species_new = ifelse(id %% 2 != 0,
+                                paste(species_nl, 1),
+                                paste(species_nl, 2))) %>%
+  select(-id)
+
+species_traits_final_new <- species_traits_final %>%
+  full_join(design_df, by = join_by(species_nl, trait_name, trait_value)) %>%
+  mutate(species_nl = ifelse(!is.na(species_new), 
+                               species_new, 
+                               species_nl)) %>%
+  select(-species_new) %>%
+  filter(!is.na(trait_value))
+```
 
 
