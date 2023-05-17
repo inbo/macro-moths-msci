@@ -47,3 +47,32 @@ species_traits_final_nozero <- read_csv(
 species_traits_final <- read_csv(file.path(out_path, "prop_data_per_trait.csv"))
 ```
 
+# Missing data and duplicates
+
+We do not know all the traits for the following species.
+
+```{r}
+species_traits_final %>% 
+  filter(is.na(trait_value)) %>%
+  distinct(species_nl, trait_name) %>%
+  mutate(val = 1) %>%
+  pivot_wider(names_from = trait_name, values_from = val) %>%
+  mutate(across(-c(species_nl), ~replace(.x, .x == 1, cur_column()))) %>%
+  unite("trait_name", -c(species_nl), sep = ", ", na.rm = TRUE) %>%
+  kable()
+```
+
+Some species occur for more than one trait value within the same trait.
+
+```{r}
+species_traits_final %>%
+  count(species_nl, period, trait_name) %>%
+  filter(n > 1) %>%
+  distinct(species_nl, trait_name) %>%
+  inner_join(distinct(species_traits_final, species_nl, trait_name, trait_value), 
+             by = join_by(species_nl, trait_name)) %>%
+  kable()
+```
+
+
+
