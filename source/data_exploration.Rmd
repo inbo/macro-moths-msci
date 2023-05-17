@@ -98,3 +98,26 @@ species_traits_final_new <- species_traits_final %>%
 ```
 
 
+# Summaries
+## Univariate
+
+How many data do we have for each trait?
+
+```{r}
+univar_summary <- species_traits_final_new %>%
+  count(trait_name, trait_value, period) %>%
+  distinct(trait_name, trait_value, n) %>%
+  mutate("n <= 10" = ifelse(is.na(trait_value), "NA", 
+                            ifelse(n <= 10, "YES", "no"))) %>%
+  arrange(trait_name, trait_value)
+
+univar_summary %>%
+  kable()
+```
+
+We see some trait values with less than 10 species.
+
+```{r}
+table(univar_summary$`n <= 10`)
+```
+
