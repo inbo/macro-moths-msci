@@ -25,15 +25,11 @@ opts_chunk$set(
 )
 opts_knit$set(root.dir = here::here())
 
-conflicted::conflicts_prefer(dplyr::filter)
-conflicted::conflicts_prefer(dplyr::select)
-conflicted::conflicts_prefer(dplyr::lag)
-conflicted::conflicts_prefer(brms::ar)
-
 # Packages
 library(tidyverse)
-library(INBOmd)
+#library(INBOtheme)
 library(brms)
+library(projpred)
 ```
 
 # Goal
@@ -53,26 +49,66 @@ species_traits_final <- read_csv(file.path(out_path, "prop_data_per_trait.csv"))
 
 # Model specification
 
-We assume a multinomial distribution per period.
+We assume a multinomial distribution per period $j$ ($j = 1, 2$) for the number of grid squares $n$ per species $i$ ($i = 1, ..., S$).
 
 $$
 \{n_{1j}, ...n_{2j}\} \sim Multinom(\sum_{i=1}^S n_{ij}, \{p_{1j}, ...p_{2j}\})
 $$
 
+Where $p_{ij} = \frac{\lambda_{ij}}{\lambda_{1j} + ... + \lambda_{Sj}}$
+
+$\{n_{1j}, ...n_{2j}\}$ can be interpreted as independent Poisson random variables
+
+$$
+n_{1j} \sim Poisson(\lambda_{1j})\\
+...\\
+n_{Sj} \sim Poisson(\lambda_{Sj})
+$$
+
+So that we can specify the model
+
+$$
+n_{ij} \sim Poisson(\lambda_{ij})
+$$
+Such that 
+
+$$
+\ln(\lambda_{ij}) = \beta_0 + \beta_{msci}X_{period} + ln(\Sigma_{i=1}^Sn_{ij}) + b_{0,{i = 1, ..., S}} + b_{1,{i = 1, ..., S}}X_{period}
+$$
+
+Where
+
+-   $\beta_0$ the average log-number of grids for period 1
+-   $\beta_{msci}$ the effect of period 2 compared to period 1 such that $MSCI = \exp(\beta_{msci})$
+-   $X_{period}$ is 0 if period is 1980-2012 and 1 if period is 2013-2022
+-   $ln(\Sigma_{i=1}^Sn_{ij})$ an offset used to control for the disproportionate search effort between the two periods
+-   $b_{0,{i = 1, ..., S}}$ a random intercept for each species: deviation per species from $\beta_0$
+-   $b_{1,{i = 1, ..., S}}$ a random slope for each species: deviation per species from $\beta_{msci}$
+
+We set $corr(b_0, b_1) = 0$ since we want a separate (uncorrelated) deviation for both periods.
+
 ```{r}
 dat <- species_traits_final %>%
-  distinct(species_nl, n_grids, period) %>%
-  pivot_wider(names_from = species_nl, values_from = n_grids)
+  filter(trait_value == "DayActive")
 
-specs <- dat %>%
-  select(where(is.numeric)) %>%
-  as.matrix()
+# MCMC parameters
+nchains <- 3           # number of chains
+niter <- 4000          # number of iterations (incl. burn-in)
+burnin <- niter / 4    # number of initial samples to discard (burn-in)
+nparallel <- nchains   # number of cores used for parallel computing
 
-dat <- dat %>%
-  mutate(size = rowSums(across(where(is.numeric))),
-         y = specs)
+fit <- brm(bf(n_grids ~ period + offset(log(sum_per_period)) + (1 + period || species_nl)), 
+            data = dat, family = poisson(),
+            chains = nchains, warmup = burnin, iter = niter, cores = nparallel)
 
-fit <- brm(bf(y | trials(size) ~ period), data = dat, 
-           family = multinomial())
+plot(fit)
+
+pp_check(fit, type = "dens_overlay_grouped", ndraws = 100, 
+         group = "period")
+
+hypothesis(
+  x = fit,
+  "exp(periodp2013_2022) - 1 = 0",
+  class = "b", alpha = 0.05)
 ```
 
