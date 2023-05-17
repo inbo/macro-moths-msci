@@ -1,0 +1,31 @@
+---
+title: "Data exploration"
+author: "Ward Langeraert"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+editor_options: 
+  chunk_output_type: console
+bibliography: [references.json]
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/research-institute-for-nature-and-forest.csl
+---
+
+# Goal
+
+Exploration of the data. Where are the bottlenecks? Missing data? ...
+
+# Load data
+
+```{r}
+out_path <- file.path("data", "processed")
+
+species_traits_final_nozero <- read_csv(
+  file.path(out_path, "prop_data_per_trait_nozero.csv")
+)
+species_traits_final <- read_csv(file.path(out_path, "prop_data_per_trait.csv"))
+```
+
