@@ -121,3 +121,49 @@ We see some trait values with less than 10 species.
 table(univar_summary$`n <= 10`)
 ```
 
+## Bivariate
+
+We can look at combinations of traits. Do we see any interesting correlations?
+
+```{r}
+cross_tab <- function(df, row, column, print = TRUE) {
+  cross_table <- df %>%
+    filter(trait_name %in% c(row, column)) %>%
+    distinct(species_nl, trait_name, trait_value) %>%
+    pivot_wider(id_cols = species_nl, names_from = trait_name, 
+                values_from = trait_value) %>%
+    drop_na() %>%
+    count(!!sym(row), !!sym(column)) %>%
+    pivot_wider(id_cols = !!sym(row), names_from = !!sym(column), 
+                values_from = n) %>%
+    mutate_all(~replace(., is.na(.), 0))
+  
+  if (isTRUE(print)) {
+    return(print(cross_table))
+  } else {
+    return(cross_table)
+  }
+}
+```
+
+```{r}
+small_traits <- univar_summary %>% 
+  filter(n <= 10) %>%
+  pull(trait_value)
+
+filtered_df <- species_traits_final_new %>%
+  filter(!trait_value %in% small_traits)
+
+combinations <- combn(unique(filtered_df$trait_name), 2)
+
+for (i in seq_len(ncol(combinations))) {
+  combo <- combinations[, i]
+  
+  if (!(setequal(c("HabitatTemperature", "TempHum"), combo) | 
+      setequal(c("TempHum", "HabitatHumidity"), combo))) {
+    print("------------------------------------------------")
+    print(combo)
+    cross_tab(filtered_df, combo[1], combo[2])
+  }
+}
+```
