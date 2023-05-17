@@ -25,11 +25,12 @@ opts_chunk$set(
 )
 opts_knit$set(root.dir = here::here())
 
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
 # Packages
 library(tidyverse)
-# library(INBOtheme)
 library(brms)
-library(projpred)
 ```
 
 # Goal
