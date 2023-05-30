@@ -31,6 +31,7 @@ conflicted::conflicts_prefer(dplyr::select)
 # Packages
 library(tidyverse)
 library(brms)
+library(posterior)
 ```
 
 # Goal
@@ -84,6 +85,29 @@ We set $corr(b_0, b_1) = 0$ since we want a separate (uncorrelated) deviation fo
 Example for trait 'Activity'. First for trait value 'DayActive'.
 
 ```{r}
+# instruct brms to use cmdstanr as backend and cache all Stan binaries
+options(brms.backend = "cmdstanr", 
+        cmdstanr_write_stan_file_dir = here("brms_cache"))
+# create cache directory if not yet available
+dir.create(here("brms_cache"), FALSE)
+
+## some nifty utility functions:
+
+## converts a matrix of draws as returned by brms into a vector of an rvar
+to_rvar_vector <- function(draw_matrix) {
+    lab <- "rv"
+    mdraws <- as_draws_matrix(draw_matrix)
+    variables(mdraws) <- paste0(lab, "[", 1:nvariables(mdraws), "]")
+    as_draws_rvars(mdraws)[["rv"]]
+}
+
+## simplifying functions to work with models in the context of data.frames
+rv_posterior_epred <- function(newdata, model, ...) {
+    to_rvar_vector(posterior_epred(model, newdata = newdata, ...))
+}
+```
+
+```{r}
 dat <- species_traits_final %>%
   filter(trait_value == "DayActive")
 
@@ -124,6 +148,45 @@ hypothesis(
   "exp(periodp2013_2022) - 1 = 0",
   class = "b", alpha = 0.05
 )
+```
+
+```{r}
+post_dat <- dat %>%
+  mutate(pm_count = rv_posterior_epred(., fit))
+
+post_dat %>%
+  mutate(pm_prop = pm_count / sum_per_period) %>%
+  group_by(species_nl) %>%
+  arrange(species_nl, trait_value, period) %>%
+  mutate(sci = pm_prop / first(pm_prop)) %>%
+  ungroup() %>%
+  mutate(ln_sci = log(sci)) %>%
+  group_by(period, trait_value) %>%
+  summarise(msci = exp(rvar_mean(ln_sci)) - 1) %>%
+  mutate(summarise_draws(msci, "mean", "median", "sd", ~quantile(.x, probs = c(0.025, 0.975))))
+  
+post_dat %>%
+  mutate(pm_prop = pm_count / sum_per_period) %>%
+  mutate(ln_sc = log(pm_prop)) %>%
+  group_by(period, trait_value) %>%
+  summarise(mean_count = exp(rvar_mean(ln_sc))) %>%
+  ungroup() %>%
+  arrange(trait_value, period) %>%
+  mutate(msci = (mean_count / first(mean_count)) - 1) %>%
+  mutate(summarise_draws(msci, "mean", "median", "sd", ~quantile(.x, probs = c(0.025, 0.975))))
+
+
+test <- post_dat %>%
+  mutate(si = pm_count / sum_per_period) %>%
+  mutate(ln_si = log(si)) %>%
+  group_by(period, trait_value) %>%
+  summarise(msi = rvar_mean(ln_si)) %>%
+  group_by(trait_value) %>%
+  arrange(trait_value, period) %>%
+  mutate(beta_p2013_2022 = msi - first(msi)) %>%
+  ungroup() %>%
+  mutate(msci = exp(beta_p2013_2022) - 1) %>%
+  mutate(summarise_draws(msci, "mean", "median", "sd", ~quantile(.x, probs = c(0.025, 0.975))))
 ```
 
 We also create a single model for all trait values in 'Activity'.
@@ -196,3 +259,75 @@ hypothesis(
   class = "b", alpha = 0.05
 )
 ```
+
+```{r}
+post_dat2 <- dat2 %>%
+  mutate(pm_count = rv_posterior_epred(., fit2))
+
+post_msci2 <- post_dat2 %>% 
+  group_by(period, sum_per_period, trait_value) %>%
+  summarise(mean_count = rvar_mean(pm_count)) %>%
+  ungroup() %>%
+  mutate(mean_prop = log(mean_count / sum_per_period)) %>%
+  group_by(trait_value) %>%
+  arrange(trait_value, period) %>%
+  mutate(msci = mean_prop - first(mean_prop)) %>%
+  ungroup()
+```
+
+test
+
+```{r}
+dat3 <- species_traits_final %>%
+  filter(trait_name %in% c("EllenbergN", "Phagy")) %>%
+  pivot_wider(id_cols = c(species_nl, n_grids, period, sum_per_period),
+              names_from = trait_name, values_from = trait_value)
+
+# MCMC parameters
+nchains <- 3 # number of chains
+niter <- 10000 # number of iterations (incl. burn-in)
+burnin <- niter / 4 # number of initial samples to discard (burn-in)
+nparallel <- nchains # number of cores used for parallel computing
+thinning <- 2
+
+fit3 <- brm(
+  bf(n_grids ~ period * Phagy * EllenbergN + offset(log(sum_per_period)) +
+    (1 + period || species_nl)),
+  data = dat3, family = poisson(),
+  chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
+  thin = thinning
+)
+```
+
+```{r}
+plot(fit3)
+```
+
+```{r}
+pp_check(fit3,
+  type = "dens_overlay_grouped", ndraws = 100,
+  group = "period"
+)
+
+pp_check(fit3,
+  type = "dens_overlay_grouped", ndraws = 100,
+  group = "Phagy"
+)
+
+pp_check(fit3,
+  type = "dens_overlay_grouped", ndraws = 100,
+  group = "EllenbergN"
+)
+```
+
+
+```{r}
+post_dat3 <- dat3 %>%
+  mutate(pm_count = rv_posterior_epred(., fit3))
+
+post_msci <- post_dat3 %>% 
+  group_by(period, Phagy, EllenbergN) %>%
+  summarise(mean_count = rvar_mean(pm_count)) %>%
+  ungroup()
+```
+
