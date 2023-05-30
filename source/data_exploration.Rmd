@@ -78,7 +78,7 @@ dubbles %>%
 
 ## Resolve issues
 
-We avoid problems by giving a suffix number to the species such. We also filter out `NA`'s.
+We avoid problems for species with more than one trait value within the same trait by giving a suffix number to the species. We also filter out `NA`'s.
 
 ```{r}
 design_df <- dubbles %>%
