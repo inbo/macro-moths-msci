@@ -41,6 +41,8 @@ Investigation of species traits as a guidance for moth conservation in the highl
 ├── media                          ├ folder to store media
 ├── output                         ├ folder to store outputs
 ├── source
+│   ├── brms_cache                 ├ store brms models 
+│   │   └── ...                    │
 │   ├── ...                        ├ markdown and R files
 │   └── references.json            ├ references markdown files
 ├── checklist.yml                  ├ options checklist package (https://github.com/inbo/checklist)
