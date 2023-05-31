@@ -82,29 +82,13 @@ Where
 
 We set $corr(b_0, b_1) = 0$ since we want a separate (uncorrelated) deviation for both periods.
 
+## Example 1: testing model structure
+
 Example for trait 'Activity'. First for trait value 'DayActive'.
 
 ```{r}
-# instruct brms to use cmdstanr as backend and cache all Stan binaries
-options(brms.backend = "cmdstanr", 
-        cmdstanr_write_stan_file_dir = here("brms_cache"))
 # create cache directory if not yet available
-dir.create(here("brms_cache"), FALSE)
-
-## some nifty utility functions:
-
-## converts a matrix of draws as returned by brms into a vector of an rvar
-to_rvar_vector <- function(draw_matrix) {
-    lab <- "rv"
-    mdraws <- as_draws_matrix(draw_matrix)
-    variables(mdraws) <- paste0(lab, "[", 1:nvariables(mdraws), "]")
-    as_draws_rvars(mdraws)[["rv"]]
-}
-
-## simplifying functions to work with models in the context of data.frames
-rv_posterior_epred <- function(newdata, model, ...) {
-    to_rvar_vector(posterior_epred(model, newdata = newdata, ...))
-}
+dir.create(here("source", "source/brms_cache"), FALSE)
 ```
 
 ```{r}
@@ -121,7 +105,9 @@ fit <- brm(
   bf(n_grids ~ period + offset(log(sum_per_period)) +
     (1 + period || species_nl)),
   data = dat, family = poisson(),
-  chains = nchains, warmup = burnin, iter = niter, cores = nparallel
+  chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
+  file = "source/brms_cache/fit",
+  file_refit = "on_change"
 )
 ```
 
@@ -150,45 +136,6 @@ hypothesis(
 )
 ```
 
-```{r}
-post_dat <- dat %>%
-  mutate(pm_count = rv_posterior_epred(., fit))
-
-post_dat %>%
-  mutate(pm_prop = pm_count / sum_per_period) %>%
-  group_by(species_nl) %>%
-  arrange(species_nl, trait_value, period) %>%
-  mutate(sci = pm_prop / first(pm_prop)) %>%
-  ungroup() %>%
-  mutate(ln_sci = log(sci)) %>%
-  group_by(period, trait_value) %>%
-  summarise(msci = exp(rvar_mean(ln_sci)) - 1) %>%
-  mutate(summarise_draws(msci, "mean", "median", "sd", ~quantile(.x, probs = c(0.025, 0.975))))
-  
-post_dat %>%
-  mutate(pm_prop = pm_count / sum_per_period) %>%
-  mutate(ln_sc = log(pm_prop)) %>%
-  group_by(period, trait_value) %>%
-  summarise(mean_count = exp(rvar_mean(ln_sc))) %>%
-  ungroup() %>%
-  arrange(trait_value, period) %>%
-  mutate(msci = (mean_count / first(mean_count)) - 1) %>%
-  mutate(summarise_draws(msci, "mean", "median", "sd", ~quantile(.x, probs = c(0.025, 0.975))))
-
-
-test <- post_dat %>%
-  mutate(si = pm_count / sum_per_period) %>%
-  mutate(ln_si = log(si)) %>%
-  group_by(period, trait_value) %>%
-  summarise(msi = rvar_mean(ln_si)) %>%
-  group_by(trait_value) %>%
-  arrange(trait_value, period) %>%
-  mutate(beta_p2013_2022 = msi - first(msi)) %>%
-  ungroup() %>%
-  mutate(msci = exp(beta_p2013_2022) - 1) %>%
-  mutate(summarise_draws(msci, "mean", "median", "sd", ~quantile(.x, probs = c(0.025, 0.975))))
-```
-
 We also create a single model for all trait values in 'Activity'.
 
 ```{r}
@@ -207,7 +154,9 @@ fit2 <- brm(
     (1 + period || species_nl)),
   data = dat2, family = poisson(),
   chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
-  thin = thinning
+  thin = thinning,
+  file = "source/brms_cache/fit2",
+  file_refit = "on_change"
 )
 ```
 
@@ -260,22 +209,218 @@ hypothesis(
 )
 ```
 
-```{r}
-post_dat2 <- dat2 %>%
-  mutate(pm_count = rv_posterior_epred(., fit2))
+### Conclusion
 
-post_msci2 <- post_dat2 %>% 
-  group_by(period, sum_per_period, trait_value) %>%
-  summarise(mean_count = rvar_mean(pm_count)) %>%
-  ungroup() %>%
-  mutate(mean_prop = log(mean_count / sum_per_period)) %>%
-  group_by(trait_value) %>%
-  arrange(trait_value, period) %>%
-  mutate(msci = mean_prop - first(mean_prop)) %>%
-  ungroup()
+The models perform well. We have a good fit and convergence. We can use these models to calculate the MSCI.
+
+## Example 2: Simpson's paradox
+
+What if we compare two traits?
+
+We look at 'Phagy' and 'EllenbergN' separately. Afterwards we combine the traits. First we look at 'Phagy'.
+
+```{r}
+## Phagy
+dat_phagy <- species_traits_final %>%
+  filter(trait_name == "Phagy")
+
+# MCMC parameters
+nchains <- 3 # number of chains
+niter <- 10000 # number of iterations (incl. burn-in)
+burnin <- niter / 4 # number of initial samples to discard (burn-in)
+nparallel <- nchains # number of cores used for parallel computing
+thinning <- 2
+
+fit_phag <- brm(
+  bf(n_grids ~ period * trait_value + offset(log(sum_per_period)) +
+    (1 + period || species_nl)),
+  data = dat_phagy, family = poisson(),
+  chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
+  thin = thinning,
+  file = "source/brms_cache/fit_phag",
+  file_refit = "on_change"
+)
 ```
 
-test
+```{r}
+# Estimate MSCI 'Monophagous'
+msci_monophagous <- hypothesis(
+  x = fit_phag,
+  "exp(periodp2013_2022) - 1 = 0",
+  class = "b", alpha = 0.05
+)
+
+#Estimate MSCI 'Oligophagous'
+msci_oligophagous <- hypothesis(
+  x = fit_phag,
+  "exp(periodp2013_2022 + periodp2013_2022:trait_valueOligophagous) - 1 = 0",
+  class = "b", alpha = 0.05
+)
+
+# Estimate MSCI 'Polyphagous'
+msci_polyphagous <- hypothesis(
+  x = fit_phag,
+  "exp(periodp2013_2022 + periodp2013_2022:trait_valuePolyphagous) - 1 = 0",
+  class = "b", alpha = 0.05
+)
+```
+
+```{r}
+estimate_msci_monophagous <- msci_monophagous$hypothesis$Estimate
+se_msci_monophagous <- msci_monophagous$hypothesis$Est.Error
+ll_msci_monophagous <- msci_monophagous$hypothesis$CI.Lower
+ul_msci_monophagous <- msci_monophagous$hypothesis$CI.Upper
+
+estimate_msci_oligophagous <- msci_oligophagous$hypothesis$Estimate
+se_msci_oligophagous <- msci_oligophagous$hypothesis$Est.Error
+ll_msci_oligophagous <- msci_oligophagous$hypothesis$CI.Lower
+ul_msci_oligophagous <- msci_oligophagous$hypothesis$CI.Upper
+
+estimate_msci_polyphagous <- msci_polyphagous$hypothesis$Estimate
+se_msci_polyphagous <- msci_polyphagous$hypothesis$Est.Error
+ll_msci_polyphagous <- msci_polyphagous$hypothesis$CI.Lower
+ul_msci_polyphagous <- msci_polyphagous$hypothesis$CI.Upper
+
+
+# Create dataframe
+phagy_summary_df <- tibble(
+  est_msci     = c(estimate_msci_monophagous, 
+                   estimate_msci_oligophagous,
+                   estimate_msci_polyphagous),
+  se_msci      = c(se_msci_monophagous, 
+                   se_msci_oligophagous,
+                   se_msci_polyphagous),
+  ll_msci      = c(ll_msci_monophagous, 
+                   ll_msci_oligophagous,
+                   ll_msci_polyphagous),
+  ul_msci      = c(ul_msci_monophagous, 
+                   ul_msci_oligophagous,
+                   ul_msci_polyphagous),
+  trait_value = c("Monophagous", "Oligophagous", "Polyphagous")
+  )
+
+# Plot
+phagy_summary_df %>%
+  ggplot(aes(y = est_msci, x = trait_value, colour = trait_value)) +
+    geom_hline(yintercept = 0, linetype = 2) +
+    geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+    geom_point(size = 4) +
+    geom_errorbar(aes(ymin = ll_msci, ymax = ul_msci), width = 0.1) +
+    labs(x = "", y = "Multispecies Change Index", title = "Phagy") +
+    theme(legend.position = "")
+```
+
+Then at 'EllenbergN':
+
+```{r}
+## EllenbergN
+dat_ellenbergy <- species_traits_final %>%
+  filter(trait_name == "EllenbergN")
+
+# MCMC parameters
+nchains <- 3 # number of chains
+niter <- 10000 # number of iterations (incl. burn-in)
+burnin <- niter / 4 # number of initial samples to discard (burn-in)
+nparallel <- nchains # number of cores used for parallel computing
+thinning <- 2
+
+fit_ellenberg <- brm(
+  bf(n_grids ~ period * trait_value + offset(log(sum_per_period)) +
+    (1 + period || species_nl)),
+  data = dat_ellenbergy, family = poisson(),
+  chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
+  thin = thinning,
+  file = "source/brms_cache/fit_ellenberg",
+  file_refit = "on_change"
+)
+```
+
+```{r}
+# Estimate MSCI 'NutrientPoor'
+msci_nutrientpoor <- hypothesis(
+  x = fit_ellenberg,
+  "exp(periodp2013_2022) - 1 = 0",
+  class = "b", alpha = 0.05
+)
+
+# Estimate MSCI 'NutrientRich'
+msci_nutrientrich <- hypothesis(
+  x = fit_ellenberg,
+  "exp(periodp2013_2022 + periodp2013_2022:trait_valueNutrientRich) - 1 = 0",
+  class = "b", alpha = 0.05
+)
+
+# Estimate MSCI 'VeryNutrientPoor'
+msci_verynutrientpoor <- hypothesis(
+  x = fit_ellenberg,
+  "exp(periodp2013_2022 + periodp2013_2022:trait_valueVeryNutrientPoor) - 1 = 0",
+  class = "b", alpha = 0.05
+)
+
+# Estimate MSCI 'VeryNutrientRich'
+msci_verynutrientrich <- hypothesis(
+  x = fit_ellenberg,
+  "exp(periodp2013_2022 + periodp2013_2022:trait_valueVeryNutrientRich) - 1 = 0",
+  class = "b", alpha = 0.05
+)
+
+estimate_msci_nutrientpoor <- msci_nutrientpoor$hypothesis$Estimate
+se_msci_nutrientpoor <- msci_nutrientpoor$hypothesis$Est.Error
+ll_msci_nutrientpoor <- msci_nutrientpoor$hypothesis$CI.Lower
+ul_msci_nutrientpoor <- msci_nutrientpoor$hypothesis$CI.Upper
+
+estimate_msci_nutrientrich <- msci_nutrientrich$hypothesis$Estimate
+se_msci_nutrientrich <- msci_nutrientrich$hypothesis$Est.Error
+ll_msci_nutrientrich <- msci_nutrientrich$hypothesis$CI.Lower
+ul_msci_nutrientrich <- msci_nutrientrich$hypothesis$CI.Upper
+
+estimate_msci_verynutrientpoor <- msci_verynutrientpoor$hypothesis$Estimate
+se_msci_verynutrientpoor <- msci_verynutrientpoor$hypothesis$Est.Error
+ll_msci_verynutrientpoor <- msci_verynutrientpoor$hypothesis$CI.Lower
+ul_msci_verynutrientpoor <- msci_verynutrientpoor$hypothesis$CI.Upper
+
+estimate_msci_verynutrientrich <- msci_verynutrientrich$hypothesis$Estimate
+se_msci_verynutrientrich <- msci_verynutrientrich$hypothesis$Est.Error
+ll_msci_verynutrientrich <- msci_verynutrientrich$hypothesis$CI.Lower
+ul_msci_verynutrientrich <- msci_verynutrientrich$hypothesis$CI.Upper
+
+
+# Create dataframe
+ellenberg_summary_df <- tibble(
+  est_msci     = c(estimate_msci_nutrientpoor, 
+                   estimate_msci_nutrientrich,
+                   estimate_msci_verynutrientpoor,
+                   estimate_msci_verynutrientrich),
+  se_msci      = c(se_msci_nutrientpoor, 
+                   se_msci_nutrientrich,
+                   se_msci_verynutrientpoor,
+                   se_msci_verynutrientrich),
+  ll_msci      = c(ll_msci_nutrientpoor, 
+                   ll_msci_nutrientrich,
+                   ll_msci_verynutrientpoor,
+                   ll_msci_verynutrientrich),
+  ul_msci      = c(ul_msci_nutrientpoor, 
+                   ul_msci_nutrientrich,
+                   ul_msci_verynutrientpoor,
+                   ul_msci_verynutrientrich),
+  trait_value = factor(c("NutrientPoor", "NutrientRich", "VeryNutrientPoor", 
+                       "VeryNutrientRich"),
+                       levels = c("VeryNutrientPoor", "NutrientPoor", "NutrientRich", 
+                       "VeryNutrientRich"), ordered = TRUE)
+  )
+
+# Plot
+ellenberg_summary_df %>%
+  ggplot(aes(y = est_msci, x = trait_value, colour = trait_value)) +
+    geom_hline(yintercept = 0, linetype = 2) +
+    geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+    geom_point(size = 4) +
+    geom_errorbar(aes(ymin = ll_msci, ymax = ul_msci), width = 0.1) +
+    labs(x = "", y = "Multispecies Change Index", title = "EllenbergN") +
+    theme(legend.position = "")
+```
+
+Do the trends change when the groups are combined (= Simpson's paradox)?
 
 ```{r}
 dat3 <- species_traits_final %>%
@@ -295,39 +440,118 @@ fit3 <- brm(
     (1 + period || species_nl)),
   data = dat3, family = poisson(),
   chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
-  thin = thinning
+  thin = thinning,
+  file = "source/brms_cache/fit3",
+  file_refit = "on_change"
 )
 ```
 
 ```{r}
-plot(fit3)
+msci_nutrientpoor_phagy <- hypothesis(
+  x = fit3,
+  c("exp(periodp2013_2022) - 1 = 0",
+    "exp(periodp2013_2022 + periodp2013_2022:PhagyOligophagous) - 1 = 0",
+    "exp(periodp2013_2022 + periodp2013_2022:PhagyPolyphagous) - 1 = 0"),
+  class = "b", alpha = 0.05
+)
+
+msci_verynutrientpoor_phagy <- hypothesis(
+  x = fit3,
+  c("exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientPoor) - 1 = 0",
+   "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientPoor + periodp2013_2022:PhagyOligophagous + periodp2013_2022:PhagyOligophagous:EllenbergNVeryNutrientPoor) - 1 = 0",
+   "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientPoor + periodp2013_2022:PhagyPolyphagous + periodp2013_2022:PhagyPolyphagous:EllenbergNVeryNutrientPoor) - 1 = 0"),
+  class = "b", alpha = 0.05
+)
+
+msci_nutrientrich_phagy <- hypothesis(
+  x = fit3,
+  c("exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich) - 1 = 0",
+   "exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich + periodp2013_2022:PhagyOligophagous + periodp2013_2022:PhagyOligophagous:EllenbergNNutrientRich) - 1 = 0",
+   "exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich + periodp2013_2022:PhagyPolyphagous + periodp2013_2022:PhagyPolyphagous:EllenbergNNutrientRich) - 1 = 0"),
+  class = "b", alpha = 0.05
+)
+
+msci_verynutrientrich_phagy <- hypothesis(
+  x = fit3,
+  c("exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientRich) - 1 = 0",
+    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientRich + periodp2013_2022:PhagyOligophagous + periodp2013_2022:PhagyOligophagous:EllenbergNVeryNutrientRich) - 1 = 0",
+    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientRich + periodp2013_2022:PhagyPolyphagous + periodp2013_2022:PhagyPolyphagous:EllenbergNVeryNutrientRich) - 1 = 0"),
+  class = "b", alpha = 0.05
+)
+
+estimate_msci_nutrientpoor_phagy <- msci_nutrientpoor_phagy$hypothesis$Estimate
+se_msci_nutrientpoor_phagy <- msci_nutrientpoor_phagy$hypothesis$Est.Error
+ll_msci_nutrientpoor_phagy <- msci_nutrientpoor_phagy$hypothesis$CI.Lower
+ul_msci_nutrientpoor_phagy <- msci_nutrientpoor_phagy$hypothesis$CI.Upper
+
+estimate_msci_nutrientrich_phagy <- msci_nutrientrich_phagy$hypothesis$Estimate
+se_msci_nutrientrich_phagy <- msci_nutrientrich_phagy$hypothesis$Est.Error
+ll_msci_nutrientrich_phagy <- msci_nutrientrich_phagy$hypothesis$CI.Lower
+ul_msci_nutrientrich_phagy <- msci_nutrientrich_phagy$hypothesis$CI.Upper
+
+estimate_msci_verynutrientpoor_phagy <- msci_verynutrientpoor_phagy$hypothesis$Estimate
+se_msci_verynutrientpoor_phagy <- msci_verynutrientpoor_phagy$hypothesis$Est.Error
+ll_msci_verynutrientpoor_phagy <- msci_verynutrientpoor_phagy$hypothesis$CI.Lower
+ul_msci_verynutrientpoor_phagy <- msci_verynutrientpoor_phagy$hypothesis$CI.Upper
+
+estimate_msci_verynutrientrich_phagy <- msci_verynutrientrich_phagy$hypothesis$Estimate
+se_msci_verynutrientrich_phagy <- msci_verynutrientrich_phagy$hypothesis$Est.Error
+ll_msci_verynutrientrich_phagy <- msci_verynutrientrich_phagy$hypothesis$CI.Lower
+ul_msci_verynutrientrich_phagy <- msci_verynutrientrich_phagy$hypothesis$CI.Upper
 ```
 
 ```{r}
-pp_check(fit3,
-  type = "dens_overlay_grouped", ndraws = 100,
-  group = "period"
-)
+# Create dataframe
+ellenberg_phagy_summary_df <- tibble(
+  est_msci     = c(estimate_msci_nutrientpoor_phagy, 
+                   estimate_msci_nutrientrich_phagy,
+                   estimate_msci_verynutrientpoor_phagy,
+                   estimate_msci_verynutrientrich_phagy),
+  se_msci      = c(se_msci_nutrientpoor_phagy, 
+                   se_msci_nutrientrich_phagy,
+                   se_msci_verynutrientpoor_phagy,
+                   se_msci_verynutrientrich_phagy),
+  ll_msci      = c(ll_msci_nutrientpoor_phagy, 
+                   ll_msci_nutrientrich_phagy,
+                   ll_msci_verynutrientpoor_phagy,
+                   ll_msci_verynutrientrich_phagy),
+  ul_msci      = c(ul_msci_nutrientpoor_phagy, 
+                   ul_msci_nutrientrich_phagy,
+                   ul_msci_verynutrientpoor_phagy,
+                   ul_msci_verynutrientrich_phagy),
+  Phagy = rep(c("Monophagous", "Oligophagous", "Polyphagous"), 4),
+  EllenbergN = factor(rep(c("NutrientPoor", "NutrientRich", "VeryNutrientPoor", 
+                             "VeryNutrientRich"), each = 3),
+                       levels = c("VeryNutrientPoor", "NutrientPoor", "NutrientRich", 
+                       "VeryNutrientRich"), ordered = TRUE)
+  ) %>%
+  arrange(Phagy, EllenbergN)
 
-pp_check(fit3,
-  type = "dens_overlay_grouped", ndraws = 100,
-  group = "Phagy"
-)
-
-pp_check(fit3,
-  type = "dens_overlay_grouped", ndraws = 100,
-  group = "EllenbergN"
-)
+ellenberg_phagy_summary_df %>%
+  kable(digits = 3)
 ```
-
 
 ```{r}
-post_dat3 <- dat3 %>%
-  mutate(pm_count = rv_posterior_epred(., fit3))
-
-post_msci <- post_dat3 %>% 
-  group_by(period, Phagy, EllenbergN) %>%
-  summarise(mean_count = rvar_mean(pm_count)) %>%
-  ungroup()
+# Plot
+ellenberg_phagy_summary_df %>%
+  ggplot(aes(y = est_msci, x = EllenbergN, colour = EllenbergN)) +
+    geom_hline(yintercept = 0, linetype = 2) +
+    geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+    geom_point(size = 4) +
+    geom_errorbar(aes(ymin = ll_msci, ymax = ul_msci), width = 0.1) +
+    labs(x = "", y = "Multispecies Change Index") +
+    theme(legend.position = "",
+          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    facet_wrap(~Phagy, scales = "free_x")
 ```
 
+### Conclusion
+
+We see that monophagous species perform better in the second compared to the reference period. For oligophagous and polyphagous species there is no significant difference.
+We see an increase in MSCI from poorer to richer nutrients.
+
+When we combine both traits we see a more complicated picture. Monophagous species only perform better if they are linked to (very) nutrient rich habitats. Monophagous species of very nutrient poor habitats even have a significant negative MSCI. For oligophagous and polyphagous species we see no significant differences for any nutrient group. Only polyphagous species in nutrient poor habitats are less prevalent than in the reference period.
+
+This phenomenon is called Simpson's paradox. We realize now that an increase in MSCI from poor to rich nutrients is only valid for monophagous species, not for oligophagous or polyphagous species. We also observe that monophagous only have a significant higher MSCI for (very) nutrient rich habitats.
+
+To avoid erroneous conclusions related to this paradox, we will select the $t$ most important traits that we are interested in and order these from most important to least important ($1, ..., t$). We create a model with the most important trait. Afterwards we add the second trait etc. We only keep groups containing more than 10 species.
