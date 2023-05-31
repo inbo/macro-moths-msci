@@ -52,12 +52,12 @@ species_traits_final <- read_csv(file.path(out_path, "prop_data_per_trait.csv"))
 We do not know all the traits for the following species.
 
 ```{r}
-species_traits_final %>% 
+species_traits_final %>%
   filter(is.na(trait_value)) %>%
   distinct(species_nl, trait_name) %>%
   mutate(val = 1) %>%
   pivot_wider(names_from = trait_name, values_from = val) %>%
-  mutate(across(-c(species_nl), ~replace(.x, .x == 1, cur_column()))) %>%
+  mutate(across(-c(species_nl), ~ replace(.x, .x == 1, cur_column()))) %>%
   unite("trait_name", -c(species_nl), sep = ", ", na.rm = TRUE) %>%
   kable()
 ```
@@ -69,8 +69,9 @@ dubbles <- species_traits_final %>%
   count(species_nl, period, trait_name) %>%
   filter(n > 1) %>%
   distinct(species_nl, trait_name) %>%
-  inner_join(distinct(species_traits_final, species_nl, trait_name, trait_value), 
-             by = join_by(species_nl, trait_name))
+  inner_join(distinct(species_traits_final, species_nl, trait_name, trait_value),
+    by = join_by(species_nl, trait_name)
+  )
 
 dubbles %>%
   kable()
@@ -84,15 +85,17 @@ We avoid problems for species with more than one trait value within the same tra
 design_df <- dubbles %>%
   rowid_to_column("id") %>%
   mutate(species_new = ifelse(id %% 2 != 0,
-                                paste(species_nl, 1),
-                                paste(species_nl, 2))) %>%
+    paste(species_nl, 1),
+    paste(species_nl, 2)
+  )) %>%
   select(-id)
 
 species_traits_final_new <- species_traits_final %>%
   full_join(design_df, by = join_by(species_nl, trait_name, trait_value)) %>%
-  mutate(species_nl = ifelse(!is.na(species_new), 
-                               species_new, 
-                               species_nl)) %>%
+  mutate(species_nl = ifelse(!is.na(species_new),
+    species_new,
+    species_nl
+  )) %>%
   select(-species_new) %>%
   filter(!is.na(trait_value))
 ```
@@ -107,8 +110,9 @@ How many data do we have for each trait?
 univar_summary <- species_traits_final_new %>%
   count(trait_name, trait_value, period) %>%
   distinct(trait_name, trait_value, n) %>%
-  mutate("n <= 10" = ifelse(is.na(trait_value), "NA", 
-                            ifelse(n <= 10, "YES", "no"))) %>%
+  mutate("n <= 10" = ifelse(is.na(trait_value), "NA",
+    ifelse(n <= 10, "YES", "no")
+  )) %>%
   arrange(trait_name, trait_value)
 
 univar_summary %>%
@@ -130,14 +134,18 @@ cross_tab <- function(df, row, column, print = TRUE) {
   cross_table <- df %>%
     filter(trait_name %in% c(row, column)) %>%
     distinct(species_nl, trait_name, trait_value) %>%
-    pivot_wider(id_cols = species_nl, names_from = trait_name, 
-                values_from = trait_value) %>%
+    pivot_wider(
+      id_cols = species_nl, names_from = trait_name,
+      values_from = trait_value
+    ) %>%
     drop_na() %>%
     count(!!sym(row), !!sym(column)) %>%
-    pivot_wider(id_cols = !!sym(row), names_from = !!sym(column), 
-                values_from = n) %>%
-    mutate_all(~replace(., is.na(.), 0))
-  
+    pivot_wider(
+      id_cols = !!sym(row), names_from = !!sym(column),
+      values_from = n
+    ) %>%
+    mutate_all(~ replace(., is.na(.), 0))
+
   if (isTRUE(print)) {
     return(print(cross_table))
   } else {
@@ -147,7 +155,7 @@ cross_tab <- function(df, row, column, print = TRUE) {
 ```
 
 ```{r}
-small_traits <- univar_summary %>% 
+small_traits <- univar_summary %>%
   filter(n <= 10) %>%
   pull(trait_value)
 
@@ -158,9 +166,9 @@ combinations <- combn(unique(filtered_df$trait_name), 2)
 
 for (i in seq_len(ncol(combinations))) {
   combo <- combinations[, i]
-  
-  if (!(setequal(c("HabitatTemperature", "TempHum"), combo) | 
-      setequal(c("TempHum", "HabitatHumidity"), combo))) {
+
+  if (!(setequal(c("HabitatTemperature", "TempHum"), combo) |
+    setequal(c("TempHum", "HabitatHumidity"), combo))) {
     print("------------------------------------------------")
     print(combo)
     cross_tab(filtered_df, combo[1], combo[2])

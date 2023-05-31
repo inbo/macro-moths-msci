@@ -250,7 +250,7 @@ msci_monophagous <- hypothesis(
   class = "b", alpha = 0.05
 )
 
-#Estimate MSCI 'Oligophagous'
+# Estimate MSCI 'Oligophagous'
 msci_oligophagous <- hypothesis(
   x = fit_phag,
   "exp(periodp2013_2022 + periodp2013_2022:trait_valueOligophagous) - 1 = 0",
@@ -284,30 +284,38 @@ ul_msci_polyphagous <- msci_polyphagous$hypothesis$CI.Upper
 
 # Create dataframe
 phagy_summary_df <- tibble(
-  est_msci     = c(estimate_msci_monophagous, 
-                   estimate_msci_oligophagous,
-                   estimate_msci_polyphagous),
-  se_msci      = c(se_msci_monophagous, 
-                   se_msci_oligophagous,
-                   se_msci_polyphagous),
-  ll_msci      = c(ll_msci_monophagous, 
-                   ll_msci_oligophagous,
-                   ll_msci_polyphagous),
-  ul_msci      = c(ul_msci_monophagous, 
-                   ul_msci_oligophagous,
-                   ul_msci_polyphagous),
+  est_msci = c(
+    estimate_msci_monophagous,
+    estimate_msci_oligophagous,
+    estimate_msci_polyphagous
+  ),
+  se_msci = c(
+    se_msci_monophagous,
+    se_msci_oligophagous,
+    se_msci_polyphagous
+  ),
+  ll_msci = c(
+    ll_msci_monophagous,
+    ll_msci_oligophagous,
+    ll_msci_polyphagous
+  ),
+  ul_msci = c(
+    ul_msci_monophagous,
+    ul_msci_oligophagous,
+    ul_msci_polyphagous
+  ),
   trait_value = c("Monophagous", "Oligophagous", "Polyphagous")
-  )
+)
 
 # Plot
 phagy_summary_df %>%
   ggplot(aes(y = est_msci, x = trait_value, colour = trait_value)) +
-    geom_hline(yintercept = 0, linetype = 2) +
-    geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
-    geom_point(size = 4) +
-    geom_errorbar(aes(ymin = ll_msci, ymax = ul_msci), width = 0.1) +
-    labs(x = "", y = "Multispecies Change Index", title = "Phagy") +
-    theme(legend.position = "")
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+  geom_point(size = 4) +
+  geom_errorbar(aes(ymin = ll_msci, ymax = ul_msci), width = 0.1) +
+  labs(x = "", y = "Multispecies Change Index", title = "Phagy") +
+  theme(legend.position = "")
 ```
 
 Then at 'EllenbergN':
@@ -387,37 +395,51 @@ ul_msci_verynutrientrich <- msci_verynutrientrich$hypothesis$CI.Upper
 
 # Create dataframe
 ellenberg_summary_df <- tibble(
-  est_msci     = c(estimate_msci_nutrientpoor, 
-                   estimate_msci_nutrientrich,
-                   estimate_msci_verynutrientpoor,
-                   estimate_msci_verynutrientrich),
-  se_msci      = c(se_msci_nutrientpoor, 
-                   se_msci_nutrientrich,
-                   se_msci_verynutrientpoor,
-                   se_msci_verynutrientrich),
-  ll_msci      = c(ll_msci_nutrientpoor, 
-                   ll_msci_nutrientrich,
-                   ll_msci_verynutrientpoor,
-                   ll_msci_verynutrientrich),
-  ul_msci      = c(ul_msci_nutrientpoor, 
-                   ul_msci_nutrientrich,
-                   ul_msci_verynutrientpoor,
-                   ul_msci_verynutrientrich),
-  trait_value = factor(c("NutrientPoor", "NutrientRich", "VeryNutrientPoor", 
-                       "VeryNutrientRich"),
-                       levels = c("VeryNutrientPoor", "NutrientPoor", "NutrientRich", 
-                       "VeryNutrientRich"), ordered = TRUE)
+  est_msci = c(
+    estimate_msci_nutrientpoor,
+    estimate_msci_nutrientrich,
+    estimate_msci_verynutrientpoor,
+    estimate_msci_verynutrientrich
+  ),
+  se_msci = c(
+    se_msci_nutrientpoor,
+    se_msci_nutrientrich,
+    se_msci_verynutrientpoor,
+    se_msci_verynutrientrich
+  ),
+  ll_msci = c(
+    ll_msci_nutrientpoor,
+    ll_msci_nutrientrich,
+    ll_msci_verynutrientpoor,
+    ll_msci_verynutrientrich
+  ),
+  ul_msci = c(
+    ul_msci_nutrientpoor,
+    ul_msci_nutrientrich,
+    ul_msci_verynutrientpoor,
+    ul_msci_verynutrientrich
+  ),
+  trait_value = factor(
+    c(
+      "NutrientPoor", "NutrientRich", "VeryNutrientPoor",
+      "VeryNutrientRich"
+    ),
+    levels = c(
+      "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
+      "VeryNutrientRich"
+    ), ordered = TRUE
   )
+)
 
 # Plot
 ellenberg_summary_df %>%
   ggplot(aes(y = est_msci, x = trait_value, colour = trait_value)) +
-    geom_hline(yintercept = 0, linetype = 2) +
-    geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
-    geom_point(size = 4) +
-    geom_errorbar(aes(ymin = ll_msci, ymax = ul_msci), width = 0.1) +
-    labs(x = "", y = "Multispecies Change Index", title = "EllenbergN") +
-    theme(legend.position = "")
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+  geom_point(size = 4) +
+  geom_errorbar(aes(ymin = ll_msci, ymax = ul_msci), width = 0.1) +
+  labs(x = "", y = "Multispecies Change Index", title = "EllenbergN") +
+  theme(legend.position = "")
 ```
 
 Do the trends change when the groups are combined (= Simpson's paradox)?
@@ -425,8 +447,10 @@ Do the trends change when the groups are combined (= Simpson's paradox)?
 ```{r}
 dat3 <- species_traits_final %>%
   filter(trait_name %in% c("EllenbergN", "Phagy")) %>%
-  pivot_wider(id_cols = c(species_nl, n_grids, period, sum_per_period),
-              names_from = trait_name, values_from = trait_value)
+  pivot_wider(
+    id_cols = c(species_nl, n_grids, period, sum_per_period),
+    names_from = trait_name, values_from = trait_value
+  )
 
 # MCMC parameters
 nchains <- 3 # number of chains
@@ -449,33 +473,41 @@ fit3 <- brm(
 ```{r}
 msci_nutrientpoor_phagy <- hypothesis(
   x = fit3,
-  c("exp(periodp2013_2022) - 1 = 0",
+  c(
+    "exp(periodp2013_2022) - 1 = 0",
     "exp(periodp2013_2022 + periodp2013_2022:PhagyOligophagous) - 1 = 0",
-    "exp(periodp2013_2022 + periodp2013_2022:PhagyPolyphagous) - 1 = 0"),
+    "exp(periodp2013_2022 + periodp2013_2022:PhagyPolyphagous) - 1 = 0"
+  ),
   class = "b", alpha = 0.05
 )
 
 msci_verynutrientpoor_phagy <- hypothesis(
   x = fit3,
-  c("exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientPoor) - 1 = 0",
-   "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientPoor + periodp2013_2022:PhagyOligophagous + periodp2013_2022:PhagyOligophagous:EllenbergNVeryNutrientPoor) - 1 = 0",
-   "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientPoor + periodp2013_2022:PhagyPolyphagous + periodp2013_2022:PhagyPolyphagous:EllenbergNVeryNutrientPoor) - 1 = 0"),
+  c(
+    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientPoor) - 1 = 0",
+    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientPoor + periodp2013_2022:PhagyOligophagous + periodp2013_2022:PhagyOligophagous:EllenbergNVeryNutrientPoor) - 1 = 0",
+    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientPoor + periodp2013_2022:PhagyPolyphagous + periodp2013_2022:PhagyPolyphagous:EllenbergNVeryNutrientPoor) - 1 = 0"
+  ),
   class = "b", alpha = 0.05
 )
 
 msci_nutrientrich_phagy <- hypothesis(
   x = fit3,
-  c("exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich) - 1 = 0",
-   "exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich + periodp2013_2022:PhagyOligophagous + periodp2013_2022:PhagyOligophagous:EllenbergNNutrientRich) - 1 = 0",
-   "exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich + periodp2013_2022:PhagyPolyphagous + periodp2013_2022:PhagyPolyphagous:EllenbergNNutrientRich) - 1 = 0"),
+  c(
+    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich) - 1 = 0",
+    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich + periodp2013_2022:PhagyOligophagous + periodp2013_2022:PhagyOligophagous:EllenbergNNutrientRich) - 1 = 0",
+    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich + periodp2013_2022:PhagyPolyphagous + periodp2013_2022:PhagyPolyphagous:EllenbergNNutrientRich) - 1 = 0"
+  ),
   class = "b", alpha = 0.05
 )
 
 msci_verynutrientrich_phagy <- hypothesis(
   x = fit3,
-  c("exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientRich) - 1 = 0",
+  c(
+    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientRich) - 1 = 0",
     "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientRich + periodp2013_2022:PhagyOligophagous + periodp2013_2022:PhagyOligophagous:EllenbergNVeryNutrientRich) - 1 = 0",
-    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientRich + periodp2013_2022:PhagyPolyphagous + periodp2013_2022:PhagyPolyphagous:EllenbergNVeryNutrientRich) - 1 = 0"),
+    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientRich + periodp2013_2022:PhagyPolyphagous + periodp2013_2022:PhagyPolyphagous:EllenbergNVeryNutrientRich) - 1 = 0"
+  ),
   class = "b", alpha = 0.05
 )
 
@@ -503,28 +535,42 @@ ul_msci_verynutrientrich_phagy <- msci_verynutrientrich_phagy$hypothesis$CI.Uppe
 ```{r}
 # Create dataframe
 ellenberg_phagy_summary_df <- tibble(
-  est_msci     = c(estimate_msci_nutrientpoor_phagy, 
-                   estimate_msci_nutrientrich_phagy,
-                   estimate_msci_verynutrientpoor_phagy,
-                   estimate_msci_verynutrientrich_phagy),
-  se_msci      = c(se_msci_nutrientpoor_phagy, 
-                   se_msci_nutrientrich_phagy,
-                   se_msci_verynutrientpoor_phagy,
-                   se_msci_verynutrientrich_phagy),
-  ll_msci      = c(ll_msci_nutrientpoor_phagy, 
-                   ll_msci_nutrientrich_phagy,
-                   ll_msci_verynutrientpoor_phagy,
-                   ll_msci_verynutrientrich_phagy),
-  ul_msci      = c(ul_msci_nutrientpoor_phagy, 
-                   ul_msci_nutrientrich_phagy,
-                   ul_msci_verynutrientpoor_phagy,
-                   ul_msci_verynutrientrich_phagy),
+  est_msci = c(
+    estimate_msci_nutrientpoor_phagy,
+    estimate_msci_nutrientrich_phagy,
+    estimate_msci_verynutrientpoor_phagy,
+    estimate_msci_verynutrientrich_phagy
+  ),
+  se_msci = c(
+    se_msci_nutrientpoor_phagy,
+    se_msci_nutrientrich_phagy,
+    se_msci_verynutrientpoor_phagy,
+    se_msci_verynutrientrich_phagy
+  ),
+  ll_msci = c(
+    ll_msci_nutrientpoor_phagy,
+    ll_msci_nutrientrich_phagy,
+    ll_msci_verynutrientpoor_phagy,
+    ll_msci_verynutrientrich_phagy
+  ),
+  ul_msci = c(
+    ul_msci_nutrientpoor_phagy,
+    ul_msci_nutrientrich_phagy,
+    ul_msci_verynutrientpoor_phagy,
+    ul_msci_verynutrientrich_phagy
+  ),
   Phagy = rep(c("Monophagous", "Oligophagous", "Polyphagous"), 4),
-  EllenbergN = factor(rep(c("NutrientPoor", "NutrientRich", "VeryNutrientPoor", 
-                             "VeryNutrientRich"), each = 3),
-                       levels = c("VeryNutrientPoor", "NutrientPoor", "NutrientRich", 
-                       "VeryNutrientRich"), ordered = TRUE)
-  ) %>%
+  EllenbergN = factor(
+    rep(c(
+      "NutrientPoor", "NutrientRich", "VeryNutrientPoor",
+      "VeryNutrientRich"
+    ), each = 3),
+    levels = c(
+      "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
+      "VeryNutrientRich"
+    ), ordered = TRUE
+  )
+) %>%
   arrange(Phagy, EllenbergN)
 
 ellenberg_phagy_summary_df %>%
@@ -535,14 +581,16 @@ ellenberg_phagy_summary_df %>%
 # Plot
 ellenberg_phagy_summary_df %>%
   ggplot(aes(y = est_msci, x = EllenbergN, colour = EllenbergN)) +
-    geom_hline(yintercept = 0, linetype = 2) +
-    geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
-    geom_point(size = 4) +
-    geom_errorbar(aes(ymin = ll_msci, ymax = ul_msci), width = 0.1) +
-    labs(x = "", y = "Multispecies Change Index") +
-    theme(legend.position = "",
-          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-    facet_wrap(~Phagy, scales = "free_x")
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+  geom_point(size = 4) +
+  geom_errorbar(aes(ymin = ll_msci, ymax = ul_msci), width = 0.1) +
+  labs(x = "", y = "Multispecies Change Index") +
+  theme(
+    legend.position = "",
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+  ) +
+  facet_wrap(~Phagy, scales = "free_x")
 ```
 
 ### Conclusion
