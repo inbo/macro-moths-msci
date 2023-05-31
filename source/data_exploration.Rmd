@@ -69,7 +69,11 @@ dubbles <- species_traits_final %>%
   count(species_nl, period, trait_name) %>%
   filter(n > 1) %>%
   distinct(species_nl, trait_name) %>%
-  inner_join(distinct(species_traits_final, species_nl, trait_name, trait_value),
+  inner_join(
+    distinct(
+      species_traits_final, species_nl, trait_name,
+      trait_value
+    ),
     by = join_by(species_nl, trait_name)
   )
 
@@ -132,11 +136,11 @@ We can look at combinations of traits. Do we see any interesting correlations?
 ```{r}
 cross_tab <- function(df, row, column, print = TRUE) {
   cross_table <- df %>%
-    filter(trait_name %in% c(row, column)) %>%
-    distinct(species_nl, trait_name, trait_value) %>%
+    filter(.data$trait_name %in% c(row, column)) %>%
+    distinct(.data$species_nl, .data$trait_name, .data$trait_value) %>%
     pivot_wider(
-      id_cols = species_nl, names_from = trait_name,
-      values_from = trait_value
+      id_cols = .data$species_nl, names_from = .data$trait_name,
+      values_from = .data$trait_value
     ) %>%
     drop_na() %>%
     count(!!sym(row), !!sym(column)) %>%
@@ -167,7 +171,7 @@ combinations <- combn(unique(filtered_df$trait_name), 2)
 for (i in seq_len(ncol(combinations))) {
   combo <- combinations[, i]
 
-  if (!(setequal(c("HabitatTemperature", "TempHum"), combo) |
+  if (!(setequal(c("HabitatTemperature", "TempHum"), combo) ||
     setequal(c("TempHum", "HabitatHumidity"), combo))) {
     print("------------------------------------------------")
     print(combo)

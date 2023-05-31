@@ -361,14 +361,20 @@ msci_nutrientrich <- hypothesis(
 # Estimate MSCI 'VeryNutrientPoor'
 msci_verynutrientpoor <- hypothesis(
   x = fit_ellenberg,
-  "exp(periodp2013_2022 + periodp2013_2022:trait_valueVeryNutrientPoor) - 1 = 0",
+  paste(
+    "exp(periodp2013_2022 +",
+    "periodp2013_2022:trait_valueVeryNutrientPoor) - 1 = 0"
+  ),
   class = "b", alpha = 0.05
 )
 
 # Estimate MSCI 'VeryNutrientRich'
 msci_verynutrientrich <- hypothesis(
   x = fit_ellenberg,
-  "exp(periodp2013_2022 + periodp2013_2022:trait_valueVeryNutrientRich) - 1 = 0",
+  paste(
+    "exp(periodp2013_2022 +",
+    "periodp2013_2022:trait_valueVeryNutrientRich) - 1 = 0"
+  ),
   class = "b", alpha = 0.05
 )
 
@@ -484,9 +490,24 @@ msci_nutrientpoor_phagy <- hypothesis(
 msci_verynutrientpoor_phagy <- hypothesis(
   x = fit3,
   c(
-    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientPoor) - 1 = 0",
-    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientPoor + periodp2013_2022:PhagyOligophagous + periodp2013_2022:PhagyOligophagous:EllenbergNVeryNutrientPoor) - 1 = 0",
-    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientPoor + periodp2013_2022:PhagyPolyphagous + periodp2013_2022:PhagyPolyphagous:EllenbergNVeryNutrientPoor) - 1 = 0"
+    paste(
+      "exp(periodp2013_2022 +",
+      "periodp2013_2022:EllenbergNVeryNutrientPoor) - 1 = 0"
+    ),
+    paste(
+      "exp(periodp2013_2022 +",
+      "periodp2013_2022:EllenbergNVeryNutrientPoor +",
+      "periodp2013_2022:PhagyOligophagous +",
+      "periodp2013_2022:PhagyOligophagous:EllenbergNVeryNutrientPoor)",
+      "- 1 = 0"
+    ),
+    paste(
+      "exp(periodp2013_2022 +",
+      "periodp2013_2022:EllenbergNVeryNutrientPoor +",
+      "periodp2013_2022:PhagyPolyphagous +",
+      "periodp2013_2022:PhagyPolyphagous:EllenbergNVeryNutrientPoor)",
+      "- 1 = 0"
+    )
   ),
   class = "b", alpha = 0.05
 )
@@ -495,8 +516,16 @@ msci_nutrientrich_phagy <- hypothesis(
   x = fit3,
   c(
     "exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich) - 1 = 0",
-    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich + periodp2013_2022:PhagyOligophagous + periodp2013_2022:PhagyOligophagous:EllenbergNNutrientRich) - 1 = 0",
-    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich + periodp2013_2022:PhagyPolyphagous + periodp2013_2022:PhagyPolyphagous:EllenbergNNutrientRich) - 1 = 0"
+    paste(
+      "exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich +",
+      "periodp2013_2022:PhagyOligophagous +",
+      "periodp2013_2022:PhagyOligophagous:EllenbergNNutrientRich) - 1 = 0"
+    ),
+    paste(
+      "exp(periodp2013_2022 + periodp2013_2022:EllenbergNNutrientRich +",
+      "periodp2013_2022:PhagyPolyphagous +",
+      "periodp2013_2022:PhagyPolyphagous:EllenbergNNutrientRich) - 1 = 0"
+    )
   ),
   class = "b", alpha = 0.05
 )
@@ -504,60 +533,75 @@ msci_nutrientrich_phagy <- hypothesis(
 msci_verynutrientrich_phagy <- hypothesis(
   x = fit3,
   c(
-    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientRich) - 1 = 0",
-    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientRich + periodp2013_2022:PhagyOligophagous + periodp2013_2022:PhagyOligophagous:EllenbergNVeryNutrientRich) - 1 = 0",
-    "exp(periodp2013_2022 + periodp2013_2022:EllenbergNVeryNutrientRich + periodp2013_2022:PhagyPolyphagous + periodp2013_2022:PhagyPolyphagous:EllenbergNVeryNutrientRich) - 1 = 0"
+    paste(
+      "exp(periodp2013_2022 +",
+      "periodp2013_2022:EllenbergNVeryNutrientRich) - 1 = 0"
+    ),
+    paste(
+      "exp(periodp2013_2022 +",
+      "periodp2013_2022:EllenbergNVeryNutrientRich +",
+      "periodp2013_2022:PhagyOligophagous +",
+      "periodp2013_2022:PhagyOligophagous:EllenbergNVeryNutrientRich)",
+      "- 1 = 0"
+    ),
+    paste(
+      "exp(periodp2013_2022 +",
+      "periodp2013_2022:EllenbergNVeryNutrientRich +",
+      "periodp2013_2022:PhagyPolyphagous +",
+      "periodp2013_2022:PhagyPolyphagous:EllenbergNVeryNutrientRich)",
+      "- 1 = 0"
+    )
   ),
   class = "b", alpha = 0.05
 )
 
-estimate_msci_nutrientpoor_phagy <- msci_nutrientpoor_phagy$hypothesis$Estimate
-se_msci_nutrientpoor_phagy <- msci_nutrientpoor_phagy$hypothesis$Est.Error
-ll_msci_nutrientpoor_phagy <- msci_nutrientpoor_phagy$hypothesis$CI.Lower
-ul_msci_nutrientpoor_phagy <- msci_nutrientpoor_phagy$hypothesis$CI.Upper
+est_msci_nutpoor_phagy <- msci_nutpoor_phagy$hypothesis$Estimate
+se_msci_nutpoor_phagy <- msci_nutpoor_phagy$hypothesis$Est.Error
+ll_msci_nutpoor_phagy <- msci_nutpoor_phagy$hypothesis$CI.Lower
+ul_msci_nutpoor_phagy <- msci_nutpoor_phagy$hypothesis$CI.Upper
 
-estimate_msci_nutrientrich_phagy <- msci_nutrientrich_phagy$hypothesis$Estimate
-se_msci_nutrientrich_phagy <- msci_nutrientrich_phagy$hypothesis$Est.Error
-ll_msci_nutrientrich_phagy <- msci_nutrientrich_phagy$hypothesis$CI.Lower
-ul_msci_nutrientrich_phagy <- msci_nutrientrich_phagy$hypothesis$CI.Upper
+est_msci_nutrich_phagy <- msci_nutrich_phagy$hypothesis$est
+se_msci_nutrich_phagy <- msci_nutrich_phagy$hypothesis$Est.Error
+ll_msci_nutrich_phagy <- msci_nutrich_phagy$hypothesis$CI.Lower
+ul_msci_nutrich_phagy <- msci_nutrich_phagy$hypothesis$CI.Upper
 
-estimate_msci_verynutrientpoor_phagy <- msci_verynutrientpoor_phagy$hypothesis$Estimate
-se_msci_verynutrientpoor_phagy <- msci_verynutrientpoor_phagy$hypothesis$Est.Error
-ll_msci_verynutrientpoor_phagy <- msci_verynutrientpoor_phagy$hypothesis$CI.Lower
-ul_msci_verynutrientpoor_phagy <- msci_verynutrientpoor_phagy$hypothesis$CI.Upper
+est_msci_verynutpoor_phagy <- msci_verynutpoor_phagy$hypothesis$est
+se_msci_verynutpoor_phagy <- msci_verynutpoor_phagy$hypothesis$Est.Error
+ll_msci_verynutpoor_phagy <- msci_verynutpoor_phagy$hypothesis$CI.Lower
+ul_msci_verynutpoor_phagy <- msci_verynutpoor_phagy$hypothesis$CI.Upper
 
-estimate_msci_verynutrientrich_phagy <- msci_verynutrientrich_phagy$hypothesis$Estimate
-se_msci_verynutrientrich_phagy <- msci_verynutrientrich_phagy$hypothesis$Est.Error
-ll_msci_verynutrientrich_phagy <- msci_verynutrientrich_phagy$hypothesis$CI.Lower
-ul_msci_verynutrientrich_phagy <- msci_verynutrientrich_phagy$hypothesis$CI.Upper
+est_msci_verynutrich_phagy <- msci_verynutrich_phagy$hypothesis$est
+se_msci_verynutrich_phagy <- msci_verynutrich_phagy$hypothesis$Est.Error
+ll_msci_verynutrich_phagy <- msci_verynutrich_phagy$hypothesis$CI.Lower
+ul_msci_verynutrich_phagy <- msci_verynutrich_phagy$hypothesis$CI.Upper
 ```
 
 ```{r}
 # Create dataframe
 ellenberg_phagy_summary_df <- tibble(
   est_msci = c(
-    estimate_msci_nutrientpoor_phagy,
-    estimate_msci_nutrientrich_phagy,
-    estimate_msci_verynutrientpoor_phagy,
-    estimate_msci_verynutrientrich_phagy
+    est_msci_nutpoor_phagy,
+    est_msci_nutrich_phagy,
+    est_msci_verynutpoor_phagy,
+    est_msci_verynutrich_phagy
   ),
   se_msci = c(
-    se_msci_nutrientpoor_phagy,
-    se_msci_nutrientrich_phagy,
-    se_msci_verynutrientpoor_phagy,
-    se_msci_verynutrientrich_phagy
+    se_msci_nutpoor_phagy,
+    se_msci_nutrich_phagy,
+    se_msci_verynutpoor_phagy,
+    se_msci_verynutrich_phagy
   ),
   ll_msci = c(
-    ll_msci_nutrientpoor_phagy,
-    ll_msci_nutrientrich_phagy,
-    ll_msci_verynutrientpoor_phagy,
-    ll_msci_verynutrientrich_phagy
+    ll_msci_nutpoor_phagy,
+    ll_msci_nutrich_phagy,
+    ll_msci_verynutpoor_phagy,
+    ll_msci_verynutrich_phagy
   ),
   ul_msci = c(
-    ul_msci_nutrientpoor_phagy,
-    ul_msci_nutrientrich_phagy,
-    ul_msci_verynutrientpoor_phagy,
-    ul_msci_verynutrientrich_phagy
+    ul_msci_nutpoor_phagy,
+    ul_msci_nutrich_phagy,
+    ul_msci_verynutpoor_phagy,
+    ul_msci_verynutrich_phagy
   ),
   Phagy = rep(c("Monophagous", "Oligophagous", "Polyphagous"), 4),
   EllenbergN = factor(
