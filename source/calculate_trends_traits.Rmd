@@ -162,7 +162,7 @@ msci_draws_df1 %>%
   geom_hline(yintercept = 0, linetype = 2) +
   geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
   scale_fill_identity() +
-  labs(x = "", y = "Multi species change index") +
+  labs(x = "", y = "Multispecies Change Index") +
   theme(legend.position = "")
 ```
 
@@ -231,6 +231,7 @@ summ_df2 <- msci_draws_df2 %>%
 
 ```{r}
 summ_df2 %>%
+  rename(msci = mean) %>%
   kable()
 ```
 
@@ -248,7 +249,7 @@ msci_draws_df2 %>%
   geom_hline(yintercept = 0, linetype = 2) +
   geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
   scale_fill_identity() +
-  labs(x = "", y = "Multi species change index") +
+  labs(x = "", y = "Multispecies Change Index") +
   theme(legend.position = "")
 ```
 
@@ -307,6 +308,7 @@ summ_df_phag <- msci_draws_df_phag %>%
 
 ```{r}
 summ_df_phag %>%
+  rename(msci = mean) %>%
   kable()
 ```
 
@@ -324,7 +326,7 @@ msci_draws_df_phag %>%
   geom_hline(yintercept = 0, linetype = 2) +
   geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
   scale_fill_identity() +
-  labs(x = "", y = "Multi species change index") +
+  labs(x = "", y = "Multispecies Change Index") +
   theme(legend.position = "")
 ```
 
@@ -377,6 +379,7 @@ summ_df_ellenberg <- msci_draws_df_ellenberg %>%
 
 ```{r}
 summ_df_ellenberg %>%
+  rename(msci = mean) %>%
   kable()
 ```
 
@@ -398,7 +401,7 @@ msci_draws_df_ellenberg %>%
   geom_hline(yintercept = 0, linetype = 2) +
   geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
   scale_fill_identity() +
-  labs(x = "", y = "Multi species change index") +
+  labs(x = "", y = "Multispecies Change Index") +
   theme(legend.position = "")
 ```
 
@@ -491,6 +494,7 @@ summ_ellenberg_phagy <- msci_draws_ellenberg_phagy %>%
 summ_ellenberg_phagy %>%
   select(Phagy, EllenbergN, everything()) %>%
   arrange(Phagy, EllenbergN) %>%
+  rename(msci = mean) %>%
   kable()
 ```
 
@@ -508,7 +512,7 @@ msci_draws_ellenberg_phagy %>%
   geom_hline(yintercept = 0, linetype = 2) +
   geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
   scale_fill_identity() +
-  labs(x = "", y = "Multi species change index") +
+  labs(x = "", y = "Multispecies Change Index") +
   theme(
     legend.position = "",
     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
