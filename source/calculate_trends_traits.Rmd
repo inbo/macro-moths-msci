@@ -150,7 +150,7 @@ msci_draws_df1 <- fit %>%
   mutate(DayActive = exp(b_periodp2013_2022) - 1) %>%
   select(DayActive) %>%
   pivot_longer(cols = everything(), names_to = "trait", values_to = "msci")
-  
+
 summ_df1 <- msci_draws_df1 %>%
   group_by(trait) %>%
   mean_qi() %>%
@@ -375,7 +375,9 @@ draw_matrix <- fit_ellenberg %>%
 
 contrast_mat <- create_contrast_matrix(fit_ellenberg)
 
-msci_draws_df_ellenberg <- as_tibble(exp(t(contrast_mat %*% t(draw_matrix))) - 1) %>%
+msci_draws_df_ellenberg <- as_tibble(
+  exp(t(contrast_mat %*% t(draw_matrix))) - 1
+  ) %>%
   `colnames<-`(get_traits(fit_ellenberg)) %>%
   pivot_longer(cols = everything(), names_to = "trait", values_to = "msci")
 
@@ -400,9 +402,9 @@ msci_draws_df_ellenberg %>%
     TRUE ~ "skyblue",
   )) %>%
   mutate(trait = factor(trait, levels = c(
-      "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
-      "VeryNutrientRich"
-    ), ordered = TRUE)) %>%
+    "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
+    "VeryNutrientRich"
+  ), ordered = TRUE)) %>%
   ggplot(aes(y = msci, x = trait, fill = fill_var)) +
   stat_halfeye() +
   geom_hline(yintercept = 0, linetype = 2) +
@@ -450,30 +452,36 @@ draw_matrix <- fit3 %>%
 
 contrast_mat <- rbind(
   cbind(create_contrast_matrix(3), matrix(rep(0, 9 * 3), 3)),
-  matrix(cbind(create_contrast_matrix(3), 
-             matrix(c(rep(1, 3), rep(0, 6)), ncol = 3), 
-             contr.treatment(3),
-             matrix(rep(0, 4 * 3), 3)), nrow = 3),
-  matrix(cbind(create_contrast_matrix(3), 
-             matrix(c(rep(0, 3), rep(1, 3), rep(0, 3)), ncol = 3), 
-             matrix(rep(0, 2 * 3), 3),
-             contr.treatment(3),
-             matrix(rep(0, 2 * 3), 3)), nrow = 3),
-  matrix(cbind(create_contrast_matrix(3), 
-             matrix(c(rep(0, 6), rep(1, 3)), ncol = 3), 
-             matrix(rep(0, 4 * 3), 3),
-             contr.treatment(3)), nrow = 3)
+  matrix(cbind(
+    create_contrast_matrix(3),
+    matrix(c(rep(1, 3), rep(0, 6)), ncol = 3),
+    contr.treatment(3),
+    matrix(rep(0, 4 * 3), 3)
+  ), nrow = 3),
+  matrix(cbind(
+    create_contrast_matrix(3),
+    matrix(c(rep(0, 3), rep(1, 3), rep(0, 3)), ncol = 3),
+    matrix(rep(0, 2 * 3), 3),
+    contr.treatment(3),
+    matrix(rep(0, 2 * 3), 3)
+  ), nrow = 3),
+  matrix(cbind(
+    create_contrast_matrix(3),
+    matrix(c(rep(0, 6), rep(1, 3)), ncol = 3),
+    matrix(rep(0, 4 * 3), 3),
+    contr.treatment(3)
+  ), nrow = 3)
 )
 
-EllenbergN <- sort(unique(fit3$data$EllenbergN))
-Phagy <- sort(unique(fit3$data$Phagy))
-col_names <- lapply(EllenbergN, function(i) {
-  paste(rep(i, 3), Phagy, sep = "_")
+ellenbergn <- sort(unique(fit3$data$EllenbergN))
+phagy <- sort(unique(fit3$data$Phagy))
+col_names <- lapply(ellenbergn, function(i) {
+  paste(rep(i, 3), phagy, sep = "_")
 })
 
 msci_draws_ellenberg_phagy <- as_tibble(
   exp(t(contrast_mat %*% t(draw_matrix))) - 1
-  ) %>%
+) %>%
   `colnames<-`(unlist(col_names)) %>%
   pivot_longer(cols = everything(), names_to = "trait", values_to = "msci") %>%
   separate(trait, into = c("EllenbergN", "Phagy")) %>%
@@ -482,8 +490,8 @@ msci_draws_ellenberg_phagy <- as_tibble(
     levels = c(
       "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
       "VeryNutrientRich"
-    ), ordered = TRUE)
-  )
+    ), ordered = TRUE
+  ))
 
 summ_ellenberg_phagy <- msci_draws_ellenberg_phagy %>%
   group_by(EllenbergN, Phagy) %>%
