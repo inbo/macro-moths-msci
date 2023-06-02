@@ -527,6 +527,6 @@ We see an increase in MSCI from poorer to richer nutrients.
 
 When we combine both traits we see a more complicated picture. Monophagous species only perform better if they are linked to (very) nutrient rich habitats. Monophagous species of very nutrient poor habitats even have a significant negative MSCI. For oligophagous and polyphagous species we see no significant differences for any nutrient group. Only polyphagous species in nutrient poor habitats are less prevalent than in the reference period.
 
-This phenomenon is called Simpson's paradox. We realize now that an increase in MSCI from poor to rich nutrients is only valid for monophagous species, not for oligophagous or polyphagous species. We also observe that monophagous only have a significant higher MSCI for (very) nutrient rich habitats.
+This phenomenon is called Simpson's paradox. We realize now that an increase in MSCI from poor to rich nutrients is especially pronounced for monophagous species, less for oligophagous or polyphagous species. We also observe that monophagous only have a significant higher MSCI for (very) nutrient rich habitats.
 
 To avoid erroneous conclusions related to this paradox, we will select the $t$ most important traits that we are interested in and order these from most important to least important ($1, ..., t$). We create a model with the most important trait. Afterwards we add the second trait etc. We only keep groups containing more than 10 species.
