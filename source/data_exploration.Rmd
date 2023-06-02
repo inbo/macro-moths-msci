@@ -146,7 +146,7 @@ cross_tab <- function(df, row, column, print = TRUE) {
     count(!!sym(row), !!sym(column)) %>%
     pivot_wider(
       id_cols = !!sym(row), names_from = !!sym(column),
-      values_from = n
+      values_from = .data$n
     ) %>%
     mutate_all(~ replace(., is.na(.), 0))
 
