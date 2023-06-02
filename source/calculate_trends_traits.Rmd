@@ -31,7 +31,7 @@ conflicted::conflicts_prefer(dplyr::select)
 # Packages
 library(tidyverse)
 library(brms)
-library(posterior)
+library(tidybayes)
 ```
 
 # Goal
@@ -47,6 +47,17 @@ species_traits_final_nozero <- read_csv(
   file.path(out_path, "prop_data_per_trait_nozero.csv")
 )
 species_traits_final <- read_csv(file.path(out_path, "prop_data_per_trait.csv"))
+```
+
+```{r}
+get_traits <- function(model) {
+  sort(unique(model$data$trait_value))
+}
+
+create_contrast_matrix <- function(model) {
+  n_col <- length(get_traits(model))
+  matrix(cbind(rep(1, n_col), contr.treatment(n_col)), ncol = n_col)
+}
 ```
 
 # Model specification
@@ -126,14 +137,40 @@ pp_check(fit,
 )
 ```
 
-MSCI estimate:
+Results:
 
 ```{r}
-hypothesis(
-  x = fit,
-  "exp(periodp2013_2022) - 1 = 0",
-  class = "b", alpha = 0.05
-)
+msci_draws_df1 <- fit %>%
+  spread_draws(`b_periodp2013_2022.*`, regex = TRUE) %>%
+  select(starts_with("b_periodp2013_2022")) %>%
+  mutate(DayActive = exp(b_periodp2013_2022) - 1) %>%
+  select(DayActive) %>%
+  pivot_longer(cols = everything(), names_to = "trait", values_to = "msci")
+  
+summ_df1 <- msci_draws_df1 %>%
+  group_by(trait) %>%
+  summarise_draws()
+
+summ_df1 %>%
+  kable()
+```
+
+```{r}
+msci_draws_df1 %>%
+  full_join(summ_df1, by = join_by(trait)) %>%
+  mutate(fill_var = case_when(
+    q5 > 0 ~ "chartreuse3",
+    q95 < 0 ~ "firebrick",
+    q5 < 0 & q5 > -0.2 & q95 > 0 & q95 < 0.25 ~ "gold",
+    TRUE ~ "skyblue",
+  )) %>%
+  ggplot(aes(y = msci, x = trait, fill = fill_var)) +
+  stat_halfeye() +
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+  scale_fill_identity() +
+  labs(x = "", y = "Multi species change index") +
+  theme(legend.position = "")
 ```
 
 We also create a single model for all trait values in 'Activity'.
@@ -179,34 +216,47 @@ pp_check(fit2,
 )
 ```
 
-Estimate MSCI 'DayActive':
+Results:
 
 ```{r}
-hypothesis(
-  x = fit2,
-  "exp(periodp2013_2022) - 1 = 0",
-  class = "b", alpha = 0.05
-)
+draw_matrix <- fit2 %>%
+  spread_draws(`b_periodp2013_2022.*`, regex = TRUE) %>%
+  select(starts_with("b_periodp2013_2022")) %>%
+  as.matrix()
+
+contrast_mat <- create_contrast_matrix(fit2)
+
+msci_draws_df2 <- as_tibble(exp(t(contrast_mat %*% t(draw_matrix))) - 1) %>%
+  `colnames<-`(get_traits(fit2)) %>%
+  pivot_longer(cols = everything(), names_to = "trait", values_to = "msci")
+
+summ_df2 <- msci_draws_df2 %>%
+  group_by(trait) %>%
+  summarise_draws() %>%
+  ungroup()
 ```
 
-Estimate MSCI 'DayNightActive':
-
 ```{r}
-hypothesis(
-  x = fit2,
-  "exp(periodp2013_2022 + periodp2013_2022:trait_valueDayNightActive) - 1 = 0",
-  class = "b", alpha = 0.05
-)
+summ_df2 %>%
+  kable()
 ```
 
-Estimate MSCI 'NightActive':
-
 ```{r}
-hypothesis(
-  x = fit2,
-  "exp(periodp2013_2022 + periodp2013_2022:trait_valueNightActive) - 1 = 0",
-  class = "b", alpha = 0.05
-)
+msci_draws_df2 %>%
+  full_join(summ_df2, by = join_by(trait)) %>%
+  mutate(fill_var = case_when(
+    q5 > 0 ~ "chartreuse3",
+    q95 < 0 ~ "firebrick",
+    q5 < 0 & q5 > -0.2 & q95 > 0 & q95 < 0.25 ~ "gold",
+    TRUE ~ "skyblue",
+  )) %>%
+  ggplot(aes(y = msci, x = trait, fill = fill_var)) +
+  stat_halfeye() +
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+  scale_fill_identity() +
+  labs(x = "", y = "Multi species change index") +
+  theme(legend.position = "")
 ```
 
 ### Conclusion
