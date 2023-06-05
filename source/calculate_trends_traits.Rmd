@@ -85,7 +85,7 @@ Where
 
 We set $corr(b_0, b_1) = 0$ since we want a separate (uncorrelated) deviation for both periods.
 
-## Example 1: testing model structure
+## Testing model structure
 
 Example for trait 'Activity'. First for trait value 'DayActive'.
 
@@ -257,7 +257,7 @@ msci_draws_df2 %>%
 
 The models perform well. We have a good fit and convergence. We can use these models to calculate the MSCI.
 
-## Example 2: Simpson's paradox
+## Exploration Simpson's paradox
 
 What if we compare two traits?
 
@@ -530,3 +530,9 @@ When we combine both traits we see a more complicated picture. Monophagous speci
 This phenomenon is called Simpson's paradox. We realize now that an increase in MSCI from poor to rich nutrients is especially pronounced for monophagous species, less for oligophagous or polyphagous species. We also observe that monophagous only have a significant higher MSCI for (very) nutrient rich habitats.
 
 To avoid erroneous conclusions related to this paradox, we will select the $t$ most important traits that we are interested in and order these from most important to least important ($1, ..., t$). We create a model with the most important trait. Afterwards we add the second trait etc. We only keep groups containing more than 10 species.
+
+## Exclusion of zeroes
+
+... test on dataset without zeroes, do we get large differences?
+
+
