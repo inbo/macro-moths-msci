@@ -530,3 +530,43 @@ When we combine both traits we see a more complicated picture. Monophagous speci
 This phenomenon is called Simpson's paradox. We realize now that an increase in MSCI from poor to rich nutrients is especially pronounced for monophagous species, less for oligophagous or polyphagous species. We also observe that monophagous only have a significant higher MSCI for (very) nutrient rich habitats.
 
 To avoid erroneous conclusions related to this paradox, we will select the $t$ most important traits that we are interested in and order these from most important to least important ($1, ..., t$). We create a model with the most important trait. Afterwards we add the second trait etc. We only keep groups containing more than 10 species.
+
+# Variable selection
+
+https://mc-stan.org/projpred/articles/latent.html
+
+```{r}
+library(projpred)
+```
+
+
+```{r}
+dat_selection <- species_traits_final %>%
+  filter(trait_name %in% c("EllenbergN", "Phagy", "Activity")) %>%
+  pivot_wider(
+    id_cols = c(species_nl, n_grids, period, sum_per_period),
+    names_from = trait_name, values_from = trait_value
+  )
+
+# MCMC parameters
+nchains <- 3 # number of chains
+niter <- 10000 # number of iterations (incl. burn-in)
+burnin <- niter / 4 # number of initial samples to discard (burn-in)
+nparallel <- nchains # number of cores used for parallel computing
+thinning <- 2
+
+test <- brm(
+  bf(n_grids ~ period * Phagy * EllenbergN * Activity + offset(log(sum_per_period)) +
+    (1 + period | species_nl)),
+  data = dat_selection, family = poisson(),
+  chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
+  thin = thinning
+)
+
+refm_poiss <- get_refmodel(test, latent = TRUE)
+
+vs_lat <- varsel(
+  refm_poiss
+)
+```
+
