@@ -179,3 +179,29 @@ for (i in seq_len(ncol(combinations))) {
   }
 }
 ```
+
+# Geometric means
+
+We calculate the geometric mean and 95 % confidence interval based on 1000 bootstrap samples for all traits with more than 10 species.
+
+```{r}
+geometric_mean <- species_traits_final_new %>%
+  select(-c(sum_per_period, n_grids)) %>%
+  pivot_wider(names_from = period, values_from = rel_prop) %>%
+  filter(p1980_2012 != 0 & p2013_2022 != 0) %>%
+  mutate(sci = p2013_2022 / p1980_2012,
+         log_sci = log(sci)) %>%
+  group_by(trait_name, trait_value) %>%
+  summarise(mean_cl_boot(log_sci,
+                         conf.int = .95)) %>%
+  mutate(msci = exp(y) - 1,
+         msci_lwr = exp(ymin) - 1,
+         msci_upr = exp(ymax) - 1)
+
+geometric_mean %>%
+  select(-c(y, ymin, ymax)) %>%
+  arrange(trait_name, trait_value) %>%
+  kable()
+```
+
+
