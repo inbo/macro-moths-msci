@@ -85,6 +85,8 @@ dubbles %>%
 
 We avoid problems for species with more than one trait value within the same trait by giving a suffix number to the species. We also filter out `NA`'s.
 
+> not a good solution, NA for combinations of traits --> no suffix but importance of group_by?
+
 ```{r}
 design_df <- dubbles %>%
   rowid_to_column("id") %>%
