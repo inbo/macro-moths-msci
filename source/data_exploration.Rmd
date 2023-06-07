@@ -181,6 +181,7 @@ for (i in seq_len(ncol(combinations))) {
 ```
 
 # Geometric means
+## Separate traits
 
 We calculate the geometric mean and 95 % confidence interval based on 1000 bootstrap samples for all traits with more than 10 species.
 
@@ -230,6 +231,74 @@ for (t in traits) {
       labs(x = "", y = "Multispecies Change Index", title = t) +
       theme(legend.position = "")
   print(p)
+}
+```
+
+## Combinations of traits
+
+```{r}
+for (i in seq_len(ncol(combinations))) {
+  combo <- combinations[, i]
+
+  if (!(setequal(c("HabitatTemperature", "TempHum"), combo) ||
+    setequal(c("TempHum", "HabitatHumidity"), combo))) {
+    
+    combo_frame <- filtered_df %>%
+      filter(trait_name %in% combo) %>%
+      pivot_wider(
+        id_cols = c(species_nl, n_grids, period, sum_per_period, rel_prop),
+        names_from = trait_name, values_from = trait_value
+      ) %>%
+      group_by_at(c("period", combo)) %>%
+      mutate(n = n()) %>%
+      ungroup() %>%
+      filter(
+        n > 10,
+        !is.na(.[[combo[1]]]),
+        !is.na(.[[combo[2]]])
+        ) %>%
+      select(-c(sum_per_period, n_grids)) %>%
+      pivot_wider(names_from = period, values_from = rel_prop) %>%
+      filter(p1980_2012 != 0 & p2013_2022 != 0)
+    
+    combo_geometric_mean <- combo_frame %>%
+      mutate(sci = p2013_2022 / p1980_2012,
+             log_sci = log(sci)) %>%
+      group_by_at(c(combo, "n")) %>%
+      summarise(mean_cl_boot(log_sci,
+                             conf.int = .95),
+                .groups = "drop") %>%
+      mutate(msci = exp(y) - 1,
+             msci_lwr = exp(ymin) - 1,
+             msci_upr = exp(ymax) - 1)
+    
+    p <- combo_geometric_mean %>%
+      mutate(col_var = case_when(
+        msci_lwr > 0 ~ "chartreuse3",
+        msci_upr < 0 ~ "coral",
+        msci_lwr < 0 & msci_lwr > -0.2 & msci_upr > 0 & msci_upr < 0.25 
+          ~ "gold",
+        TRUE ~ "skyblue",
+        ),
+        trait_value = paste(.[[combo[1]]], .[[combo[2]]], sep = "\n")) %>%
+      ggplot(aes(y = msci, x = .data[[combo[1]]])) +
+        geom_hline(yintercept = 0, linetype = 2) +
+        geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+        geom_point(aes(colour = col_var), size = 2,
+                   position = position_dodge(width = 0.6)) +
+        geom_errorbar(aes(ymin = msci_lwr, ymax = msci_upr, colour = col_var), 
+                      width = 0.25, position = position_dodge(width = 0.6)) +
+        geom_text(aes(y = msci_upr, label = n, group = trait_value), vjust = -1,
+                  colour = "firebrick", position = position_dodge(width = 0.6)) +
+        scale_y_continuous(expand = expansion(mult = 0.2)) +
+        scale_colour_identity() +
+        labs(x = "", y = "Multispecies Change Index", 
+             title = paste(combo, collapse = " - ")) +
+        theme(legend.position = "",
+              axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+        facet_wrap(~.data[[combo[2]]])
+    print(p)
+  }
 }
 ```
 
