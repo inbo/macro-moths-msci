@@ -91,18 +91,18 @@ We avoid problems for species with more than one trait value within the same tra
 design_df <- dubbles %>%
   rowid_to_column("id") %>%
   mutate(species_new = ifelse(id %% 2 != 0,
-    paste(species_nl, 1),
-    paste(species_nl, 2)
+    paste(species_nl, 1, sep = "_"),
+    paste(species_nl, 2, sep = "_")
   )) %>%
   select(-id)
 
 species_traits_final_new <- species_traits_final %>%
   full_join(design_df, by = join_by(species_nl, trait_name, trait_value)) %>%
-  mutate(species_nl = ifelse(!is.na(species_new),
-    species_new,
-    species_nl
-  )) %>%
-  select(-species_new) %>%
+  mutate(
+    species_new = ifelse(!is.na(species_new), species_new,
+      ifelse(species_nl %in% unique(design_df$species_nl), 
+             paste(species_nl, 1, sep = "_"), species_nl)
+      )) %>%
   filter(!is.na(trait_value))
 ```
 
@@ -116,9 +116,7 @@ How many data do we have for each trait?
 univar_summary <- species_traits_final_new %>%
   count(trait_name, trait_value, period) %>%
   distinct(trait_name, trait_value, n) %>%
-  mutate("n <= 10" = ifelse(is.na(trait_value), "NA",
-    ifelse(n <= 10, "YES", "no")
-  )) %>%
+  mutate("n <= 10" = ifelse(n <= 10, "YES", "no")) %>%
   arrange(trait_name, trait_value)
 
 univar_summary %>%
@@ -140,17 +138,23 @@ cross_tab <- function(df, row, column, print = TRUE) {
   require(dplyr)
   require(tidyr)
   cross_table <- df %>%
-    filter("trait_name" %in% c(row, column)) %>%
-    distinct(.data$species_nl, .data$trait_name, .data$trait_value) %>%
+    filter(trait_name %in% c(row, column)) %>%
+    distinct(.data$species_nl, .data$species_new, .data$trait_name, 
+             .data$trait_value) %>%
     pivot_wider(
-      id_cols = .data$species_nl, names_from = .data$trait_name,
-      values_from = .data$trait_value
+        id_cols = c("species_nl", "species_new"), names_from = .data$trait_name,
+        values_from = .data$trait_value
     ) %>%
     drop_na() %>%
+    group_by(species_nl) %>%
+    arrange(species_nl, species_new, !!sym(column)) %>%
+    mutate("{column}" := ifelse(is.na(!!sym(column)), 
+                                first(!!sym(column)), !!sym(column))) %>%
+    ungroup() %>%
     count(!!sym(row), !!sym(column)) %>%
     pivot_wider(
-      id_cols = !!sym(row), names_from = !!sym(column),
-      values_from = .data$n
+        id_cols = !!sym(row), names_from = !!sym(column),
+        values_from = .data$n
     ) %>%
     mutate_all(~ replace(., is.na(.), 0))
 
