@@ -145,12 +145,14 @@ cross_tab <- function(df, row, column, print = TRUE) {
         id_cols = c("species_nl", "species_new"), names_from = .data$trait_name,
         values_from = .data$trait_value
     ) %>%
-    drop_na() %>%
     group_by(species_nl) %>%
-    arrange(species_nl, species_new, !!sym(column)) %>%
-    mutate("{column}" := ifelse(is.na(!!sym(column)), 
+    arrange(species_nl, species_new, !!sym(row), !!sym(column)) %>%
+    mutate("{row}"    := ifelse(is.na(!!sym(row)), 
+                                first(!!sym(row)), !!sym(row)),
+           "{column}" := ifelse(is.na(!!sym(column)), 
                                 first(!!sym(column)), !!sym(column))) %>%
     ungroup() %>%
+    drop_na() %>%
     count(!!sym(row), !!sym(column)) %>%
     pivot_wider(
         id_cols = !!sym(row), names_from = !!sym(column),
@@ -262,19 +264,28 @@ for (i in seq_len(ncol(combinations))) {
 
   if (!(setequal(c("HabitatTemperature", "TempHum"), combo) ||
     setequal(c("TempHum", "HabitatHumidity"), combo))) {
+    row <- combo[1]
+    column <- combo[2]
     combo_frame <- filtered_df %>%
       filter(trait_name %in% combo) %>%
       pivot_wider(
-        id_cols = c(species_nl, n_grids, period, sum_per_period, rel_prop),
+        id_cols = c(species_nl, species_new, n_grids, period, sum_per_period, 
+                    rel_prop),
         names_from = trait_name, values_from = trait_value
       ) %>%
+      group_by(species_nl) %>%
+      arrange(species_nl, species_new, !!sym(row), !!sym(column)) %>%
+      mutate("{row}"    := ifelse(is.na(!!sym(row)), 
+                                  first(!!sym(row)), !!sym(row)),
+             "{column}" := ifelse(is.na(!!sym(column)), 
+                                  first(!!sym(column)), !!sym(column))) %>%
+      ungroup() %>%
+      drop_na() %>%
       group_by_at(c("period", combo)) %>%
       mutate(n = n()) %>%
       ungroup() %>%
       filter(
-        n > 10,
-        !is.na(.[[combo[1]]]),
-        !is.na(.[[combo[2]]])
+        n > 10
       ) %>%
       select(-c(sum_per_period, n_grids)) %>%
       pivot_wider(names_from = period, values_from = rel_prop) %>%
