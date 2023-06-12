@@ -132,7 +132,7 @@ design_df_nozero <- dubbles_nozero %>%
   )) %>%
   select(-id)
 
-species_traits_final_nozero_new <- species_traits_final_nozero %>%
+spec_traits_final_nozero_new <- species_traits_final_nozero %>%
   full_join(design_df_nozero,
             by = join_by(species_nl, trait_name, trait_value)) %>%
   mutate(
@@ -245,7 +245,7 @@ for (i in seq_len(ncol(combinations))) {
 We calculate the geometric mean and 95 % confidence interval based on 1000 bootstrap samples for all traits with more than 10 species. This is based on the data without zeroes.
 
 ```{r}
-univar_summary_nozero <- species_traits_final_nozero_new %>%
+univar_summary_nozero <- spec_traits_final_nozero_new %>%
   count(trait_name, trait_value, period) %>%
   distinct(trait_name, trait_value, n) %>%
   mutate("n <= 10" = ifelse(n <= 10, "YES", "no")) %>%
@@ -255,7 +255,7 @@ small_traits_nozero <- univar_summary_nozero %>%
   filter(n <= 10) %>%
   pull(trait_value)
 
-filtered_df_nozero <- species_traits_final_nozero_new %>%
+filtered_df_nozero <- spec_traits_final_nozero_new %>%
   filter(!trait_value %in% small_traits)
 
 combinations_nozero <- combn(unique(filtered_df$trait_name), 2)
@@ -440,7 +440,7 @@ out_df <- species_traits_final_new %>%
   ungroup() %>%
   arrange(species_nl, species_new, trait_name, trait_value)
 
-out_df_nozero <- species_traits_final_nozero_new %>%
+out_df_nozero <- spec_traits_final_nozero_new %>%
   select(species_nl, species_new, everything()) %>%
   group_by(period, trait_value) %>%
   mutate(n_spec = n_distinct(species_new)) %>%
