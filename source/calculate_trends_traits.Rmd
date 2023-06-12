@@ -44,12 +44,13 @@ Calculate model based species change indices for certain traits.
 # Load data
 
 ```{r}
-out_path <- file.path("data", "processed")
+data_path <- file.path("data", "processed")
 
 species_traits_final_nozero <- read_csv(
-  file.path(out_path, "prop_data_per_trait_nozero.csv")
+  file.path(data_path, "prop_data_per_trait_nozero.csv")
 )
-species_traits_final <- read_csv(file.path(out_path, "prop_data_per_trait.csv"))
+species_traits_final <- read_csv(file.path(data_path, 
+                                           "prop_data_per_trait.csv"))
 ```
 
 # Model specification
