@@ -10,8 +10,6 @@ output:
     toc_collapsed: true
 editor_options: 
   chunk_output_type: console
-bibliography: [references.json]
-csl: https://raw.githubusercontent.com/citation-style-language/styles/master/research-institute-for-nature-and-forest.csl
 ---
 
 ```{r setup, include=FALSE}
@@ -39,12 +37,13 @@ Exploration of the data. Where are the bottlenecks? Missing data? ...
 # Load data
 
 ```{r}
-out_path <- file.path("data", "processed")
+data_path <- file.path("data", "intermediate")
 
 species_traits_final_nozero <- read_csv(
-  file.path(out_path, "prop_data_per_trait_nozero.csv")
+  file.path(data_path, "prop_data_per_trait_nozero_intermed.csv")
 )
-species_traits_final <- read_csv(file.path(out_path, "prop_data_per_trait.csv"))
+species_traits_final <- read_csv(file.path(data_path, 
+                                           "prop_data_per_trait_intermed.csv"))
 ```
 
 # Missing data and duplicates
@@ -81,6 +80,22 @@ dubbles %>%
   kable()
 ```
 
+We also calculate this for the data without zeroes.
+
+```{r}
+dubbles_nozero <- species_traits_final_nozero %>%
+  count(species_nl, period, trait_name) %>%
+  filter(n > 1) %>%
+  distinct(species_nl, trait_name) %>%
+  inner_join(
+    distinct(
+      species_traits_final, species_nl, trait_name,
+      trait_value
+    ),
+    by = join_by(species_nl, trait_name)
+  )
+```
+
 ## Resolve issues
 
 We avoid problems for species with more than one trait value within the same trait by giving a suffix number to the species in a separate column. By grouping the data, it is possible to circumvent any issues (see code further on). We also filter out `NA`'s.
@@ -106,11 +121,34 @@ species_traits_final_new <- species_traits_final %>%
   filter(!is.na(trait_value))
 ```
 
+We also calculate this for the data without zeroes.
+
+```{r}
+design_df_nozero <- dubbles_nozero %>%
+  rowid_to_column("id") %>%
+  mutate(species_new = ifelse(id %% 2 != 0,
+    paste(species_nl, 1, sep = "_"),
+    paste(species_nl, 2, sep = "_")
+  )) %>%
+  select(-id)
+
+species_traits_final_nozero_new <- species_traits_final_nozero %>%
+  full_join(design_df_nozero, 
+            by = join_by(species_nl, trait_name, trait_value)) %>%
+  mutate(
+    species_new = ifelse(!is.na(species_new), species_new,
+      ifelse(species_nl %in% unique(design_df$species_nl),
+        paste(species_nl, 1, sep = "_"), species_nl
+      )
+    )
+  ) %>%
+  filter(!is.na(trait_value))
+```
 
 # Summaries
 ## Univariate
 
-How many data do we have for each trait?
+How many data do we have for each trait (for data including zeroes)?
 
 ```{r}
 univar_summary <- species_traits_final_new %>%
@@ -204,10 +242,27 @@ for (i in seq_len(ncol(combinations))) {
 # Geometric means
 ## Separate traits
 
-We calculate the geometric mean and 95 % confidence interval based on 1000 bootstrap samples for all traits with more than 10 species.
+We calculate the geometric mean and 95 % confidence interval based on 1000 bootstrap samples for all traits with more than 10 species. This is based on the data without zeroes.
 
 ```{r}
-geometric_mean <- filtered_df %>%
+univar_summary_nozero <- species_traits_final_nozero_new %>%
+  count(trait_name, trait_value, period) %>%
+  distinct(trait_name, trait_value, n) %>%
+  mutate("n <= 10" = ifelse(n <= 10, "YES", "no")) %>%
+  arrange(trait_name, trait_value)
+
+small_traits_nozero <- univar_summary_nozero %>%
+  filter(n <= 10) %>%
+  pull(trait_value)
+
+filtered_df_nozero <- species_traits_final_nozero_new %>%
+  filter(!trait_value %in% small_traits)
+
+combinations_nozero <- combn(unique(filtered_df$trait_name), 2)
+```
+
+```{r}
+geometric_mean <- filtered_df_nozero %>%
   select(-c(sum_per_period, n_grids)) %>%
   pivot_wider(names_from = period, values_from = rel_prop) %>%
   filter(p1980_2012 != 0 & p2013_2022 != 0) %>%
@@ -271,14 +326,14 @@ for (t in traits) {
 ## Combinations of traits
 
 ```{r}
-for (i in seq_len(ncol(combinations))) {
-  combo <- combinations[, i]
+for (i in seq_len(ncol(combinations_nozero))) {
+  combo <- combinations_nozero[, i]
 
   if (!(setequal(c("HabitatTemperature", "TempHum"), combo) ||
     setequal(c("TempHum", "HabitatHumidity"), combo))) {
     row <- combo[1]
     column <- combo[2]
-    combo_frame <- filtered_df %>%
+    combo_frame <- filtered_df_nozero %>%
       filter(trait_name %in% combo) %>%
       pivot_wider(
         id_cols = c(
@@ -372,3 +427,36 @@ for (i in seq_len(ncol(combinations))) {
 }
 ```
 
+
+# Write out data
+
+We write out the final datasets (for zero and non-zero datasets) with extra columns `species_new` for species occurring twice in a single trait group and a column `n_spec` containing the number of species per trait value.
+
+```{r}
+out_df <- species_traits_final_new %>%
+  select(species_nl, species_new, everything()) %>%
+  group_by(period, trait_value) %>%
+  mutate(n_spec = n_distinct(species_new)) %>%
+  ungroup() %>%
+  arrange(species_nl, species_new, trait_name, trait_value)
+
+out_df_nozero <- species_traits_final_nozero_new %>%
+  select(species_nl, species_new, everything()) %>%
+  group_by(period, trait_value) %>%
+  mutate(n_spec = n_distinct(species_new)) %>%
+  ungroup() %>%
+  arrange(species_nl, species_new, trait_name, trait_value)
+```
+
+```{r}
+out_path <- file.path("data", "processed")
+
+write_csv(
+  out_df_nozero,
+  file.path(out_path, "prop_data_per_trait_nozero.csv")
+)
+write_csv(
+  out_df,
+  file.path(out_path, "prop_data_per_trait.csv")
+)
+```
