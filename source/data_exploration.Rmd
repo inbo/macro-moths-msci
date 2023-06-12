@@ -83,26 +83,26 @@ dubbles %>%
 
 ## Resolve issues
 
-We avoid problems for species with more than one trait value within the same trait by giving a suffix number to the species. We also filter out `NA`'s.
-
-> not a good solution, NA for combinations of traits --> no suffix but importance of group_by?
+We avoid problems for species with more than one trait value within the same trait by giving a suffix number to the species in a separate column. By grouping the data, it is possible to circumvent any issues (see code further on). We also filter out `NA`'s.
 
 ```{r}
 design_df <- dubbles %>%
   rowid_to_column("id") %>%
   mutate(species_new = ifelse(id %% 2 != 0,
-    paste(species_nl, 1),
-    paste(species_nl, 2)
+    paste(species_nl, 1, sep = "_"),
+    paste(species_nl, 2, sep = "_")
   )) %>%
   select(-id)
 
 species_traits_final_new <- species_traits_final %>%
   full_join(design_df, by = join_by(species_nl, trait_name, trait_value)) %>%
-  mutate(species_nl = ifelse(!is.na(species_new),
-    species_new,
-    species_nl
-  )) %>%
-  select(-species_new) %>%
+  mutate(
+    species_new = ifelse(!is.na(species_new), species_new,
+      ifelse(species_nl %in% unique(design_df$species_nl),
+        paste(species_nl, 1, sep = "_"), species_nl
+      )
+    )
+  ) %>%
   filter(!is.na(trait_value))
 ```
 
@@ -116,9 +116,7 @@ How many data do we have for each trait?
 univar_summary <- species_traits_final_new %>%
   count(trait_name, trait_value, period) %>%
   distinct(trait_name, trait_value, n) %>%
-  mutate("n <= 10" = ifelse(is.na(trait_value), "NA",
-    ifelse(n <= 10, "YES", "no")
-  )) %>%
+  mutate("n <= 10" = ifelse(n <= 10, "YES", "no")) %>%
   arrange(trait_name, trait_value)
 
 univar_summary %>%
@@ -137,16 +135,35 @@ We can look at combinations of traits. Do we see any interesting correlations?
 
 ```{r}
 cross_tab <- function(df, row, column, print = TRUE) {
-  require(dplyr)
-  require(tidyr)
+  require("dplyr")
+  require("tidyr")
+  require("data.table")
   cross_table <- df %>%
-    filter("trait_name" %in% c(row, column)) %>%
-    distinct(.data$species_nl, .data$trait_name, .data$trait_value) %>%
+    filter(.data$trait_name %in% c(row, column)) %>%
+    distinct(
+      .data$species_nl, .data$species_new, .data$trait_name,
+      .data$trait_value
+    ) %>%
     pivot_wider(
-      id_cols = .data$species_nl, names_from = .data$trait_name,
+      id_cols = c("species_nl", "species_new"), names_from = .data$trait_name,
       values_from = .data$trait_value
     ) %>%
+    # Fill in missing trait values for species that occur twice
+    group_by(.data$species_nl) %>%
+    arrange(.data$species_nl, .data$species_new, !!sym(row), !!sym(column)) %>%
+    mutate(
+      "{row}" := ifelse(is.na(!!sym(row)), # nolint: object_name_linter.
+        first(!!sym(row)), !!sym(row)
+      ),
+      "{column}" := ifelse(is.na(!!sym(column)), # nolint: object_name_linter.
+        first(!!sym(column)), !!sym(column)
+      )
+    ) %>%
+    ungroup() %>%
+    # Pivot wider can recreate NA's for missing trait values
+    # (which were filtered out before in the dataset)
     drop_na() %>%
+    # How many species per trait combination?
     count(!!sym(row), !!sym(column)) %>%
     pivot_wider(
       id_cols = !!sym(row), names_from = !!sym(column),
@@ -243,6 +260,7 @@ for (t in traits) {
       vjust = -1,
       colour = "firebrick", position = position_dodge(width = 0.6)
     ) +
+    scale_y_continuous(expand = expansion(mult = 0.2)) +
     scale_colour_identity() +
     labs(x = "", y = "Multispecies Change Index", title = t) +
     theme(legend.position = "")
@@ -258,19 +276,38 @@ for (i in seq_len(ncol(combinations))) {
 
   if (!(setequal(c("HabitatTemperature", "TempHum"), combo) ||
     setequal(c("TempHum", "HabitatHumidity"), combo))) {
+    row <- combo[1]
+    column <- combo[2]
     combo_frame <- filtered_df %>%
       filter(trait_name %in% combo) %>%
       pivot_wider(
-        id_cols = c(species_nl, n_grids, period, sum_per_period, rel_prop),
+        id_cols = c(
+          species_nl, species_new, n_grids, period, sum_per_period,
+          rel_prop
+        ),
         names_from = trait_name, values_from = trait_value
       ) %>%
+      # Fill in missing trait values for species that occur twice
+      group_by(species_nl) %>%
+      arrange(species_nl, species_new, !!sym(row), !!sym(column)) %>%
+      mutate(
+        "{row}" := ifelse(is.na(!!sym(row)), # nolint: object_name_linter.
+          first(!!sym(row)), !!sym(row)
+        ),
+        "{column}" := ifelse(is.na(!!sym(column)), # nolint: object_name_linter.
+          first(!!sym(column)), !!sym(column)
+        )
+      ) %>%
+      ungroup() %>%
+      # Pivot wider can recreate NA's for missing trait values
+      # (which were filtered out before in the dataset)
+      drop_na() %>%
+      # How many species per trait combination?
       group_by_at(c("period", combo)) %>%
       mutate(n = n()) %>%
       ungroup() %>%
       filter(
-        n > 10,
-        !is.na(.[[combo[1]]]),
-        !is.na(.[[combo[2]]])
+        n > 10
       ) %>%
       select(-c(sum_per_period, n_grids)) %>%
       pivot_wider(names_from = period, values_from = rel_prop) %>%
