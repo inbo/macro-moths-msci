@@ -10,8 +10,6 @@ output:
     toc_collapsed: true
 editor_options: 
   chunk_output_type: console
-bibliography: [references.json]
-csl: https://raw.githubusercontent.com/citation-style-language/styles/master/research-institute-for-nature-and-forest.csl
 ---
 
 ```{r setup, include=FALSE}
@@ -306,14 +304,14 @@ species_traits_final %>%
 We write out the datasets.
 
 ```{r}
-out_path <- file.path("data", "processed")
+out_path <- file.path("data", "intermediate")
 
 write_csv(
   species_traits_final_nozero,
-  file.path(out_path, "prop_data_per_trait_nozero.csv")
+  file.path(out_path, "prop_data_per_trait_nozero_intermed.csv")
 )
 write_csv(
   species_traits_final,
-  file.path(out_path, "prop_data_per_trait.csv")
+  file.path(out_path, "prop_data_per_trait_intermed.csv")
 )
 ```
