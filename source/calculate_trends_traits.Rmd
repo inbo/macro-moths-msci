@@ -49,7 +49,7 @@ data_path <- file.path("data", "processed")
 species_traits_final_nozero <- read_csv(
   file.path(data_path, "prop_data_per_trait_nozero.csv")
 )
-species_traits_final <- read_csv(file.path(data_path, 
+species_traits_final <- read_csv(file.path(data_path,
                                            "prop_data_per_trait.csv"))
 ```
 

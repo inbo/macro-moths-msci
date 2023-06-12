@@ -42,7 +42,7 @@ data_path <- file.path("data", "intermediate")
 species_traits_final_nozero <- read_csv(
   file.path(data_path, "prop_data_per_trait_nozero_intermed.csv")
 )
-species_traits_final <- read_csv(file.path(data_path, 
+species_traits_final <- read_csv(file.path(data_path,
                                            "prop_data_per_trait_intermed.csv"))
 ```
 
@@ -133,7 +133,7 @@ design_df_nozero <- dubbles_nozero %>%
   select(-id)
 
 species_traits_final_nozero_new <- species_traits_final_nozero %>%
-  full_join(design_df_nozero, 
+  full_join(design_df_nozero,
             by = join_by(species_nl, trait_name, trait_value)) %>%
   mutate(
     species_new = ifelse(!is.na(species_new), species_new,
