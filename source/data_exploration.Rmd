@@ -83,9 +83,7 @@ dubbles %>%
 
 ## Resolve issues
 
-We avoid problems for species with more than one trait value within the same trait by giving a suffix number to the species. We also filter out `NA`'s.
-
-> not a good solution, NA for combinations of traits --> no suffix but importance of group_by?
+We avoid problems for species with more than one trait value within the same trait by giving a suffix number to the species in a separate column. By grouping the data, it is possible to circumvent any issues (see code further on). We also filter out `NA`'s.
 
 ```{r}
 design_df <- dubbles %>%
@@ -145,6 +143,7 @@ cross_tab <- function(df, row, column, print = TRUE) {
         id_cols = c("species_nl", "species_new"), names_from = .data$trait_name,
         values_from = .data$trait_value
     ) %>%
+    # Fill in missing trait values for species that occur twice
     group_by(species_nl) %>%
     arrange(species_nl, species_new, !!sym(row), !!sym(column)) %>%
     mutate("{row}"    := ifelse(is.na(!!sym(row)), 
@@ -152,7 +151,10 @@ cross_tab <- function(df, row, column, print = TRUE) {
            "{column}" := ifelse(is.na(!!sym(column)), 
                                 first(!!sym(column)), !!sym(column))) %>%
     ungroup() %>%
+    # Pivot wider can recreate NA's for missing trait values 
+    # (which were filtered out before in the dataset)
     drop_na() %>%
+    # How many species per trait combination?
     count(!!sym(row), !!sym(column)) %>%
     pivot_wider(
         id_cols = !!sym(row), names_from = !!sym(column),
@@ -249,6 +251,7 @@ for (t in traits) {
       vjust = -1,
       colour = "firebrick", position = position_dodge(width = 0.6)
     ) +
+    scale_y_continuous(expand = expansion(mult = 0.2)) +
     scale_colour_identity() +
     labs(x = "", y = "Multispecies Change Index", title = t) +
     theme(legend.position = "")
@@ -273,6 +276,7 @@ for (i in seq_len(ncol(combinations))) {
                     rel_prop),
         names_from = trait_name, values_from = trait_value
       ) %>%
+      # Fill in missing trait values for species that occur twice
       group_by(species_nl) %>%
       arrange(species_nl, species_new, !!sym(row), !!sym(column)) %>%
       mutate("{row}"    := ifelse(is.na(!!sym(row)), 
@@ -280,7 +284,10 @@ for (i in seq_len(ncol(combinations))) {
              "{column}" := ifelse(is.na(!!sym(column)), 
                                   first(!!sym(column)), !!sym(column))) %>%
       ungroup() %>%
+      # Pivot wider can recreate NA's for missing trait values 
+      # (which were filtered out before in the dataset)
       drop_na() %>%
+      # How many species per trait combination?
       group_by_at(c("period", combo)) %>%
       mutate(n = n()) %>%
       ungroup() %>%
