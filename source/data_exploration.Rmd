@@ -25,6 +25,7 @@ opts_knit$set(root.dir = here::here())
 
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
+conflicted::conflicts_prefer(dplyr::first)
 
 # Packages
 library(tidyverse)
