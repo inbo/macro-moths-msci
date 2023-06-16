@@ -27,6 +27,12 @@ opts_knit$set(root.dir = here::here())
 
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
+conflicted::conflicts_prefer(stats::lag)
+conflicted::conflicts_prefer(brms::ar)
+conflicted::conflicts_prefer(brms::dstudent_t)
+conflicted::conflicts_prefer(brms::pstudent_t)
+conflicted::conflicts_prefer(brms::qstudent_t)
+conflicted::conflicts_prefer(brms::rstudent_t)
 
 # Packages
 library(tidyverse)
