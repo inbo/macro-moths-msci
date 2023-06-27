@@ -246,10 +246,28 @@ Multiple Correspondence Analysis (MCA) is an alternative to PCA for categorical 
 
 ```{r}
 library(FactoMineR)
-#library(vcd)
 library(factoextra)
 ```
 
+```{r}
+dat_mca <- filtered_df %>%
+  filter(!trait_name %in% c("Biotope")) %>%
+  select(species_nl, trait_name, trait_value) %>%
+  distinct() %>%
+  pivot_wider(
+    id_cols = species_nl,
+    names_from = trait_name, values_from = trait_value
+  ) %>%
+  select(-species_nl) %>%
+  drop_na()
+
+traits_mca <- MCA(dat_mca, graph = FALSE)
+
+fviz_mca_biplot(traits_mca, geom.ind = "point", ggtheme = theme_minimal(), repel = TRUE,
+                alpha.ind = 0, col.var = "contrib")
+```
+
+http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/114-mca-multiple-correspondence-analysis-in-r-essentials/
 
 # Geometric means
 ## Separate traits
