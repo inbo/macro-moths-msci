@@ -266,7 +266,29 @@ The models perform well. We have a good fit and convergence. We can use these mo
 
 ## Exploration Simpson's paradox
 
-What if we compare two traits?
+What if we compare two traits? We look at 'Phagy' and 'EllenbergN'.
+
+```{r}
+species_traits_final %>%
+  filter(trait_name %in% c("EllenbergN", "Phagy")) %>%
+  pivot_wider(
+    id_cols = c(species_nl, n_grids, period, sum_per_period),
+    names_from = trait_name, values_from = trait_value
+  ) %>%
+  group_by(EllenbergN, Phagy) %>%
+  mutate(n = n_distinct(species_nl)) %>%
+  ungroup() %>%
+  mutate(EllenbergN = factor(EllenbergN, levels = c(
+    "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
+    "VeryNutrientRich"
+    ), ordered = TRUE)
+  ) %>%
+  ggplot(aes(x = EllenbergN, y = Phagy)) +
+    geom_tile(aes(fill = n), colour = "white") +
+    geom_text(aes(label = n)) +
+    scale_fill_gradient(low = "blue", high = "red") +
+    labs(fill = "number of\nspecies", x = "", y = "")
+```
 
 We look at 'Phagy' and 'EllenbergN' separately. Afterwards we combine the traits. First we look at 'Phagy'.
 
