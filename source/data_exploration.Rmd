@@ -240,6 +240,17 @@ for (i in seq_len(ncol(combinations))) {
 }
 ```
 
+## Multivariate
+
+Multiple Correspondence Analysis (MCA) is an alternative to PCA for categorical variables. The `MCA()` function from the **FactoMineR** package can be used to implement MCA.
+
+```{r}
+library(FactoMineR)
+#library(vcd)
+library(factoextra)
+```
+
+
 # Geometric means
 ## Separate traits
 
