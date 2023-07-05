@@ -33,6 +33,7 @@ library(FactoMineR) # MCA
 library(factoextra) # visualise MCA
 library(corrplot)   # visualise correlations
 library(gridExtra)
+library(ggrepel)
 ```
 
 # Goal
@@ -272,8 +273,46 @@ fviz_screeplot(traits_mca, addlabels = TRUE, ylim = c(0, 10))
 We visualise the correlation between variables and MCA principal dimensions.
 
 ```{r}
-fviz_mca_var(traits_mca, axes = c(1, 2), choice = "mca.cor", repel = TRUE,
-             ggtheme = theme_minimal())
+# bug in fviz_mca_var function of factoextrapackage
+# https://github.com/kassambara/factoextra/issues/166
+# create own plots ...
+
+plot_df <- as.data.frame(traits_mca$var$eta2) %>%
+  rownames_to_column("variable")
+
+p1 <- ggplot(plot_df, aes(x = `Dim 1`, y = `Dim 2`)) +
+    geom_hline(yintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_vline(xintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_point() +
+    geom_text_repel(aes(label = variable), size = 3) +
+    coord_cartesian(xlim = c(-0.05, NA), ylim = c(-0.05, NA)) +
+    theme_minimal()
+
+p2 <- ggplot(plot_df, aes(x = `Dim 2`, y = `Dim 3`)) +
+    geom_hline(yintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_vline(xintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_point() +
+    geom_text_repel(aes(label = variable), size = 3) +
+    coord_cartesian(xlim = c(-0.05, NA), ylim = c(-0.05, NA)) +
+    theme_minimal()
+
+p3 <- ggplot(plot_df, aes(x = `Dim 3`, y = `Dim 4`)) +
+    geom_hline(yintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_vline(xintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_point() +
+    geom_text_repel(aes(label = variable), size = 3) +
+    coord_cartesian(xlim = c(-0.05, NA), ylim = c(-0.05, NA)) +
+    theme_minimal()
+
+p4 <- ggplot(plot_df, aes(x = `Dim 4`, y = `Dim 5`)) +
+    geom_hline(yintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_vline(xintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_point() +
+    geom_text_repel(aes(label = variable), size = 3) +
+    coord_cartesian(xlim = c(-0.05, NA), ylim = c(-0.05, NA)) +
+    theme_minimal()
+
+grid.arrange(p1, p2, p3, p4)
 ```
 
 Variable categories with a similar species profile are grouped together. The distance between category points and the origin measures the quality of the variable category on the factor map. Category points that are away from the origin are well represented on the factor map. The two dimensions 1 and 2 are sufficient to retain 11.4 % of the total variation contained in the data. Not all the points are equally well displayed in these two dimensions.The quality of the representation is called the squared cosine (cos2), which measures the degree of association between variable categories and a particular axis
