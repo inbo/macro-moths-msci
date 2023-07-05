@@ -354,9 +354,6 @@ fviz_cos2(traits_mca, choice = "var", axes = 1:5)
 ```
 
 
-
-
-
 # Geometric means
 ## Separate traits
 
