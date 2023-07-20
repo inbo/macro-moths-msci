@@ -29,6 +29,11 @@ conflicted::conflicts_prefer(dplyr::first)
 
 # Packages
 library(tidyverse)
+library(FactoMineR) # MCA
+library(factoextra) # visualise MCA
+library(corrplot)   # visualise correlations
+library(gridExtra)
+library(ggrepel)
 ```
 
 # Goal
@@ -239,6 +244,115 @@ for (i in seq_len(ncol(combinations))) {
   }
 }
 ```
+
+## Multivariate
+
+Multiple Correspondence Analysis ([MCA](http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/114-mca-multiple-correspondence-analysis-in-r-essentials/)) is an alternative to PCA for categorical variables. The `MCA()` function from the **FactoMineR** package can be used to implement MCA. We exclude `HabitatTemperature` and `HabitatHumidity` since `TempHum` is already included.
+
+```{r}
+dat_mca <- filtered_df %>%
+  filter(!trait_name %in% c("HabitatTemperature", "HabitatHumidity")) %>%
+  select(species_new, trait_name, trait_value) %>%
+  distinct() %>%
+  pivot_wider(
+    id_cols = species_new,
+    names_from = trait_name, values_from = trait_value
+  ) %>%
+  select(-species_new) %>%
+  drop_na()
+
+traits_mca <- MCA(dat_mca, graph = FALSE)
+```
+
+We visualise the percentages of variance explained by each of the MCA dimensions.
+
+```{r}
+fviz_screeplot(traits_mca, addlabels = TRUE, ylim = c(0, 10))
+```
+
+We visualise the correlation between variables and MCA principal dimensions.
+
+```{r}
+# bug in fviz_mca_var function of factoextrapackage
+# https://github.com/kassambara/factoextra/issues/166
+# create own plots ...
+
+plot_df <- as.data.frame(traits_mca$var$eta2) %>%
+  rownames_to_column("variable")
+
+p1 <- ggplot(plot_df, aes(x = `Dim 1`, y = `Dim 2`)) +
+    geom_hline(yintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_vline(xintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_point() +
+    geom_text_repel(aes(label = variable), size = 3) +
+    coord_cartesian(xlim = c(-0.05, NA), ylim = c(-0.05, NA)) +
+    theme_minimal()
+
+p2 <- ggplot(plot_df, aes(x = `Dim 2`, y = `Dim 3`)) +
+    geom_hline(yintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_vline(xintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_point() +
+    geom_text_repel(aes(label = variable), size = 3) +
+    coord_cartesian(xlim = c(-0.05, NA), ylim = c(-0.05, NA)) +
+    theme_minimal()
+
+p3 <- ggplot(plot_df, aes(x = `Dim 3`, y = `Dim 4`)) +
+    geom_hline(yintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_vline(xintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_point() +
+    geom_text_repel(aes(label = variable), size = 3) +
+    coord_cartesian(xlim = c(-0.05, NA), ylim = c(-0.05, NA)) +
+    theme_minimal()
+
+p4 <- ggplot(plot_df, aes(x = `Dim 4`, y = `Dim 5`)) +
+    geom_hline(yintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_vline(xintercept = 0, colour = "grey", linetype = "dashed") +
+    geom_point() +
+    geom_text_repel(aes(label = variable), size = 3) +
+    coord_cartesian(xlim = c(-0.05, NA), ylim = c(-0.05, NA)) +
+    theme_minimal()
+
+grid.arrange(p1, p2, p3, p4)
+```
+
+Variable categories with a similar species profile are grouped together. The distance between category points and the origin measures the quality of the variable category on the factor map. Category points that are away from the origin are well represented on the factor map. The two dimensions 1 and 2 are sufficient to retain 11.4 % of the total variation contained in the data. Not all the points are equally well displayed in these two dimensions.The quality of the representation is called the squared cosine (cos2), which measures the degree of association between variable categories and a particular axis
+
+```{r}
+fviz_mca_var(traits_mca, axes = c(1, 2), repel = TRUE,
+             col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             ggtheme = theme_minimal())
+
+fviz_mca_var(traits_mca, axes = c(3, 4), repel = TRUE,
+             col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             ggtheme = theme_minimal())
+```
+
+```{r}
+p1 <- fviz_contrib(traits_mca, choice = "var", axes = 1, top = 15,
+                   font.xtickslab = 7, font.title = 10)
+p2 <- fviz_contrib(traits_mca, choice = "var", axes = 2, top = 15,
+                   font.xtickslab = 7, font.title = 10)
+p3 <- fviz_contrib(traits_mca, choice = "var", axes = 3, top = 15,
+                   font.xtickslab = 7, font.title = 10)
+p4 <- fviz_contrib(traits_mca, choice = "var", axes = 4, top = 15,
+                   font.xtickslab = 7, font.title = 10)
+grid.arrange(p1, p2, p3, p4)
+```
+
+Along all dimensions:
+
+```{r, fig.height=10}
+var <- get_mca_var(traits_mca)
+corrplot(var$cos2, is.corr = FALSE, tl.col = "black", tl.srt = 45, tl.cex = 0.5,
+         cl.pos = "b", cl.cex = 0.5, cl.length = 4)
+```
+
+```{r}
+fviz_cos2(traits_mca, choice = "var", axes = 1:5)
+```
+
 
 # Geometric means
 ## Separate traits
