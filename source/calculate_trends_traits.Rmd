@@ -64,12 +64,12 @@ species_traits_final <- read_csv(file.path(data_path,
 We assume a multinomial distribution per period $j$ ($j = 1, 2$) for the number of grid squares $n$ per species $i$ ($i = 1, ..., S$).
 
 $$
-\{n_{1j}, ...n_{2j}\} \sim Multinom(\sum_{i=1}^S n_{ij}, \{p_{1j}, ...p_{2j}\})
+\{n_{1j}, ..., n_{Sj}\} \sim Multinom(\sum_{i=1}^S n_{ij}, \{p_{1j}, ..., p_{Sj}\})
 $$
 
 Where $p_{ij} = \frac{\lambda_{ij}}{\lambda_{1j} + ... + \lambda_{Sj}}$
 
-$\{n_{1j}, ...n_{2j}\}$ can be interpreted as independent Poisson random variables
+$\{n_{1j}, ..., n_{Sj}\}$ can be interpreted as independent Poisson random variables
 
 $$
 n_{ij} \sim Poisson(\lambda_{ij})
@@ -85,7 +85,7 @@ Where
 
 -   $\beta_0$ the average log-number of grids for period 1
 -   $\beta_{msci}$ the effect of period 2 compared to period 1 such that $MSCI = \exp(\beta_{msci})$
--   $X_{period}$ is 0 if period is 1980-2012 and 1 if period is 2013-2022
+-   $X_{period}$ is 0 for period 1980-2012 and 1 for period 2013-2022
 -   $ln(\Sigma_{i=1}^Sn_{ij})$ an offset used to control for the disproportionate search effort between the two periods
 -   $b_{0,{i = 1, ..., S}}$ a random intercept for each species: deviation per species from $\beta_0$
 -   $b_{1,{i = 1, ..., S}}$ a random slope for each species: deviation per species from $\beta_{msci}$
