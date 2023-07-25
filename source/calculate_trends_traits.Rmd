@@ -565,6 +565,30 @@ To avoid erroneous conclusions related to this paradox, we will select the $t$ m
 Do we see large differences when we exclude zeroes?
 
 ```{r}
+species_traits_final_nozero %>%
+  filter(trait_name %in% c("EllenbergN", "Phagy")) %>%
+  pivot_wider(
+    id_cols = c(species_nl, n_grids, period, sum_per_period),
+    names_from = trait_name, values_from = trait_value
+  ) %>%
+  group_by(EllenbergN, Phagy) %>%
+  mutate(n = n_distinct(species_nl)) %>%
+  ungroup() %>%
+  mutate(EllenbergN = factor(EllenbergN, levels = c(
+    "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
+    "VeryNutrientRich"
+    ), ordered = TRUE)
+  ) %>%
+  ggplot(aes(x = EllenbergN, y = Phagy)) +
+    geom_tile(aes(fill = n), colour = "white") +
+    geom_text(aes(label = n)) +
+    scale_fill_gradient(low = "blue", high = "red") +
+    labs(fill = "number of\nspecies", x = "", y = "")
+```
+
+We see that one group does not contain at least 10 species, but for this example we will not filter the data.
+
+```{r}
 dat_nozero <- species_traits_final_nozero %>%
   filter(trait_name %in% c("EllenbergN", "Phagy")) %>%
   pivot_wider(
