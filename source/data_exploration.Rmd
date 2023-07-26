@@ -67,6 +67,8 @@ species_traits_final %>%
   kable()
 ```
 
+This is not an issue since we have the combined trait `TempHum`.
+
 Some species have more than one trait value within the same trait.
 
 ```{r}
@@ -104,7 +106,10 @@ dubbles_nozero <- species_traits_final_nozero %>%
 
 ## Resolve issues
 
-We avoid problems for species with more than one trait value within the same trait by giving a suffix number to the species in a separate column. By grouping the data, it is possible to circumvent any issues (see code further on). We also filter out `NA`'s.
+We avoid problems for species with more than one trait value within the same trait by giving a suffix number to the species in a separate column. By grouping the data, it is possible to circumvent any issues (see code further on).
+
+We remove traits `HabitatTemperature` and `HabitatHumidity` for further processing.
+We have no `NA`'s left.
 
 ```{r}
 design_df <- dubbles %>%
@@ -124,7 +129,7 @@ species_traits_final_new <- species_traits_final %>%
       )
     )
   ) %>%
-  filter(!is.na(trait_value))
+  filter(!trait_name %in% c("HabitatTemperature", "HabitatHumidity"))
 ```
 
 We also calculate this for the data without zeroes.
@@ -148,7 +153,7 @@ spec_traits_final_nozero_new <- species_traits_final_nozero %>%
       )
     )
   ) %>%
-  filter(!is.na(trait_value))
+  filter(!trait_name %in% c("HabitatTemperature", "HabitatHumidity"))
 ```
 
 # Summaries
@@ -236,22 +241,18 @@ combinations <- combn(unique(filtered_df$trait_name), 2)
 for (i in seq_len(ncol(combinations))) {
   combo <- combinations[, i]
 
-  if (!(setequal(c("HabitatTemperature", "TempHum"), combo) ||
-    setequal(c("TempHum", "HabitatHumidity"), combo))) {
-    print("------------------------------------------------")
-    print(combo)
-    cross_tab(filtered_df, combo[1], combo[2])
-  }
+  print("------------------------------------------------")
+  print(combo)
+  cross_tab(filtered_df, combo[1], combo[2])
 }
 ```
 
 ## Multivariate
 
-Multiple Correspondence Analysis ([MCA](http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/114-mca-multiple-correspondence-analysis-in-r-essentials/)) is an alternative to PCA for categorical variables. The `MCA()` function from the **FactoMineR** package can be used to implement MCA. We exclude `HabitatTemperature` and `HabitatHumidity` since `TempHum` is already included.
+Multiple Correspondence Analysis ([MCA](http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/114-mca-multiple-correspondence-analysis-in-r-essentials/)) is an alternative to PCA for categorical variables. The `MCA()` function from the **FactoMineR** package can be used to implement MCA.
 
 ```{r}
 dat_mca <- filtered_df %>%
-  filter(!trait_name %in% c("HabitatTemperature", "HabitatHumidity")) %>%
   select(species_new, trait_name, trait_value) %>%
   distinct() %>%
   pivot_wider(
@@ -390,7 +391,7 @@ geometric_mean <- filtered_df_nozero %>%
     mean_cl_boot(log_sci,
       conf.int = .95
     ),
-    n = n()
+    n_species = n()
   ) %>%
   mutate(
     msci = exp(y) - 1,
@@ -426,7 +427,7 @@ for (t in traits) {
     geom_errorbar(aes(ymin = msci_lwr, ymax = msci_upr, colour = col_var),
       width = 0.25, position = position_dodge(width = 0.6)
     ) +
-    geom_text(aes(y = msci_upr, label = n, group = trait_value),
+    geom_text(aes(y = msci_upr, label = n_species, group = trait_value),
       vjust = -1,
       colour = "firebrick", position = position_dodge(width = 0.6)
     ) +
