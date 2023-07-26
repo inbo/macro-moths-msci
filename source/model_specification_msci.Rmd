@@ -671,3 +671,10 @@ msci_draws_nozero %>%
 ```
 
 There are differences, but they are not large.
+
+
+# General conclusion
+
+-   The models fit very well with the data in each case. This indicates that the specified Poisson model performs well.
+-   Selection of a limited number of (combinations of) traits needs to be done a priori based on expert knowledge
+-   Inclusion of zeroes
