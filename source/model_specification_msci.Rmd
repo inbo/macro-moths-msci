@@ -43,7 +43,7 @@ source(here("source", "summarise_brms_models.R"))
 
 # Goal
 
-Calculate model based species change indices for certain traits.
+Test out model specifications and model fit.
 
 # Load data
 
