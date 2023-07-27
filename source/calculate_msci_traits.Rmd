@@ -129,7 +129,7 @@ trait_df_list <- lapply(trait_combinations, function(combo) {
       ungroup() %>%
       select(-species_nl) %>%
       mutate(species_nl = species_new) %>%
-      select(-species_new) %>% 
+      select(-species_new) %>%
       select_at(c("species_nl", "n_grids", "period", "sum_per_period", combo,
                   "n_species"))
   } else if (length(combo) == 1) {
@@ -147,11 +147,11 @@ trait_df_list <- lapply(trait_combinations, function(combo) {
       ungroup() %>%
       select(-species_nl) %>%
       mutate(species_nl = species_new) %>%
-      select(-species_new) %>% 
+      select(-species_new) %>%
       select_at(c("species_nl", "n_grids", "period", "sum_per_period", combo,
                   "n_species"))
   } else {
-    stop("Function not implemented for combinations of more than 2 traits.", 
+    stop("Function not implemented for combinations of more than 2 traits.",
          call. = FALSE)
   }
   return(out)
@@ -164,4 +164,57 @@ names_trait_df_list <- sapply(trait_combinations, function(combo) {
 names(trait_df_list) <- names_trait_df_list
 ```
 
+How many species do we have per trait combination?
+
+```{r}
+for (i in seq_along(trait_combinations)) {
+  combo <- trait_combinations[[i]]
+
+  if (length(combo) == 2) {
+    p <- trait_df_list[[i]] %>%
+      ggplot(aes(x = .data[[combo[1]]], y = .data[[combo[2]]])) +
+        geom_tile(aes(fill = n_species), colour = "white") +
+        geom_text(aes(label = n_species)) +
+        scale_fill_gradient(low = "red", high = "green") +
+        labs(fill = "number of\nspecies", x = "", y = "",
+             title = gsub("_", " ~ ", names(trait_df_list)[i]))
+
+    print(p)
+  }
+}
+```
+
+```{r}
+filter_size <- 10
+```
+
+We only keep trait groups with more than `r filter_size` species.
+
+```{r}
+trait_df_list_filtered <- lapply(trait_df_list, function(df) {
+  df %>%
+    filter(n_species > filter_size)
+})
+names(trait_df_list_filtered) <- names(trait_df_list)
+```
+
+These are the groups that remain:
+
+```{r}
+for (i in seq_along(trait_combinations)) {
+  combo <- trait_combinations[[i]]
+
+  if (length(combo) == 2) {
+    p <- trait_df_list_filtered[[i]] %>%
+      ggplot(aes(x = .data[[combo[1]]], y = .data[[combo[2]]])) +
+        geom_tile(fill = "cornflowerblue", colour = "white") +
+        geom_text(aes(label = n_species)) +
+        #scale_fill_gradient(low = "red", high = "green") +
+        labs(fill = "number of\nspecies", x = "", y = "",
+             title = gsub("_", " ~ ", names(trait_df_list)[i]))
+
+    print(p)
+  }
+}
+```
 
