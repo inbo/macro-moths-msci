@@ -56,10 +56,42 @@ species_traits_final <- read_csv(file.path(data_path,
 
 # Automatisation
 
--   Make a list with each trait (combination)
+-   make a list with each trait (combination)
 -   `lapply()` to create list of filtered dataframes
+-   visualise and filter on group sizes
 -   `lapply()` to create formula list
 -   fit models in for loop
 -   check MCMC convergence in for loop
 -   check model fit in for loop
 -   ...
+
+# Data preparation
+## Trait combinations
+
+We consider a number of trait combinations.
+
+```{r}
+trait_combinations <- list(
+  c("Biotope", "Phagy"),
+  c("Biotope", "EllenbergN"),
+  c("colourVariation", "Size"),
+  c("Activity", "nGenerations"),
+  c("OverwinteringStage", "nGenerations"),
+  c("Phagy", "LarvalFoodSource2"),
+  c("Phagy", "EllenbergN"),
+  c("Phagy", "nGenerations"),
+  c("Phagy", "Size"),
+  c("Phagy", "TempHum"),
+  c("LarvalFoodSource2", "EllenbergN"),
+  c("EllenbergN", "TempHum"),
+  c("nGenerations", "Distribution"),
+  c("nGenerations", "Size"),
+  c("nGenerations", "TempHum"),
+  c("Distribution", "TempHum"),
+  c("Size", "TempHum")
+)
+trait_combinations
+```
+
+
+## Filter dataframes
