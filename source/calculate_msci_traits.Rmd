@@ -94,4 +94,74 @@ trait_combinations
 ```
 
 
-## Filter dataframes
+## Filter dataframes per trait combination
+
+We create a list of dataframes per trait combination.
+
+```{r}
+trait_df_list <- lapply(trait_combinations, function(combo) {
+  if (length(combo) == 2) {
+    row <- combo[1]
+    column <- combo[2]
+    out <- species_traits_final %>%
+      filter(trait_name %in% combo) %>%
+      pivot_wider(
+        id_cols = c("species_nl", "species_new", "n_grids", "period",
+                    "sum_per_period"),
+        names_from = "trait_name",
+        values_from = "trait_value"
+      ) %>%
+      # Fill in missing trait values for species that occur twice
+      group_by(species_nl) %>%
+      arrange(species_nl, species_new, !!sym(row), !!sym(column)) %>%
+      mutate(
+        "{row}" := ifelse(is.na(!!sym(row)), # nolint: object_name_linter.
+          first(!!sym(row)), !!sym(row)
+        ),
+        "{column}" := ifelse(is.na(!!sym(column)), # nolint: object_name_linter.
+          first(!!sym(column)), !!sym(column)
+        )
+      ) %>%
+      ungroup() %>%
+      # How many species per trait combination?
+      group_by_at(c("period", combo)) %>%
+      mutate(n_species = n()) %>%
+      ungroup() %>%
+      select(-species_nl) %>%
+      mutate(species_nl = species_new) %>%
+      select(-species_new) %>% 
+      select_at(c("species_nl", "n_grids", "period", "sum_per_period", combo,
+                  "n_species"))
+  } else if (length(combo) == 1) {
+    species_traits_final %>%
+      filter(trait_name == combo) %>%
+      pivot_wider(
+        id_cols = c("species_nl", "species_new", "n_grids", "period",
+                    "sum_per_period"),
+        names_from = "trait_name",
+        values_from = "trait_value"
+      ) %>%
+      # How many species per trait combination?
+      group_by_at(c("period", combo)) %>%
+      mutate(n_species = n()) %>%
+      ungroup() %>%
+      select(-species_nl) %>%
+      mutate(species_nl = species_new) %>%
+      select(-species_new) %>% 
+      select_at(c("species_nl", "n_grids", "period", "sum_per_period", combo,
+                  "n_species"))
+  } else {
+    stop("Function not implemented for combinations of more than 2 traits.", 
+         call. = FALSE)
+  }
+  return(out)
+})
+
+names_trait_df_list <- sapply(trait_combinations, function(combo) {
+  paste(combo, collapse = "_")
+})
+
+names(trait_df_list) <- names_trait_df_list
+```
+
+
