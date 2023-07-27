@@ -282,7 +282,10 @@ names(model_msci_list) <- model_msci_list_names
 We check MCMC convergence based on posterior densities, trace plots and the Gelman-Rubin diagnostic for each parameter.
 
 ```{r}
-plot(fit_msci_Biotope_Phagy, ask = FALSE)
+for (model in model_msci_list) {
+  print(plot(model, ask = FALSE))
+}
+
 ```
 
 ```{r}
@@ -319,18 +322,32 @@ show_rhat(model_msci_list)
 We check model fit based on posterior predictive checks were we compare the observed outcome to simulated datasets from the posterior predictive distribution.
 
 ```{r}
-pp_check(fit_msci_Biotope_Phagy,
-  type = "dens_overlay_grouped", ndraws = 100,
-  group = "period"
-)
-
-pp_check(fit_msci_Biotope_Phagy,
-  type = "dens_overlay_grouped", ndraws = 100,
-  group = "Biotope"
-)
-
-pp_check(fit_msci_Biotope_Phagy,
-  type = "dens_overlay_grouped", ndraws = 100,
-  group = "Phagy"
-)
+for (i in seq_along(model_msci_list)) {
+  title <- paste("Fit referentiemodel", names(model_msci_list)[i])
+  model <- model_msci_list[[i]]
+  print(
+    pp_check(
+      model,
+      type = "dens_overlay_grouped", ndraws = 100,
+      group = "period"
+      ) +
+      ggtitle(title)
+    )
+  
+  print(
+    pp_check(fit_msci_Biotope_Phagy,
+      type = "dens_overlay_grouped", ndraws = 100,
+      group = trait_combinations[[i]][1]
+      ) +
+      ggtitle(title)
+    )
+  
+  print(
+    pp_check(fit_msci_Biotope_Phagy,
+      type = "dens_overlay_grouped", ndraws = 100,
+      group = trait_combinations[[i]][2]
+      ) +
+      ggtitle(title)
+    )
+}
 ```
