@@ -218,3 +218,55 @@ for (i in seq_along(trait_combinations)) {
 }
 ```
 
+
+# Model fitting
+## Mode fit preparation
+
+```{r}
+# create cache directory if not yet available
+dir.create(here("source", "source/brms_cache"), FALSE)
+```
+
+```{r}
+# MCMC parameters
+nchains <- 3 # number of chains
+niter <- 10000 # number of iterations (incl. burn-in)
+burnin <- niter / 4 # number of initial samples to discard (burn-in)
+nparallel <- nchains # number of cores used for parallel computing
+thinning <- 2
+```
+
+```{r}
+formula_list <- lapply(trait_combinations, function(combo) {
+  bf(paste("n_grids", "~", paste(c("period", combo), collapse = " * "),
+           " + offset(log(sum_per_period)) + (1 + period || species_nl)"))
+})
+```
+
+```{r}
+model_msci_list <- vector("list", length = length(trait_df_list_filtered))
+model_msci_list_names <- vector(length = length(trait_df_list_filtered))
+
+for (i in seq_along(trait_df_list_filtered)) {
+  combo_name <- names(trait_df_list_filtered)[i]
+  obj_name <- paste0("fit_msci_", combo_name)
+  print(paste("Busy fitting", obj_name, "..."))
+  assign(obj_name,
+         brm(formula = formula_list[[i]],
+             data = trait_df_list_filtered[[i]], 
+             family = poisson(),
+             chains = nchains, 
+             warmup = burnin, 
+             iter = niter,
+             cores = nparallel,
+             thin = thinning,
+             file = paste0("source/brms_cache/", obj_name),
+             file_refit = "on_change"))
+  
+  model_msci_list[[i]] <- get(obj_name)
+  model_msci_list_names[i] <- combo_name
+}
+
+names(model_msci_list) <- model_msci_list_names
+```
+
