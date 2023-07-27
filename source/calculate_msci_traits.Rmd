@@ -227,10 +227,10 @@ We set the MCMC parameters and make a list of model formulae as specified in `mo
 ```{r}
 # MCMC parameters
 nchains <- 3 # number of chains
-niter <- 8000 # number of iterations (incl. burn-in)
+niter <- 10000 # number of iterations (incl. burn-in)
 burnin <- niter / 4 # number of initial samples to discard (burn-in)
 nparallel <- nchains # number of cores used for parallel computing
-thinning <- 6
+thinning <- 2
 ```
 
 ```{r}
@@ -268,7 +268,7 @@ for (i in seq_along(trait_df_list_filtered)) {
              thin = thinning,
              file = paste0("source/brms_cache/", obj_name),
              file_refit = "on_change"))
-  
+
   model_msci_list[[i]] <- get(obj_name)
   model_msci_list_names[i] <- combo_name
 }
@@ -297,11 +297,12 @@ show_rhat <- function(models) {
       mutate(model = names(models)[i])
     })
   rhat_df <- do.call(rbind.data.frame, rhat_list)
-  
+
   # visualise
-  palette <- colorRampPalette(RColorBrewer::brewer.pal(9, name = 'Set1'))(length(unique(rhat_df$variable)))
+  palette <- colorRampPalette(RColorBrewer::brewer.pal(9,
+               name = "Set1"))(length(unique(rhat_df$variable)))
   rhat_df %>%
-    ggplot(aes(y = rhat, x = model, colour = variable)) +
+    ggplot(aes(y = .data$rhat, x = .data$model, colour = .data$variable)) +
       geom_hline(yintercept = c(1, 1.1), colour = "grey", linetype = "dashed") +
       geom_jitter(width = 0.2, height = 0) +
       scale_colour_manual(values = palette) +
@@ -315,7 +316,7 @@ show_rhat <- function(models) {
 show_rhat(model_msci_list)
 ```
 
-We check model fit based on posterior predicive checks were we compare the observed outcome to simulated datasets from the posterior predictive distribution.
+We check model fit based on posterior predictive checks were we compare the observed outcome to simulated datasets from the posterior predictive distribution.
 
 ```{r}
 pp_check(fit_msci_Biotope_Phagy,
