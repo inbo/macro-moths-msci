@@ -349,7 +349,7 @@ model2_msci_list_names <- vector(length = length(trait_df_list))
 
 for (i in seq_along(trait_df_list)) {
   combo_name <- names(trait_df_list)[i]
-  if (combo_name %in% trait_combinations_to_fit){
+  if (combo_name %in% trait_combinations_to_fit) {
     obj_name <- paste0("fit2_msci_", combo_name)
     print(paste("Busy fitting", obj_name, "..."))
     assign(obj_name,
