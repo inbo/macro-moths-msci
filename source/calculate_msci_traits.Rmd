@@ -283,15 +283,17 @@ We check MCMC convergence based on posterior densities, trace plots and the Gelm
 
 ```{r}
 for (model in model_msci_list) {
+  model <- model_msci_list[[i]]
+  print("Convergence model", names(model_msci_list)[i])
   print(plot(model, ask = FALSE))
 }
-
 ```
 
 ```{r}
 get_rhats <- function(models) {
   require("dplyr")
-   # get rhats and make dataframe
+  require("tibble")
+  # get rhats and make dataframe
   rhat_list <- lapply(seq_along(models), function(i) {
     model <- models[[i]]
     rhats <- brms::rhat(model)
@@ -323,20 +325,6 @@ show_rhat <- function(rhat_df) {
 rhat_list <- get_rhats(model_msci_list)
 show_rhat(do.call(rbind.data.frame, rhat_list))
 ```
-
-
-```{r}
-test_model <- brm(formula = formula_list[[3]],
-             data = trait_df_list_filtered$colourVariation_Size,
-             family = poisson(),
-             chains = nchains,
-             warmup = burnin*2,
-             iter = niter*2,
-             cores = nparallel,
-             thin = thinning*2)
-```
-
-
 
 We check model fit based on posterior predictive checks were we compare the observed outcome to simulated datasets from the posterior predictive distribution.
 
