@@ -289,8 +289,8 @@ for (model in model_msci_list) {
 ```
 
 ```{r}
-show_rhat <- function(models) {
-  # get rhats and make dataframe
+get_rhats <- function(models) {
+   # get rhats and make dataframe
   rhat_list <- lapply(seq_along(models), function(i) {
     model <- models[[i]]
     rhats <- rhat(model)
@@ -299,24 +299,27 @@ show_rhat <- function(models) {
       rename_with(~paste0("rhat"), .cols = starts_with("rhat")) %>%
       mutate(model = names(models)[i])
     })
-  rhat_df <- do.call(rbind.data.frame, rhat_list)
+  names(rhat_list) <- names(models)
+  return(rhat_list)
+}
 
-  # visualise
+show_rhat <- function(rhat_df) {
   palette <- colorRampPalette(RColorBrewer::brewer.pal(9,
                name = "Set1"))(length(unique(rhat_df$variable)))
   rhat_df %>%
     ggplot(aes(y = .data$rhat, x = .data$model, colour = .data$variable)) +
       geom_hline(yintercept = c(1, 1.1), colour = "grey", linetype = "dashed") +
-      geom_jitter(width = 0.2, height = 0) +
+      geom_jitter(width = 0.2, height = 0, size = 1) +
       scale_colour_manual(values = palette) +
       theme(legend.position = "",
             axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-      labs(x = "")
+      labs(x = "", y = "Gelman-Rubin diagnostic")
 }
 ```
 
 ```{r}
-show_rhat(model_msci_list)
+rhat_list <- get_rhats(model_msci_list)
+show_rhat(do.call(rbind.data.frame, rhat_list))
 ```
 
 We check model fit based on posterior predictive checks were we compare the observed outcome to simulated datasets from the posterior predictive distribution.
@@ -333,17 +336,17 @@ for (i in seq_along(model_msci_list)) {
       ) +
       ggtitle(title)
     )
-  
+
   print(
-    pp_check(fit_msci_Biotope_Phagy,
+    pp_check(model,
       type = "dens_overlay_grouped", ndraws = 100,
       group = trait_combinations[[i]][1]
       ) +
       ggtitle(title)
     )
-  
+
   print(
-    pp_check(fit_msci_Biotope_Phagy,
+    pp_check(model,
       type = "dens_overlay_grouped", ndraws = 100,
       group = trait_combinations[[i]][2]
       ) +
