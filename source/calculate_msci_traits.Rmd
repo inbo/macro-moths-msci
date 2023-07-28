@@ -328,6 +328,20 @@ show_rhat(do.call(rbind.data.frame, rhat_list))
 
 Models did not converge because of missing groups.
 Can we fit the models without filtering the data?
+We can exclude groups afterwards.
+
+```{r}
+trait_combinations_to_fit <- sapply(seq_along(rhat_list), function(i) {
+  df <- rhat_list[[i]]
+  if (max(df$rhat) > 1.1) {
+    return(names(rhat_list)[i])
+  } else {
+    return(NA)
+  }
+})
+index <- !is.na(trait_combinations_to_fit)
+trait_combinations_to_fit <- trait_combinations_to_fit[index]
+```
 
 ```{r}
 model2_msci_list <- vector("list", length = length(trait_df_list))
@@ -335,19 +349,24 @@ model2_msci_list_names <- vector(length = length(trait_df_list))
 
 for (i in seq_along(trait_df_list)) {
   combo_name <- names(trait_df_list)[i]
-  obj_name <- paste0("fit2_msci_", combo_name)
-  print(paste("Busy fitting", obj_name, "..."))
-  assign(obj_name,
-         brm(formula = formula_list[[i]],
-             data = trait_df_list[[i]],
-             family = poisson(),
-             chains = nchains,
-             warmup = burnin,
-             iter = niter,
-             cores = nparallel,
-             thin = thinning,
-             file = paste0("source/brms_cache/", obj_name),
-             file_refit = "on_change"))
+  if (combo_name %in% trait_combinations_to_fit){
+    obj_name <- paste0("fit2_msci_", combo_name)
+    print(paste("Busy fitting", obj_name, "..."))
+    assign(obj_name,
+           brm(formula = formula_list[[i]],
+               data = trait_df_list[[i]],
+               family = poisson(),
+               chains = nchains,
+               warmup = burnin,
+               iter = niter,
+               cores = nparallel,
+               thin = thinning,
+               file = paste0("source/brms_cache/", obj_name),
+               file_refit = "on_change"))
+  } else {
+    obj_name <- get(paste0("fit_msci_", combo_name))
+    print(paste("Loading", obj_name, "..."))
+  }
 
   model2_msci_list[[i]] <- get(obj_name)
   model2_msci_list_names[i] <- combo_name
