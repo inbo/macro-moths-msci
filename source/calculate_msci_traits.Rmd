@@ -290,10 +290,11 @@ for (model in model_msci_list) {
 
 ```{r}
 get_rhats <- function(models) {
+  require("dplyr")
    # get rhats and make dataframe
   rhat_list <- lapply(seq_along(models), function(i) {
     model <- models[[i]]
-    rhats <- rhat(model)
+    rhats <- brms::rhat(model)
     as.data.frame(rhats) %>%
       rownames_to_column("variable") %>%
       rename_with(~paste0("rhat"), .cols = starts_with("rhat")) %>%
@@ -304,9 +305,10 @@ get_rhats <- function(models) {
 }
 
 show_rhat <- function(rhat_df) {
+  require("ggplot2")
   palette <- colorRampPalette(RColorBrewer::brewer.pal(9,
                name = "Set1"))(length(unique(rhat_df$variable)))
-  rhat_df %>%
+  rhat_df |>
     ggplot(aes(y = .data$rhat, x = .data$model, colour = .data$variable)) +
       geom_hline(yintercept = c(1, 1.1), colour = "grey", linetype = "dashed") +
       geom_jitter(width = 0.2, height = 0, size = 1) +
@@ -321,6 +323,20 @@ show_rhat <- function(rhat_df) {
 rhat_list <- get_rhats(model_msci_list)
 show_rhat(do.call(rbind.data.frame, rhat_list))
 ```
+
+
+```{r}
+test_model <- brm(formula = formula_list[[3]],
+             data = trait_df_list_filtered$colourVariation_Size,
+             family = poisson(),
+             chains = nchains,
+             warmup = burnin*2,
+             iter = niter*2,
+             cores = nparallel,
+             thin = thinning*2)
+```
+
+
 
 We check model fit based on posterior predictive checks were we compare the observed outcome to simulated datasets from the posterior predictive distribution.
 
