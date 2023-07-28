@@ -277,7 +277,7 @@ names(model_msci_list) <- model_msci_list_names
 ```
 
 
-## Checking convergence and model fit
+## Checking model convergence
 
 We check MCMC convergence based on posterior densities, trace plots and the Gelman-Rubin diagnostic for each parameter.
 
@@ -325,6 +325,39 @@ show_rhat <- function(rhat_df) {
 rhat_list <- get_rhats(model_msci_list)
 show_rhat(do.call(rbind.data.frame, rhat_list))
 ```
+
+Models did not converge because of missing groups.
+Can we fit the models without filtering the data?
+
+```{r}
+model2_msci_list <- vector("list", length = length(trait_df_list))
+model2_msci_list_names <- vector(length = length(trait_df_list))
+
+for (i in seq_along(trait_df_list)) {
+  combo_name <- names(trait_df_list)[i]
+  obj_name <- paste0("fit2_msci_", combo_name)
+  print(paste("Busy fitting", obj_name, "..."))
+  assign(obj_name,
+         brm(formula = formula_list[[i]],
+             data = trait_df_list[[i]],
+             family = poisson(),
+             chains = nchains,
+             warmup = burnin,
+             iter = niter,
+             cores = nparallel,
+             thin = thinning,
+             file = paste0("source/brms_cache/", obj_name),
+             file_refit = "on_change"))
+
+  model2_msci_list[[i]] <- get(obj_name)
+  model2_msci_list_names[i] <- combo_name
+}
+
+names(model2_msci_list) <- model2_msci_list_names
+```
+
+
+## Checking model fit
 
 We check model fit based on posterior predictive checks were we compare the observed outcome to simulated datasets from the posterior predictive distribution.
 
