@@ -284,7 +284,7 @@ We check MCMC convergence based on posterior densities, trace plots and the Gelm
 ```{r}
 for (model in model_msci_list) {
   model <- model_msci_list[[i]]
-  print("Convergence model", names(model_msci_list)[i])
+  print(paste("Convergence model", names(model_msci_list)[i]))
   print(plot(model, ask = FALSE))
 }
 ```
