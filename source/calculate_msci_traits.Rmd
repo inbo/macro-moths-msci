@@ -391,15 +391,30 @@ rhat_list2 <- get_rhats(model2_msci_list)
 show_rhat(do.call(rbind.data.frame, rhat_list2))
 ```
 
+```{r}
+converged_models_list <- vector("list")
+converged_models_list_names <- vector()
+j <- 0
+for (i in seq_along(rhat_list2)) {
+  df <- rhat_list2[[i]]
+  if (max(df$rhat) <= 1.1) {
+    j <- j + 1
+    converged_models_list[[j]] <- model2_msci_list[[i]]
+    converged_models_list_names[j] <- names(model2_msci_list)[i]
+  }
+}
+names(converged_models_list) <- converged_models_list_names
+```
+
 
 ## Checking model fit
 
 We check model fit based on posterior predictive checks were we compare the observed outcome to simulated datasets from the posterior predictive distribution.
 
 ```{r}
-for (i in seq_along(model_msci_list)) {
-  title <- paste("Fit referentiemodel", names(model_msci_list)[i])
-  model <- model_msci_list[[i]]
+for (i in seq_along(converged_models_list)) {
+  title <- paste("Fit referentiemodel", names(converged_models_list)[i])
+  model <- converged_models_list[[i]]
   print(
     pp_check(
       model,
