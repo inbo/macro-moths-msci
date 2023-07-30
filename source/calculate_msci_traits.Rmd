@@ -364,8 +364,19 @@ for (i in seq_along(trait_df_list)) {
                file = paste0("source/brms_cache/", obj_name),
                file_refit = "on_change"))
   } else {
-    obj_name <- get(paste0("fit_msci_", combo_name))
-    print(paste("Loading", obj_name, "..."))
+    obj_name <- paste0("fit_msci_", combo_name)
+    print(paste("Busy loading", obj_name, "..."))
+    assign(obj_name,
+           brm(formula = formula_list[[i]],
+               data = trait_df_list_filtered[[i]],
+               family = poisson(),
+               chains = nchains,
+               warmup = burnin,
+               iter = niter,
+               cores = nparallel,
+               thin = thinning,
+               file = paste0("source/brms_cache/", obj_name),
+               file_refit = "on_change"))
   }
 
   model2_msci_list[[i]] <- get(obj_name)
@@ -373,6 +384,11 @@ for (i in seq_along(trait_df_list)) {
 }
 
 names(model2_msci_list) <- model2_msci_list_names
+```
+
+```{r}
+rhat_list2 <- get_rhats(model2_msci_list)
+show_rhat(do.call(rbind.data.frame, rhat_list2))
 ```
 
 
