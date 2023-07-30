@@ -406,6 +406,10 @@ for (i in seq_along(rhat_list2)) {
 names(converged_models_list) <- converged_models_list_names
 ```
 
+There are still models that did not converge.
+This is because there are some groups that did not have any data from the beginning.
+
+> add strong priors? ignore these parameters (we do not need them anyway)?
 
 ## Checking model fit
 
@@ -427,7 +431,7 @@ for (i in seq_along(converged_models_list)) {
   print(
     pp_check(model,
       type = "dens_overlay_grouped", ndraws = 100,
-      group = trait_combinations[[i]][1]
+      group = str_split_i(names(converged_models_list)[i], "_", 1)
       ) +
       ggtitle(title)
     )
@@ -435,9 +439,11 @@ for (i in seq_along(converged_models_list)) {
   print(
     pp_check(model,
       type = "dens_overlay_grouped", ndraws = 100,
-      group = trait_combinations[[i]][2]
+      group = str_split_i(names(converged_models_list)[i], "_", 2)
       ) +
       ggtitle(title)
     )
 }
 ```
+
+Model fit is good.
