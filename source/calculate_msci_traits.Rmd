@@ -409,7 +409,8 @@ names(converged_models_list) <- converged_models_list_names
 There are still models that did not converge.
 This is because there are some groups that did not have any data from the beginning.
 
-> add strong priors? ignore these parameters (we do not need them anyway)?
+> add constant priors? https://github.com/paul-buerkner/brms/issues/783
+> ignore these parameters (we do not need them anyway)?
 
 ## Checking model fit
 
