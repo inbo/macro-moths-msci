@@ -412,6 +412,29 @@ This is because there are some groups that did not have any data from the beginn
 > add constant priors? https://github.com/paul-buerkner/brms/issues/783
 > ignore these parameters (we do not need them anyway)?
 
+```{r}
+prior_fixed <- c(
+  prior(constant(0),
+        class = "b",
+        coef = "EllenbergNVeryNutrientPoor:TempHumHot_Wet"),
+  prior(constant(0),
+        class = "b",
+        coef = "periodp2013_2022:EllenbergNVeryNutrientPoor:TempHumHot_Wet")
+  )
+
+obj_name <- brm(
+  formula = formula_list[[12]],
+  data = trait_df_list$EllenbergN_TempHum,
+  family = poisson(),
+  prior = prior_fixed,
+  chains = nchains,
+  warmup = burnin/2,
+  iter = niter/2,
+  cores = nparallel,
+  thin = thinning)
+```
+
+
 ## Checking model fit
 
 We check model fit based on posterior predictive checks were we compare the observed outcome to simulated datasets from the posterior predictive distribution.
