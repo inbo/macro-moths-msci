@@ -238,6 +238,7 @@ formula_list <- lapply(trait_combinations, function(combo) {
   bf(paste("n_grids", "~", paste(c("period", combo), collapse = " * "),
            " + offset(log(sum_per_period)) + (1 + period || species_nl)"))
 })
+names(formula_list) <- names(trait_df_list)
 ```
 
 ## Fit models
@@ -422,7 +423,7 @@ prior_fixed <- c(
         coef = "periodp2013_2022:EllenbergNVeryNutrientPoor:TempHumHot_Wet")
   )
 
-obj_name <- brm(
+test_fixed_fit <- brm(
   formula = formula_list[[12]],
   data = trait_df_list$EllenbergN_TempHum,
   family = poisson(),
@@ -434,6 +435,78 @@ obj_name <- brm(
   thin = thinning)
 ```
 
+This works. We can automate this but what about when the missing group is the reference group?
+
+```{r}
+set_fixed_priors <- function(combo) {
+  trait1 <- str_split_i(combo, "_", 1)
+  trait2 <- str_split_i(combo, "_", 2)
+  
+  present_combinations <- trait_df_list[[combo]] %>% 
+    mutate(group = paste(paste0(trait1, !!sym(trait1)), 
+                         paste0(trait2, !!sym(trait2)), sep = ":")) %>%
+    distinct(group) %>%
+    pull()
+  
+  all_combinations <- trait_df_list[[combo]] %>%
+    expand(!!sym(trait1), !!sym(trait2)) %>% 
+    mutate(group = paste(paste0(trait1, !!sym(trait1)), 
+                         paste0(trait2, !!sym(trait2)), sep = ":")) %>%
+    pull(group)
+  
+  
+  
+  missing_combinations <- setdiff(all_combinations,
+                                  present_combinations)
+  
+  interactions <- paste("periodp2013_2022", missing_combinations, sep = ":")
+  
+  priors <- get_prior(
+    formula = formula_list[[combo]],
+    data = trait_df_list[[combo]],
+    family = poisson())
+  
+  priors %>%
+    mutate(prior = ifelse(coef %in% c(missing_combinations, interactions),
+                          "constant(0)", prior))
+}
+```
+
+
+```{r}
+unconverged_models <- setdiff(model2_msci_list_names, 
+                              converged_models_list_names)
+model3_msci_list <- vector("list", length = length(unconverged_models))
+
+for (i in seq_along(unconverged_models)) {
+  combo_name <- unconverged_models[i]
+  obj_name <- paste0("fit3_msci_", combo_name)
+  print(paste("Busy fitting", obj_name, "..."))
+  
+  # set priors of missing groups to zero
+  prior_fixed <- set_fixed_priors(combo_name)
+  assign(obj_name, brm(formula = formula_list[[combo_name]],
+           data = trait_df_list[[combo_name]],
+           family = poisson(),
+           prior = prior_fixed,
+           chains = nchains,
+           warmup = burnin,
+           iter = niter,
+           cores = nparallel,
+           thin = thinning,
+           file = paste0("source/brms_cache/", obj_name),
+           file_refit = "on_change"))
+    
+  model3_msci_list[[i]] <- get(obj_name)
+}
+
+names(model3_msci_list) <- unconverged_models
+```
+
+```{r}
+rhat_list3 <- get_rhats(model3_msci_list)
+show_rhat(do.call(rbind.data.frame, rhat_list3))
+```
 
 ## Checking model fit
 
