@@ -59,7 +59,7 @@ species_traits_final <- read_csv(file.path(data_path,
 
 -   make a list with each trait (combination)
 -   `lapply()` to create list of filtered dataframes
--   relevel traits and/or filter dataframes
+-   `relevel()` traits and/or filter dataframes
 -   visualise group sizes
 -   `lapply()` to create formula list
 -   fit models in for loop
@@ -178,7 +178,7 @@ trait_df_list <- lapply(trait_df_list_raw, function(df) {
   if ("LarvalFoodSource2" %in% names(df)) {
     df <- df %>%
       filter(LarvalFoodSource2 != "Other") %>%
-      mutate(LarvalFoodSource2 = relevel(factor(LarvalFoodSource2), 
+      mutate(LarvalFoodSource2 = relevel(factor(LarvalFoodSource2),
                                          "Shrubs_Trees"))
   }
   if ("Phagy" %in% names(df)) {
@@ -217,7 +217,7 @@ trait_df_list <- lapply(trait_df_list_raw, function(df) {
     df <- df %>%
       mutate(OverwinteringStage = relevel(factor(OverwinteringStage), "Pupa"))
   }
-  
+
   return(df)
 })
 ```
@@ -281,12 +281,12 @@ model_msci_list_names <- vector(length = length(trait_df_list))
 for (i in seq_along(trait_df_list)) {
   combo_name <- names(trait_df_list)[i]
   obj_name <- paste0("fit_msci_", combo_name)
-  
+
   # set priors: https://github.com/paul-buerkner/brms/issues/783
   prior_combo <- set_priors_brms(combo_name,
                                  trait_df_list[[combo_name]],
                                  formula_list[[combo_name]])
-  
+
   print(paste("Busy fitting", obj_name, "..."))
   assign(obj_name,
          brm(formula = formula_list[[combo_name]],

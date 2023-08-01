@@ -7,14 +7,14 @@ set_priors_brms <- function(combo, df, formula) {
   present_combinations <- df %>%
     mutate(group = paste(paste0(trait1, !!sym(trait1)),
                          paste0(trait2, !!sym(trait2)), sep = ":")) %>%
-    distinct(group) %>%
+    distinct(.data$group) %>%
     pull()
 
   all_combinations <- df %>%
     expand(!!sym(trait1), !!sym(trait2)) %>%
     mutate(group = paste(paste0(trait1, !!sym(trait1)),
                          paste0(trait2, !!sym(trait2)), sep = ":")) %>%
-    pull(group)
+    pull(.data$group)
 
 
 
