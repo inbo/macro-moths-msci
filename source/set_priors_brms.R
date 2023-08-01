@@ -1,8 +1,10 @@
 set_priors_brms <- function(combo, df, formula) {
   require("dplyr")
+  require("tidyr")
+  require("brms")
 
-  trait1 <- str_split_i(combo, "_", 1)
-  trait2 <- str_split_i(combo, "_", 2)
+  trait1 <- stringr::str_split_i(combo, "_", 1)
+  trait2 <- stringr::str_split_i(combo, "_", 2)
 
   present_combinations <- df %>%
     mutate(group = paste(paste0(trait1, !!sym(trait1)),
@@ -34,7 +36,7 @@ set_priors_brms <- function(combo, df, formula) {
   } else {
     prior_out <- priors %>%
       mutate(prior = ifelse(coef %in% c(missing_combinations, interactions),
-                            "constant(0)", prior))
+                            "constant(0)", .data$prior))
   }
 
   return(prior_out)

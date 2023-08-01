@@ -311,7 +311,7 @@ names(model_msci_list) <- model_msci_list_names
 
 ## Checking model convergence
 
-We check MCMC convergence based on posterior densities, trace plots and the Gelman-Rubin diagnostic for each parameter.
+We check MCMC convergence based on posterior densities, trace plots and the Gelman-Rubin diagnostic for each parameter in each model.
 
 ```{r}
 for (model in model_msci_list) {
