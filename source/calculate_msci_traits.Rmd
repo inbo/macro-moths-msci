@@ -411,44 +411,21 @@ There are still models that did not converge.
 This is because there are some groups that did not have any data from the beginning.
 
 > add constant priors? https://github.com/paul-buerkner/brms/issues/783
-> ignore these parameters (we do not need them anyway)?
-
-```{r}
-prior_fixed <- c(
-  prior(constant(0),
-        class = "b",
-        coef = "EllenbergNVeryNutrientPoor:TempHumHot_Wet"),
-  prior(constant(0),
-        class = "b",
-        coef = "periodp2013_2022:EllenbergNVeryNutrientPoor:TempHumHot_Wet")
-  )
-
-test_fixed_fit <- brm(
-  formula = formula_list[[12]],
-  data = trait_df_list$EllenbergN_TempHum,
-  family = poisson(),
-  prior = prior_fixed,
-  chains = nchains,
-  warmup = burnin/2,
-  iter = niter/2,
-  cores = nparallel,
-  thin = thinning)
-```
 
 This works. We can automate this but what about when the missing group is the reference group?
 
 ```{r}
-set_fixed_priors <- function(combo) {
+set_fixed_priors <- function(combo, df) {
   trait1 <- str_split_i(combo, "_", 1)
   trait2 <- str_split_i(combo, "_", 2)
   
-  present_combinations <- trait_df_list[[combo]] %>% 
+  present_combinations <- df %>% 
     mutate(group = paste(paste0(trait1, !!sym(trait1)), 
                          paste0(trait2, !!sym(trait2)), sep = ":")) %>%
     distinct(group) %>%
     pull()
   
-  all_combinations <- trait_df_list[[combo]] %>%
+  all_combinations <- df %>%
     expand(!!sym(trait1), !!sym(trait2)) %>% 
     mutate(group = paste(paste0(trait1, !!sym(trait1)), 
                          paste0(trait2, !!sym(trait2)), sep = ":")) %>%
@@ -456,14 +433,15 @@ set_fixed_priors <- function(combo) {
   
   
   
-  missing_combinations <- setdiff(all_combinations,
-                                  present_combinations)
+  missing_combinations <- gsub("(\\s|\\(|\\))", "", 
+                               setdiff(all_combinations, present_combinations))
+    
   
   interactions <- paste("periodp2013_2022", missing_combinations, sep = ":")
   
   priors <- get_prior(
     formula = formula_list[[combo]],
-    data = trait_df_list[[combo]],
+    data = df,
     family = poisson())
   
   priors %>%
@@ -484,7 +462,7 @@ for (i in seq_along(unconverged_models)) {
   print(paste("Busy fitting", obj_name, "..."))
   
   # set priors of missing groups to zero
-  prior_fixed <- set_fixed_priors(combo_name)
+  prior_fixed <- set_fixed_priors(combo_name, trait_df_list[[combo_name]])
   assign(obj_name, brm(formula = formula_list[[combo_name]],
            data = trait_df_list[[combo_name]],
            family = poisson(),
@@ -507,6 +485,26 @@ names(model3_msci_list) <- unconverged_models
 rhat_list3 <- get_rhats(model3_msci_list)
 show_rhat(do.call(rbind.data.frame, rhat_list3))
 ```
+
+```{r}
+i = 1
+combo_name <- unconverged_models[i]
+dat <- trait_df_list[[combo_name]] %>%
+  mutate(Biotope = relevel(factor(Biotope), "Woodland"))
+
+# set priors of missing groups to zero
+prior_fixed <- set_fixed_priors(combo_name, dat)
+biotope_ellenberg_test <- brm(formula = formula_list[[combo_name]],
+           data = dat,
+           family = poisson(),
+           prior = prior_fixed,
+           chains = nchains,
+           warmup = burnin,
+           iter = niter,
+           cores = nparallel,
+           thin = thinning)
+```
+
 
 ## Checking model fit
 
