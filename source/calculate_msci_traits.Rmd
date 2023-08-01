@@ -287,17 +287,22 @@ set_priors_brms <- function(combo, df) {
 We fit the models in a for loop and store them in a list.
 
 ```{r}
-model_msci_list <- vector("list", length = length(trait_df_list_filtered))
-model_msci_list_names <- vector(length = length(trait_df_list_filtered))
+model_msci_list <- vector("list", length = length(trait_df_list))
+model_msci_list_names <- vector(length = length(trait_df_list))
 
-for (i in seq_along(trait_df_list_filtered)) {
-  combo_name <- names(trait_df_list_filtered)[i]
+for (i in seq_along(trait_df_list)) {
+  combo_name <- names(trait_df_list)[i]
   obj_name <- paste0("fit_msci_", combo_name)
+  
+  # set priors
+  prior_combo <- set_priors_brms(combo_name, trait_df_list[[i]])
+  
   print(paste("Busy fitting", obj_name, "..."))
   assign(obj_name,
          brm(formula = formula_list[[i]],
-             data = trait_df_list_filtered[[i]],
+             data = trait_df_list[[i]],
              family = poisson(),
+             prior = prior_combo,
              chains = nchains,
              warmup = burnin,
              iter = niter,
