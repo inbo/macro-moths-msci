@@ -167,7 +167,7 @@ names(trait_df_list_raw) <- names_trait_df_list
 ```
 
 We set reference levels such that the models can converge (reference group does not contain missing data).
-We also filter out `LarvalFoodSource2:Other` which contains only two species.
+We also filter out `LarvalFoodSource2:Other` which contains only two species and `Distribution:Cosmopolitan` which contains only five species.
 
 ```{r}
 trait_df_list <- lapply(trait_df_list_raw, function(df) {
@@ -187,6 +187,7 @@ trait_df_list <- lapply(trait_df_list_raw, function(df) {
   }
   if ("Distribution" %in% names(df)) {
     df <- df %>%
+      filter(Distribution != "Cosmopolitan") %>%
       mutate(Distribution = relevel(factor(Distribution), "Palaearctic"))
   }
   if ("TempHum" %in% names(df)) {
