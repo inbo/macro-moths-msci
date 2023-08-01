@@ -1,7 +1,6 @@
 set_priors_brms <- function(combo, df, formula) {
   require("dplyr")
   require("tidyr")
-  require("brms")
 
   trait1 <- stringr::str_split_i(combo, "_", 1)
   trait2 <- stringr::str_split_i(combo, "_", 2)
@@ -26,7 +25,7 @@ set_priors_brms <- function(combo, df, formula) {
 
   interactions <- paste("periodp2013_2022", missing_combinations, sep = ":")
 
-  priors <- get_prior(
+  priors <- brms::get_prior(
     formula = formula,
     data = df,
     family = poisson())

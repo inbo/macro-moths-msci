@@ -326,6 +326,8 @@ rhat_list <- get_rhats(model_msci_list)
 show_rhat(do.call(rbind.data.frame, rhat_list))
 ```
 
+Convergence is good.
+
 
 ## Checking model fit
 
