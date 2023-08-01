@@ -230,7 +230,7 @@ nchains <- 3 # number of chains
 niter <- 10000 # number of iterations (incl. burn-in)
 burnin <- niter / 4 # number of initial samples to discard (burn-in)
 nparallel <- nchains # number of cores used for parallel computing
-thinning <- 2
+thinning <- 3
 ```
 
 ```{r}
@@ -246,6 +246,42 @@ names(formula_list) <- names(trait_df_list)
 ```{r}
 # create cache directory if not yet available
 dir.create(here("source", "source/brms_cache"), FALSE)
+```
+
+```{r}
+set_priors_brms <- function(combo, df) {
+  trait1 <- str_split_i(combo, "_", 1)
+  trait2 <- str_split_i(combo, "_", 2)
+  
+  present_combinations <- df %>% 
+    mutate(group = paste(paste0(trait1, !!sym(trait1)), 
+                         paste0(trait2, !!sym(trait2)), sep = ":")) %>%
+    distinct(group) %>%
+    pull()
+  
+  all_combinations <- df %>%
+    expand(!!sym(trait1), !!sym(trait2)) %>% 
+    mutate(group = paste(paste0(trait1, !!sym(trait1)), 
+                         paste0(trait2, !!sym(trait2)), sep = ":")) %>%
+    pull(group)
+  
+  
+  
+  missing_combinations <- gsub("(\\s|\\(|\\))", "", 
+                               setdiff(all_combinations, present_combinations))
+    
+  
+  interactions <- paste("periodp2013_2022", missing_combinations, sep = ":")
+  
+  priors <- get_prior(
+    formula = formula_list[[combo]],
+    data = df,
+    family = poisson())
+  
+  priors %>%
+    mutate(prior = ifelse(coef %in% c(missing_combinations, interactions),
+                          "constant(0)", prior))
+}
 ```
 
 We fit the models in a for loop and store them in a list.
@@ -414,41 +450,7 @@ This is because there are some groups that did not have any data from the beginn
 
 This works. We can automate this but what about when the missing group is the reference group?
 
-```{r}
-set_fixed_priors <- function(combo, df) {
-  trait1 <- str_split_i(combo, "_", 1)
-  trait2 <- str_split_i(combo, "_", 2)
-  
-  present_combinations <- df %>% 
-    mutate(group = paste(paste0(trait1, !!sym(trait1)), 
-                         paste0(trait2, !!sym(trait2)), sep = ":")) %>%
-    distinct(group) %>%
-    pull()
-  
-  all_combinations <- df %>%
-    expand(!!sym(trait1), !!sym(trait2)) %>% 
-    mutate(group = paste(paste0(trait1, !!sym(trait1)), 
-                         paste0(trait2, !!sym(trait2)), sep = ":")) %>%
-    pull(group)
-  
-  
-  
-  missing_combinations <- gsub("(\\s|\\(|\\))", "", 
-                               setdiff(all_combinations, present_combinations))
-    
-  
-  interactions <- paste("periodp2013_2022", missing_combinations, sep = ":")
-  
-  priors <- get_prior(
-    formula = formula_list[[combo]],
-    data = df,
-    family = poisson())
-  
-  priors %>%
-    mutate(prior = ifelse(coef %in% c(missing_combinations, interactions),
-                          "constant(0)", prior))
-}
-```
+
 
 
 ```{r}
@@ -462,7 +464,7 @@ for (i in seq_along(unconverged_models)) {
   print(paste("Busy fitting", obj_name, "..."))
   
   # set priors of missing groups to zero
-  prior_fixed <- set_fixed_priors(combo_name, trait_df_list[[combo_name]])
+  prior_fixed <- set_priors_brms(combo_name, trait_df_list[[combo_name]])
   assign(obj_name, brm(formula = formula_list[[combo_name]],
            data = trait_df_list[[combo_name]],
            family = poisson(),
@@ -493,7 +495,7 @@ dat <- trait_df_list[[combo_name]] %>%
   mutate(Biotope = relevel(factor(Biotope), "Woodland"))
 
 # set priors of missing groups to zero
-prior_fixed <- set_fixed_priors(combo_name, dat)
+prior_fixed <- set_priors_brms(combo_name, dat)
 biotope_ellenberg_test <- brm(formula = formula_list[[combo_name]],
            data = dat,
            family = poisson(),
@@ -505,10 +507,79 @@ biotope_ellenberg_test <- brm(formula = formula_list[[combo_name]],
            thin = thinning)
 ```
 
+```{r}
+test_rhat <- get_rhats(list(model = biotope_ellenberg_test))
+show_rhat(do.call(rbind.data.frame, test_rhat))
+```
+
+```{r}
+i = 2
+combo_name <- unconverged_models[i]
+dat <- trait_df_list[[combo_name]] %>%
+  mutate(LarvalFoodSource2 = relevel(factor(LarvalFoodSource2), "Shrubs_Trees"),
+         Phagy = relevel(factor(Phagy), "Polyphagous")) %>%
+  filter(LarvalFoodSource2 != "Other")
+
+# set priors of missing groups to zero
+prior_fixed <- set_priors_brms(combo_name, dat)
+Phagy_LarvalFoodSource2 <- brm(formula = formula_list[[combo_name]],
+           data = dat,
+           family = poisson(),
+           prior = prior_fixed,
+           chains = nchains,
+           warmup = burnin,
+           iter = niter,
+           cores = nparallel,
+           thin = thinning)
+
+i = 3
+combo_name <- unconverged_models[i]
+dat <- trait_df_list[[combo_name]] %>%
+  mutate(LarvalFoodSource2 = relevel(factor(LarvalFoodSource2), "Shrubs_Trees")) %>%
+  filter(LarvalFoodSource2 != "Other")
+
+# set priors of missing groups to zero
+prior_fixed <- set_priors_brms(combo_name, dat)
+LarvalFoodSource2_EllenbergN <- brm(formula = formula_list[[combo_name]],
+           data = dat,
+           family = poisson(),
+           prior = prior_fixed,
+           chains = nchains,
+           warmup = burnin,
+           iter = niter,
+           cores = nparallel,
+           thin = thinning)
+
+i = 5
+combo_name <- unconverged_models[i]
+dat <- trait_df_list[[combo_name]] %>%
+  mutate(Distribution = relevel(factor(Distribution), "Palaearctic"),
+         TempHum = relevel(factor(TempHum), "Hot_Dry"))
+
+# set priors of missing groups to zero
+prior_fixed <- set_priors_brms(combo_name, dat)
+Distribution_TempHum <- brm(formula = formula_list[[combo_name]],
+           data = dat,
+           family = poisson(),
+           prior = prior_fixed,
+           chains = nchains,
+           warmup = burnin,
+           iter = niter,
+           cores = nparallel,
+           thin = thinning)
+```
+
+```{r}
+test_rhat2 <- get_rhats(list("Phagy_LarvalFoodSource2" = Phagy_LarvalFoodSource2,
+                            "LarvalFoodSource2_EllenbergN" = LarvalFoodSource2_EllenbergN,
+                            "Distribution_TempHum" = Distribution_TempHum))
+show_rhat(do.call(rbind.data.frame, test_rhat2))
+```
+
 
 ## Checking model fit
 
-We check model fit based on posterior predictive checks were we compare the observed outcome to simulated datasets from the posterior predictive distribution.
+We check model fit based on posterior predictive checks where we compare the observed outcome to simulated datasets from the posterior predictive distribution.
 
 ```{r}
 for (i in seq_along(converged_models_list)) {

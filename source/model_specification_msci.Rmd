@@ -76,7 +76,7 @@ $$
 Such that we can specify the model
 
 $$
-\ln(\lambda_{ij}) = \beta_0 + \beta_{msci}X_{period} + ln(\Sigma_{i=1}^Sn_{ij}) + b_{0,{i = 1, ..., S}} + b_{1,{i = 1, ..., S}}X_{period}
+\ln(\lambda_{ij}) = \beta_0 + \beta_{msci}X_{period} + \ln(\Sigma_{i=1}^Sn_{ij}) + b_{0,{i = 1, ..., S}} + b_{1,{i = 1, ..., S}}X_{period}
 $$
 
 Where
