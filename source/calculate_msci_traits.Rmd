@@ -481,10 +481,13 @@ msci_draw_list <- lapply(names(model_msci_list), function(name) {
 names(msci_draw_list) <- names(model_msci_list)
 
 # filter groups with too few species
-msci_draw_list_filtered <- lapply(msci_draw_list, function(name) {
-  msci_draws <- msci_draw_list[[name]]
+msci_draw_list_filtered <- lapply(msci_draw_list, function(draws) {
+  draws %>%
+    filter(n_species > filter_size) %>%
+    select(-n_species)
 })
 
+# get summary statistics
 summary_draw_list <- lapply(names(msci_draw_list_filtered), function(name) {
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
