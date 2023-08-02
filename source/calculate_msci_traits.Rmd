@@ -39,6 +39,7 @@ library(tidybayes)
 
 # Source
 source(here("source", "summarise_brms_models.R"))
+source(here("source", "set_priors_brms.R"))
 ```
 
 # Goal
@@ -58,7 +59,8 @@ species_traits_final <- read_csv(file.path(data_path,
 
 -   make a list with each trait (combination)
 -   `lapply()` to create list of filtered dataframes
--   visualise and filter on group sizes
+-   `relevel()` traits and/or filter dataframes
+-   visualise group sizes
 -   `lapply()` to create formula list
 -   fit models in for loop
 -   check MCMC convergence in for loop
@@ -99,7 +101,7 @@ trait_combinations
 We create a list of dataframes per trait combination.
 
 ```{r}
-trait_df_list <- lapply(trait_combinations, function(combo) {
+trait_df_list_raw <- lapply(trait_combinations, function(combo) {
   if (length(combo) == 2) {
     row <- combo[1]
     column <- combo[2]
@@ -161,7 +163,64 @@ names_trait_df_list <- sapply(trait_combinations, function(combo) {
   paste(combo, collapse = "_")
 })
 
-names(trait_df_list) <- names_trait_df_list
+names(trait_df_list_raw) <- names_trait_df_list
+```
+
+We set reference levels such that the models can converge (reference group does not contain missing data).
+We also filter out `LarvalFoodSource2:Other` which contains only two species and `Distribution:Cosmopolitan` which contains only five species.
+
+```{r}
+trait_df_list <- lapply(trait_df_list_raw, function(df) {
+  if ("Biotope" %in% names(df)) {
+    df <- df %>%
+      mutate(Biotope = relevel(factor(Biotope), "Woodland"))
+  }
+  if ("LarvalFoodSource2" %in% names(df)) {
+    df <- df %>%
+      filter(LarvalFoodSource2 != "Other") %>%
+      mutate(LarvalFoodSource2 = relevel(factor(LarvalFoodSource2),
+                                         "Shrubs_Trees"))
+  }
+  if ("Phagy" %in% names(df)) {
+    df <- df %>%
+      mutate(Phagy = relevel(factor(Phagy), "Polyphagous"))
+  }
+  if ("Distribution" %in% names(df)) {
+    df <- df %>%
+      filter(Distribution != "Cosmopolitan") %>%
+      mutate(Distribution = relevel(factor(Distribution), "Palaearctic"))
+  }
+  if ("TempHum" %in% names(df)) {
+    df <- df %>%
+      mutate(TempHum = relevel(factor(TempHum), "Hot_Dry"))
+  }
+  if ("EllenbergN" %in% names(df)) {
+    df <- df %>%
+      mutate(EllenbergN = relevel(factor(EllenbergN), "NutrientPoor"))
+  }
+  if ("colourVariation" %in% names(df)) {
+    df <- df %>%
+      mutate(colourVariation = relevel(factor(colourVariation), "Invariable"))
+  }
+  if ("Size" %in% names(df)) {
+    df <- df %>%
+      mutate(Size = relevel(factor(Size), "Intermediate"))
+  }
+  if ("Activity" %in% names(df)) {
+    df <- df %>%
+      mutate(Activity = relevel(factor(Activity), "NightActive"))
+  }
+  if ("nGenerations" %in% names(df)) {
+    df <- df %>%
+      mutate(nGenerations = relevel(factor(nGenerations), "1"))
+  }
+  if ("OverwinteringStage" %in% names(df)) {
+    df <- df %>%
+      mutate(OverwinteringStage = relevel(factor(OverwinteringStage), "Pupa"))
+  }
+
+  return(df)
+})
 ```
 
 How many species do we have per trait combination?
@@ -176,40 +235,6 @@ for (i in seq_along(trait_combinations)) {
         geom_tile(aes(fill = n_species), colour = "white") +
         geom_text(aes(label = n_species)) +
         scale_fill_gradient(low = "red", high = "green") +
-        labs(fill = "number of\nspecies", x = "", y = "",
-             title = gsub("_", " ~ ", names(trait_df_list)[i]))
-
-    print(p)
-  }
-}
-```
-
-```{r}
-filter_size <- 10
-```
-
-We only keep trait groups with more than `r filter_size` species.
-
-```{r}
-trait_df_list_filtered <- lapply(trait_df_list, function(df) {
-  df %>%
-    filter(n_species > filter_size)
-})
-names(trait_df_list_filtered) <- names(trait_df_list)
-```
-
-These are the groups that remain:
-
-```{r}
-for (i in seq_along(trait_combinations)) {
-  combo <- trait_combinations[[i]]
-
-  if (length(combo) == 2) {
-    p <- trait_df_list_filtered[[i]] %>%
-      ggplot(aes(x = .data[[combo[1]]], y = .data[[combo[2]]])) +
-        geom_tile(fill = "cornflowerblue", colour = "white") +
-        geom_text(aes(label = n_species)) +
-        #scale_fill_gradient(low = "red", high = "green") +
         labs(fill = "number of\nspecies", x = "", y = "",
              title = gsub("_", " ~ ", names(trait_df_list)[i]))
 
@@ -248,42 +273,6 @@ names(formula_list) <- names(trait_df_list)
 dir.create(here("source", "source/brms_cache"), FALSE)
 ```
 
-```{r}
-set_priors_brms <- function(combo, df) {
-  trait1 <- str_split_i(combo, "_", 1)
-  trait2 <- str_split_i(combo, "_", 2)
-  
-  present_combinations <- df %>% 
-    mutate(group = paste(paste0(trait1, !!sym(trait1)), 
-                         paste0(trait2, !!sym(trait2)), sep = ":")) %>%
-    distinct(group) %>%
-    pull()
-  
-  all_combinations <- df %>%
-    expand(!!sym(trait1), !!sym(trait2)) %>% 
-    mutate(group = paste(paste0(trait1, !!sym(trait1)), 
-                         paste0(trait2, !!sym(trait2)), sep = ":")) %>%
-    pull(group)
-  
-  
-  
-  missing_combinations <- gsub("(\\s|\\(|\\))", "", 
-                               setdiff(all_combinations, present_combinations))
-    
-  
-  interactions <- paste("periodp2013_2022", missing_combinations, sep = ":")
-  
-  priors <- get_prior(
-    formula = formula_list[[combo]],
-    data = df,
-    family = poisson())
-  
-  priors %>%
-    mutate(prior = ifelse(coef %in% c(missing_combinations, interactions),
-                          "constant(0)", prior))
-}
-```
-
 We fit the models in a for loop and store them in a list.
 
 ```{r}
@@ -293,14 +282,16 @@ model_msci_list_names <- vector(length = length(trait_df_list))
 for (i in seq_along(trait_df_list)) {
   combo_name <- names(trait_df_list)[i]
   obj_name <- paste0("fit_msci_", combo_name)
-  
-  # set priors
-  prior_combo <- set_priors_brms(combo_name, trait_df_list[[i]])
-  
+
+  # set priors: https://github.com/paul-buerkner/brms/issues/783
+  prior_combo <- set_priors_brms(combo_name,
+                                 trait_df_list[[combo_name]],
+                                 formula_list[[combo_name]])
+
   print(paste("Busy fitting", obj_name, "..."))
   assign(obj_name,
-         brm(formula = formula_list[[i]],
-             data = trait_df_list[[i]],
+         brm(formula = formula_list[[combo_name]],
+             data = trait_df_list[[combo_name]],
              family = poisson(),
              prior = prior_combo,
              chains = nchains,
@@ -321,7 +312,7 @@ names(model_msci_list) <- model_msci_list_names
 
 ## Checking model convergence
 
-We check MCMC convergence based on posterior densities, trace plots and the Gelman-Rubin diagnostic for each parameter.
+We check MCMC convergence based on posterior densities, trace plots and the Gelman-Rubin diagnostic for each parameter in each model.
 
 ```{r}
 for (model in model_msci_list) {
@@ -332,254 +323,11 @@ for (model in model_msci_list) {
 ```
 
 ```{r}
-get_rhats <- function(models) {
-  require("dplyr")
-  require("tibble")
-  # get rhats and make dataframe
-  rhat_list <- lapply(seq_along(models), function(i) {
-    model <- models[[i]]
-    rhats <- brms::rhat(model)
-    as.data.frame(rhats) %>%
-      rownames_to_column("variable") %>%
-      rename_with(~paste0("rhat"), .cols = starts_with("rhat")) %>%
-      mutate(model = names(models)[i])
-    })
-  names(rhat_list) <- names(models)
-  return(rhat_list)
-}
-
-show_rhat <- function(rhat_df) {
-  require("ggplot2")
-  palette <- colorRampPalette(RColorBrewer::brewer.pal(9,
-               name = "Set1"))(length(unique(rhat_df$variable)))
-  rhat_df |>
-    ggplot(aes(y = .data$rhat, x = .data$model, colour = .data$variable)) +
-      geom_hline(yintercept = c(1, 1.1), colour = "grey", linetype = "dashed") +
-      geom_jitter(width = 0.2, height = 0, size = 1) +
-      scale_colour_manual(values = palette) +
-      theme(legend.position = "",
-            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-      labs(x = "", y = "Gelman-Rubin diagnostic")
-}
-```
-
-```{r}
 rhat_list <- get_rhats(model_msci_list)
 show_rhat(do.call(rbind.data.frame, rhat_list))
 ```
 
-Models did not converge because of missing groups.
-Can we fit the models without filtering the data?
-We can exclude groups afterwards.
-
-```{r}
-trait_combinations_to_fit <- sapply(seq_along(rhat_list), function(i) {
-  df <- rhat_list[[i]]
-  if (max(df$rhat) > 1.1) {
-    return(names(rhat_list)[i])
-  } else {
-    return(NA)
-  }
-})
-index <- !is.na(trait_combinations_to_fit)
-trait_combinations_to_fit <- trait_combinations_to_fit[index]
-```
-
-```{r}
-model2_msci_list <- vector("list", length = length(trait_df_list))
-model2_msci_list_names <- vector(length = length(trait_df_list))
-
-for (i in seq_along(trait_df_list)) {
-  combo_name <- names(trait_df_list)[i]
-  if (combo_name %in% trait_combinations_to_fit) {
-    obj_name <- paste0("fit2_msci_", combo_name)
-    print(paste("Busy fitting", obj_name, "..."))
-    assign(obj_name,
-           brm(formula = formula_list[[i]],
-               data = trait_df_list[[i]],
-               family = poisson(),
-               chains = nchains,
-               warmup = burnin,
-               iter = niter,
-               cores = nparallel,
-               thin = thinning,
-               file = paste0("source/brms_cache/", obj_name),
-               file_refit = "on_change"))
-  } else {
-    obj_name <- paste0("fit_msci_", combo_name)
-    print(paste("Busy loading", obj_name, "..."))
-    assign(obj_name,
-           brm(formula = formula_list[[i]],
-               data = trait_df_list_filtered[[i]],
-               family = poisson(),
-               chains = nchains,
-               warmup = burnin,
-               iter = niter,
-               cores = nparallel,
-               thin = thinning,
-               file = paste0("source/brms_cache/", obj_name),
-               file_refit = "on_change"))
-  }
-
-  model2_msci_list[[i]] <- get(obj_name)
-  model2_msci_list_names[i] <- combo_name
-}
-
-names(model2_msci_list) <- model2_msci_list_names
-```
-
-```{r}
-rhat_list2 <- get_rhats(model2_msci_list)
-show_rhat(do.call(rbind.data.frame, rhat_list2))
-```
-
-```{r}
-converged_models_list <- vector("list")
-converged_models_list_names <- vector()
-j <- 0
-for (i in seq_along(rhat_list2)) {
-  df <- rhat_list2[[i]]
-  if (max(df$rhat) <= 1.1) {
-    j <- j + 1
-    converged_models_list[[j]] <- model2_msci_list[[i]]
-    converged_models_list_names[j] <- names(model2_msci_list)[i]
-  }
-}
-names(converged_models_list) <- converged_models_list_names
-```
-
-There are still models that did not converge.
-This is because there are some groups that did not have any data from the beginning.
-
-> add constant priors? https://github.com/paul-buerkner/brms/issues/783
-
-This works. We can automate this but what about when the missing group is the reference group?
-
-
-
-
-```{r}
-unconverged_models <- setdiff(model2_msci_list_names, 
-                              converged_models_list_names)
-model3_msci_list <- vector("list", length = length(unconverged_models))
-
-for (i in seq_along(unconverged_models)) {
-  combo_name <- unconverged_models[i]
-  obj_name <- paste0("fit3_msci_", combo_name)
-  print(paste("Busy fitting", obj_name, "..."))
-  
-  # set priors of missing groups to zero
-  prior_fixed <- set_priors_brms(combo_name, trait_df_list[[combo_name]])
-  assign(obj_name, brm(formula = formula_list[[combo_name]],
-           data = trait_df_list[[combo_name]],
-           family = poisson(),
-           prior = prior_fixed,
-           chains = nchains,
-           warmup = burnin,
-           iter = niter,
-           cores = nparallel,
-           thin = thinning,
-           file = paste0("source/brms_cache/", obj_name),
-           file_refit = "on_change"))
-    
-  model3_msci_list[[i]] <- get(obj_name)
-}
-
-names(model3_msci_list) <- unconverged_models
-```
-
-```{r}
-rhat_list3 <- get_rhats(model3_msci_list)
-show_rhat(do.call(rbind.data.frame, rhat_list3))
-```
-
-```{r}
-i = 1
-combo_name <- unconverged_models[i]
-dat <- trait_df_list[[combo_name]] %>%
-  mutate(Biotope = relevel(factor(Biotope), "Woodland"))
-
-# set priors of missing groups to zero
-prior_fixed <- set_priors_brms(combo_name, dat)
-biotope_ellenberg_test <- brm(formula = formula_list[[combo_name]],
-           data = dat,
-           family = poisson(),
-           prior = prior_fixed,
-           chains = nchains,
-           warmup = burnin,
-           iter = niter,
-           cores = nparallel,
-           thin = thinning)
-```
-
-```{r}
-test_rhat <- get_rhats(list(model = biotope_ellenberg_test))
-show_rhat(do.call(rbind.data.frame, test_rhat))
-```
-
-```{r}
-i = 2
-combo_name <- unconverged_models[i]
-dat <- trait_df_list[[combo_name]] %>%
-  mutate(LarvalFoodSource2 = relevel(factor(LarvalFoodSource2), "Shrubs_Trees"),
-         Phagy = relevel(factor(Phagy), "Polyphagous")) %>%
-  filter(LarvalFoodSource2 != "Other")
-
-# set priors of missing groups to zero
-prior_fixed <- set_priors_brms(combo_name, dat)
-Phagy_LarvalFoodSource2 <- brm(formula = formula_list[[combo_name]],
-           data = dat,
-           family = poisson(),
-           prior = prior_fixed,
-           chains = nchains,
-           warmup = burnin,
-           iter = niter,
-           cores = nparallel,
-           thin = thinning)
-
-i = 3
-combo_name <- unconverged_models[i]
-dat <- trait_df_list[[combo_name]] %>%
-  mutate(LarvalFoodSource2 = relevel(factor(LarvalFoodSource2), "Shrubs_Trees")) %>%
-  filter(LarvalFoodSource2 != "Other")
-
-# set priors of missing groups to zero
-prior_fixed <- set_priors_brms(combo_name, dat)
-LarvalFoodSource2_EllenbergN <- brm(formula = formula_list[[combo_name]],
-           data = dat,
-           family = poisson(),
-           prior = prior_fixed,
-           chains = nchains,
-           warmup = burnin,
-           iter = niter,
-           cores = nparallel,
-           thin = thinning)
-
-i = 5
-combo_name <- unconverged_models[i]
-dat <- trait_df_list[[combo_name]] %>%
-  mutate(Distribution = relevel(factor(Distribution), "Palaearctic"),
-         TempHum = relevel(factor(TempHum), "Hot_Dry"))
-
-# set priors of missing groups to zero
-prior_fixed <- set_priors_brms(combo_name, dat)
-Distribution_TempHum <- brm(formula = formula_list[[combo_name]],
-           data = dat,
-           family = poisson(),
-           prior = prior_fixed,
-           chains = nchains,
-           warmup = burnin,
-           iter = niter,
-           cores = nparallel,
-           thin = thinning)
-```
-
-```{r}
-test_rhat2 <- get_rhats(list("Phagy_LarvalFoodSource2" = Phagy_LarvalFoodSource2,
-                            "LarvalFoodSource2_EllenbergN" = LarvalFoodSource2_EllenbergN,
-                            "Distribution_TempHum" = Distribution_TempHum))
-show_rhat(do.call(rbind.data.frame, test_rhat2))
-```
+Convergence is good.
 
 
 ## Checking model fit
@@ -587,9 +335,9 @@ show_rhat(do.call(rbind.data.frame, test_rhat2))
 We check model fit based on posterior predictive checks where we compare the observed outcome to simulated datasets from the posterior predictive distribution.
 
 ```{r}
-for (i in seq_along(converged_models_list)) {
-  title <- paste("Fit referentiemodel", names(converged_models_list)[i])
-  model <- converged_models_list[[i]]
+for (i in seq_along(model_msci_list)) {
+  title <- paste("Fit referentiemodel", names(model_msci_list)[i])
+  model <- model_msci_list[[i]]
   print(
     pp_check(
       model,
@@ -602,7 +350,7 @@ for (i in seq_along(converged_models_list)) {
   print(
     pp_check(model,
       type = "dens_overlay_grouped", ndraws = 100,
-      group = str_split_i(names(converged_models_list)[i], "_", 1)
+      group = str_split_i(names(model_msci_list)[i], "_", 1)
       ) +
       ggtitle(title)
     )
@@ -610,7 +358,7 @@ for (i in seq_along(converged_models_list)) {
   print(
     pp_check(model,
       type = "dens_overlay_grouped", ndraws = 100,
-      group = str_split_i(names(converged_models_list)[i], "_", 2)
+      group = str_split_i(names(model_msci_list)[i], "_", 2)
       ) +
       ggtitle(title)
     )
