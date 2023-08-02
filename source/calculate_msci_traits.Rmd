@@ -137,9 +137,9 @@ trait_df_list <- lapply(trait_combinations, function(combo) {
       ) %>%
       ungroup() %>%
       # Reference group is most frequent group
-      mutate("{row}" := factor(!!sym(row),
+      mutate("{row}" := factor(!!sym(row), # nolint: object_name_linter.
                                levels(fct_infreq(!!sym(row)))),
-             "{column}" := factor(!!sym(column),
+             "{column}" := factor(!!sym(column), # nolint: object_name_linter.
                                   levels(fct_infreq(!!sym(column))))) %>%
       # How many species per trait combination?
       group_by_at(c("period", combo)) %>%
@@ -171,7 +171,7 @@ trait_df_list <- lapply(trait_combinations, function(combo) {
         values_from = "trait_value"
       ) %>%
       # Reference group is most frequent group
-      mutate("{combo}" := factor(!!sym(combo), 
+      mutate("{combo}" := factor(!!sym(combo), # nolint: object_name_linter.
                                  levels(fct_infreq(!!sym(combo))))) %>%
       # How many species per trait combination?
       group_by_at(c("period", combo)) %>%
