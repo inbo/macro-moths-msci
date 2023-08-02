@@ -396,12 +396,18 @@ msci_draw_list <- lapply(names(model_msci_list), function(name) {
   contrast_matrix <- contrast_mat_list[[name]]
   
   # calculate msci
-  out <- as_tibble(
+  msci_df <- as_tibble(
     exp(t(contrast_matrix %*% t(draw_matrix))) - 1
     ) %>%
     `colnames<-`(unlist(names_list[[name]])) %>%
     pivot_longer(cols = everything(), names_to = "trait", values_to = "msci") %>%
     separate(trait, into = c(trait2, trait1), sep = ":")
+  
+  # get number of species per group
+  out <- msci_df %>%
+    full_join(trait_df_list[[name]] %>%
+                select(all_of(c(trait1, trait2)), n_species),
+              relationship = "many-to-many")
   
   # ordered factors
   if ("EllenbergN" %in% names(out)) {
@@ -474,11 +480,16 @@ msci_draw_list <- lapply(names(model_msci_list), function(name) {
 })
 names(msci_draw_list) <- names(model_msci_list)
 
-summary_draw_list <- lapply(names(msci_draw_list), function(name) {
+# filter groups with too few species
+msci_draw_list_filtered <- lapply(msci_draw_list, function(name) {
+  msci_draws <- msci_draw_list[[name]]
+})
+
+summary_draw_list <- lapply(names(msci_draw_list_filtered), function(name) {
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
   
-  msci_draws <- msci_draw_list[[name]]
+  msci_draws <- msci_draw_list_filtered[[name]]
   
   msci_draws %>%
     group_by_at(c(trait1, trait2)) %>%
@@ -503,7 +514,7 @@ for (i in seq_along(summary_draw_list)) {
     kable() %>%
     print()
   
-  p <- msci_draw_list[[name]] %>%
+  p <- msci_draw_list_filtered[[name]] %>%
     select(all_of(c(trait1, trait2)), everything()) %>%
     full_join(summary) %>%
     mutate(fill_var = case_when(
