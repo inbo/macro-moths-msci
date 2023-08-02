@@ -20,7 +20,8 @@ show_rhat <- function(rhat_df) {
                               name = "Set1"))(length(unique(rhat_df$variable)))
   rhat_df |>
     ggplot(aes(y = .data$rhat, x = .data$model, colour = .data$variable)) +
-    geom_hline(yintercept = c(1, 1.1), colour = "grey", linetype = "dashed") +
+    geom_hline(yintercept = 1, colour = "darkgrey", linetype = "dashed") +
+    geom_hline(yintercept = 1.1, colour = "firebrick", linetype = "dashed") +
     geom_jitter(width = 0.2, height = 0, size = 1) +
     scale_colour_manual(values = palette) +
     theme(legend.position = "",
