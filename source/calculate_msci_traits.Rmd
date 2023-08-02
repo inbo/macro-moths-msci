@@ -168,11 +168,19 @@ names_trait_df_list <- sapply(trait_combinations, function(combo) {
 names(trait_df_list_raw) <- names_trait_df_list
 ```
 
+```{r}
+filter_size <- 10
+```
+
 We set reference levels such that the models can converge (reference group does not contain missing data).
-We also filter out `LarvalFoodSource2:Other` which contains only two species and `Distribution:Cosmopolitan` which contains only five species.
+We only keep trait values with more than `r filter_size` species.
 
 ```{r}
 trait_df_list <- lapply(trait_df_list_raw, function(df) {
+  df <- df %>%
+    filter(n_trait1 > filter_size,
+           n_trait2 > filter_size)
+  
   if ("Biotope" %in% names(df)) {
     df <- df %>%
       mutate(Biotope = relevel(factor(Biotope), "Woodland"))
@@ -277,6 +285,7 @@ dir.create(here("source", "source/brms_cache"), FALSE)
 ```
 
 We fit the models in a for loop and store them in a list.
+For missing trait value combinations we need to set constant priors of zero.
 
 ```{r}
 model_msci_list <- vector("list", length = length(trait_df_list))
@@ -286,7 +295,7 @@ for (i in seq_along(trait_df_list)) {
   combo_name <- names(trait_df_list)[i]
   obj_name <- paste0("fit_msci_", combo_name)
 
-  # set priors: https://github.com/paul-buerkner/brms/issues/783
+  # set priors
   prior_combo <- set_priors_brms(combo_name,
                                  trait_df_list[[combo_name]],
                                  formula_list[[combo_name]])
@@ -315,7 +324,7 @@ names(model_msci_list) <- model_msci_list_names
 
 ### Checking model convergence
 
-We check MCMC convergence based on posterior densities, trace plots and the Gelman-Rubin diagnostic for each parameter in each model.
+We check MCMC convergence based on posterior densities, trace plots and the potential scale reduction factors ($\hat{R}$) for each parameter in each model.
 
 ```{r}
 for (i in seq_along(model_msci_list)) {
