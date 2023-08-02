@@ -44,7 +44,7 @@ source(here("source", "set_priors_brms.R"))
 
 # Goal
 
-Fit models and calculate MSCI for specific trait combinations.
+Fit models and calculate MSCI for specific traits and/or trait combinations.
 
 # Load data
 
@@ -55,20 +55,22 @@ species_traits_final <- read_csv(file.path(data_path,
                                            "prop_data_per_trait.csv"))
 ```
 
-# Automatisation
+# Trait combinations
+## Workflow
 
 -   make a list with each trait (combination)
--   `lapply()` to create list of filtered dataframes
--   `relevel()` traits and/or filter dataframes
+-   `lapply()` to create list of dataframes for each trait combination
+-   `relevel()` traits and filter dataframes based on number of species
 -   visualise group sizes
 -   `lapply()` to create formula list
 -   fit models in for loop
 -   check MCMC convergence in for loop
 -   check model fit in for loop
--   ...
+-   summarise results
+-   visualise results
 
-# Data preparation
-## Trait combinations
+## Data preparation
+### Traits of interest
 
 We consider a number of trait combinations.
 
@@ -96,7 +98,7 @@ trait_combinations
 ```
 
 
-## Filter dataframes per trait combination
+### Filter dataframes per trait combination
 
 We create a list of dataframes per trait combination.
 
@@ -245,8 +247,8 @@ for (i in seq_along(trait_combinations)) {
 ```
 
 
-# Model fitting
-## Model fit preparation
+## Model fitting
+### Model fit preparation
 
 We set the MCMC parameters and make a list of model formulae as specified in `model_specification_msci.Rmd`.
 
@@ -267,7 +269,7 @@ formula_list <- lapply(trait_combinations, function(combo) {
 names(formula_list) <- names(trait_df_list)
 ```
 
-## Fit models
+### Fit models
 
 ```{r}
 # create cache directory if not yet available
@@ -311,7 +313,7 @@ names(model_msci_list) <- model_msci_list_names
 ```
 
 
-## Checking model convergence
+### Checking model convergence
 
 We check MCMC convergence based on posterior densities, trace plots and the Gelman-Rubin diagnostic for each parameter in each model.
 
@@ -332,7 +334,7 @@ show_rhat(do.call(rbind.data.frame, rhat_list))
 Convergence is good.
 
 
-## Checking model fit
+### Checking model fit
 
 We check model fit based on posterior predictive checks where we compare the observed outcome to simulated datasets from the posterior predictive distribution.
 
@@ -368,3 +370,5 @@ for (i in seq_along(model_msci_list)) {
 ```
 
 Model fit is good.
+
+## Results
