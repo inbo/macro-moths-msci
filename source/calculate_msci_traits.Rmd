@@ -348,67 +348,181 @@ Model fit is good.
 ## Results
 
 ```{r}
-draw_matrix <- model_msci_list$Phagy_EllenbergN %>%
-  spread_draws(`b_periodp2013_2022.*`, regex = TRUE) %>%
-  select(starts_with("b_periodp2013_2022")) %>%
-  as.matrix()
-
-contrast_mat <- get_contrast_matrix(model_msci_list$Phagy_EllenbergN,
-                                    "Phagy_EllenbergN")
-
-ellenbergn <- sort(unique(model_msci_list$Phagy_EllenbergN$data$EllenbergN))
-phagy <- sort(unique(model_msci_list$Phagy_EllenbergN$data$Phagy))
-col_names <- lapply(ellenbergn, function(i) {
-  paste(rep(i, 3), phagy, sep = "_")
+# get posterior draws for parameters of interest
+draws_mat_list <- lapply(model_msci_list, function(model) {
+  model %>%
+    spread_draws(`b_periodp2013_2022.*`, regex = TRUE) %>%
+    select(starts_with("b_periodp2013_2022")) %>%
+    as.matrix()
 })
 
-msci_draws <- as_tibble(
-  exp(t(contrast_mat %*% t(draw_matrix))) - 1
-  ) %>%
-  `colnames<-`(unlist(col_names)) %>%
-  pivot_longer(cols = everything(), names_to = "trait", values_to = "msci") %>%
-  separate(trait, into = c("EllenbergN", "Phagy")) %>%
-  mutate(EllenbergN = factor(
-    EllenbergN,
-    levels = c(
-      "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
-      "VeryNutrientRich"
-    ), ordered = TRUE
-  ))
+# get contrast matrices for combinations of interest
+contrast_mat_list <- vector("list", length = length(model_msci_list))
+for (i in seq_along(model_msci_list)) {
+  model <- model_msci_list[[i]]
+  name <- names(model_msci_list)[i]
+  
+  contrast_mat_list[[i]] <- get_contrast_matrix(model, name)
+}
+names(contrast_mat_list) <- names(model_msci_list)
 
+# get combination names
+names_list <- vector("list", length = length(model_msci_list))
+for (i in seq_along(model_msci_list)) {
+  model <- model_msci_list[[i]]
+  name <- names(model_msci_list)[i]
+  
+  trait1 <- stringr::str_split_i(name, "_", 1)
+  trait2 <- stringr::str_split_i(name, "_", 2)
+  
+  trait_vals1 <- sort(unique(model$data[[trait1]]))
+  trait_vals2 <- sort(unique(model$data[[trait2]]))
+  
+  col_names <- lapply(trait_vals2, function(i) {
+    paste(rep(i, length(trait_vals1)), trait_vals1, sep = ":")
+  })
+  
+  names_list[[i]] <- col_names
+}
+names(names_list) <- names(model_msci_list)
 
+# calculate msci
+msci_draw_list <- lapply(names(model_msci_list), function(name) {
+  trait1 <- stringr::str_split_i(name, "_", 1)
+  trait2 <- stringr::str_split_i(name, "_", 2)
+  
+  # get draws and contrasts
+  draw_matrix <- draws_mat_list[[name]]
+  contrast_matrix <- contrast_mat_list[[name]]
+  
+  # calculate msci
+  out <- as_tibble(
+    exp(t(contrast_matrix %*% t(draw_matrix))) - 1
+    ) %>%
+    `colnames<-`(unlist(names_list[[name]])) %>%
+    pivot_longer(cols = everything(), names_to = "trait", values_to = "msci") %>%
+    separate(trait, into = c(trait2, trait1), sep = ":")
+  
+  # ordered factors
+  if ("EllenbergN" %in% names(out)) {
+    out <- out %>%
+      mutate(EllenbergN = factor(EllenbergN,
+               levels = c(
+                 "VeryNutrientPoor",
+                 "NutrientPoor",
+                 "NutrientRich",
+                 "VeryNutrientRich"
+                 ), ordered = TRUE)
+             )
+  }
+  if ("Size" %in% names(out)) {
+    out <- out %>%
+      mutate(Size = factor(Size,
+               levels = c(
+                 "VerySmall",
+                 "Small",
+                 "Intermediate",
+                 "Large",
+                 "VeryLarge"
+                 ), ordered = TRUE)
+             )
+  }
+  if ("nGenerations" %in% names(out)) {
+    out <- out %>%
+      mutate(nGenerations = factor(nGenerations,
+               levels = c(
+                 "1",
+                 "2"
+                 ), ordered = TRUE)
+             )
+  }
+  if ("OverwinteringStage" %in% names(out)) {
+    out <- out %>%
+      mutate(OverwinteringStage = factor(OverwinteringStage,
+               levels = c(
+                 "Egg",
+                 "Caterpillar",
+                 "Pupa",
+                 "Adult"
+                 ), ordered = TRUE)
+             )
+  }
+  if ("Phagy" %in% names(out)) {
+    out <- out %>%
+      mutate(Phagy = factor(Phagy,
+               levels = c(
+                 "Monophagous",
+                 "Oligophagous",
+                 "Polyphagous"
+                 ), ordered = TRUE)
+             )
+  }
+  if ("TempHum" %in% names(out)) {
+    out <- out %>%
+      mutate(TempHum = factor(TempHum,
+               levels = c(
+                 "Cold_VeryWet",
+                 "Cold_Wet",
+                 "Hot_Wet",
+                 "Hot_Dry",
+                 "VeryHot_Dry"
+                 ), ordered = TRUE)
+             )
+  }
+  
+  return(out)
+})
+names(msci_draw_list) <- names(model_msci_list)
 
-summ_draws <- msci_draws %>%
-  group_by(EllenbergN, Phagy) %>%
-  mean_qi() %>%
-  rename(mean = msci)
-
-summ_draws %>%
-  select(Phagy, EllenbergN, everything()) %>%
-  arrange(Phagy, EllenbergN) %>%
-  rename(msci = mean) %>%
-  kable()
+summary_draw_list <- lapply(names(msci_draw_list), function(name) {
+  trait1 <- stringr::str_split_i(name, "_", 1)
+  trait2 <- stringr::str_split_i(name, "_", 2)
+  
+  msci_draws <- msci_draw_list[[name]]
+  
+  msci_draws %>%
+    group_by_at(c(trait1, trait2)) %>%
+    mean_qi() %>%
+    rename(mean = msci)
+})
+names(summary_draw_list) <- names(model_msci_list)
 ```
+
 
 ```{r}
-msci_draws %>%
-  full_join(summ_draws) %>%
-  mutate(fill_var = case_when(
-    .lower > 0 ~ "chartreuse3",
-    .upper < 0 ~ "coral",
-    .lower < 0 & .lower > -0.2 & .upper > 0 & .upper < 0.25 ~ "gold",
-    TRUE ~ "skyblue",
-  )) %>%
-  ggplot(aes(y = msci, x = EllenbergN, fill = fill_var)) +
-  stat_halfeye() +
-  geom_hline(yintercept = 0, linetype = 2) +
-  geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
-  scale_fill_identity() +
-  labs(x = "", y = "Multispecies Change Index") +
-  theme(
-    legend.position = "",
-    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
-  ) +
-  facet_wrap(~Phagy, scales = "free")
+for (i in seq_along(summary_draw_list)) {
+  summary <- summary_draw_list[[i]]
+  name <- names(summary_draw_list)[i]
+  trait1 <- stringr::str_split_i(name, "_", 1)
+  trait2 <- stringr::str_split_i(name, "_", 2)
+  
+  summary %>%
+    select(all_of(c(trait1, trait2)), everything()) %>%
+    arrange(trait1, trait2) %>%
+    rename(msci = mean) %>%
+    kable() %>%
+    print()
+  
+  p <- msci_draw_list[[name]] %>%
+    select(all_of(c(trait1, trait2)), everything()) %>%
+    full_join(summary) %>%
+    mutate(fill_var = case_when(
+      .lower > 0 ~ "chartreuse3",
+      .upper < 0 ~ "coral",
+      .lower < 0 & .lower > -0.2 & .upper > 0 & .upper < 0.25 ~ "gold",
+      TRUE ~ "skyblue",
+    )) %>%
+    ggplot(aes(y = msci, x = .data[[trait1]], fill = fill_var)) +
+      stat_halfeye() +
+      geom_hline(yintercept = 0, linetype = 2) +
+      geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+      scale_fill_identity() +
+      labs(x = "", y = "Multispecies Change Index") +
+      theme(
+        legend.position = "",
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
+      ) +
+      facet_wrap(~.data[[trait2]], scales = "free")
+  print(p)
+}
 ```
-
