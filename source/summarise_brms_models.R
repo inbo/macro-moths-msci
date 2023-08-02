@@ -41,3 +41,48 @@ create_contrast_matrix <- function(model) {
   }
   matrix(cbind(rep(1, n_col), contr.treatment(n_col)), ncol = n_col)
 }
+
+get_contrast_matrix <- function(model, combo) {
+  trait1 <- stringr::str_split_i(combo, "_", 1)
+  trait2 <- stringr::str_split_i(combo, "_", 2)
+
+  n_trait1 <- length(unique(model$data[[trait1]]))
+  n_trait2 <- length(unique(model$data[[trait2]]))
+
+  # Reference group
+  ref_group <- cbind(
+    create_contrast_matrix(n_trait1),
+    matrix(rep(0, ((n_trait1 * n_trait2) - n_trait1) * n_trait1), n_trait1))
+
+  # Other groups
+  parts1 <- vector("list", length = n_trait2 - 1)
+  for (i in seq_along(parts1)) {
+    parts1[[i]] <- create_contrast_matrix(n_trait1)
+  }
+  parts2 <- vector("list", length = n_trait2 - 1)
+  for (i in seq_along(parts2)) {
+    part <- matrix(rep(0, n_trait1 * (n_trait2 - 1)), nrow = n_trait1)
+    part[, i] <- rep(1, n_trait1)
+    parts2[[i]] <- part
+  }
+  parts3 <- vector("list", length = n_trait2 - 1)
+  j <- 0
+  for (i in seq_along(parts3)) {
+    cntr_trt <- contr.treatment(n_trait1)
+    part <- matrix(rep(0, n_trait1 * (n_trait1 - 1) * (n_trait2 - 1)),
+                   nrow = n_trait1)
+
+    first <- i + (j * (n_trait1 - 2))
+    last <- first + n_trait1 - 2
+    part[, first:last] <- cntr_trt
+    parts3[[i]] <- part
+    j <- j + 1
+  }
+
+  rest_group <- cbind(
+    do.call(rbind, parts1),
+    do.call(rbind, parts2),
+    do.call(rbind, parts3))
+
+  return(rbind(ref_group, rest_group))
+}

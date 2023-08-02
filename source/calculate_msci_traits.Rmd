@@ -346,3 +346,69 @@ for (i in seq_along(model_msci_list)) {
 Model fit is good.
 
 ## Results
+
+```{r}
+draw_matrix <- model_msci_list$Phagy_EllenbergN %>%
+  spread_draws(`b_periodp2013_2022.*`, regex = TRUE) %>%
+  select(starts_with("b_periodp2013_2022")) %>%
+  as.matrix()
+
+contrast_mat <- get_contrast_matrix(model_msci_list$Phagy_EllenbergN,
+                                    "Phagy_EllenbergN")
+
+ellenbergn <- sort(unique(model_msci_list$Phagy_EllenbergN$data$EllenbergN))
+phagy <- sort(unique(model_msci_list$Phagy_EllenbergN$data$Phagy))
+col_names <- lapply(ellenbergn, function(i) {
+  paste(rep(i, 3), phagy, sep = "_")
+})
+
+msci_draws <- as_tibble(
+  exp(t(contrast_mat %*% t(draw_matrix))) - 1
+  ) %>%
+  `colnames<-`(unlist(col_names)) %>%
+  pivot_longer(cols = everything(), names_to = "trait", values_to = "msci") %>%
+  separate(trait, into = c("EllenbergN", "Phagy")) %>%
+  mutate(EllenbergN = factor(
+    EllenbergN,
+    levels = c(
+      "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
+      "VeryNutrientRich"
+    ), ordered = TRUE
+  ))
+
+
+
+summ_draws <- msci_draws %>%
+  group_by(EllenbergN, Phagy) %>%
+  mean_qi() %>%
+  rename(mean = msci)
+
+summ_draws %>%
+  select(Phagy, EllenbergN, everything()) %>%
+  arrange(Phagy, EllenbergN) %>%
+  rename(msci = mean) %>%
+  kable()
+```
+
+```{r}
+msci_draws %>%
+  full_join(summ_draws) %>%
+  mutate(fill_var = case_when(
+    .lower > 0 ~ "chartreuse3",
+    .upper < 0 ~ "coral",
+    .lower < 0 & .lower > -0.2 & .upper > 0 & .upper < 0.25 ~ "gold",
+    TRUE ~ "skyblue",
+  )) %>%
+  ggplot(aes(y = msci, x = EllenbergN, fill = fill_var)) +
+  stat_halfeye() +
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+  scale_fill_identity() +
+  labs(x = "", y = "Multispecies Change Index") +
+  theme(
+    legend.position = "",
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
+  ) +
+  facet_wrap(~Phagy, scales = "free")
+```
+
