@@ -507,9 +507,9 @@ names(summary_draw_list) <- names(model_msci_list)
 
 ```{r}
 for (i in seq_along(summary_draw_list)) {
-  summary_df <- summary_draw_list[[i]]
-  draws_df <- msci_draw_list_filtered[[name]]
   name <- names(summary_draw_list)[i]
+  summary_df <- summary_draw_list[[name]]
+  draws_df <- msci_draw_list_filtered[[name]]
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
 
@@ -521,9 +521,12 @@ for (i in seq_along(summary_draw_list)) {
     print()
 
   # create dataframe to plot number of species
+  min_threshold <- -0.2
+  max_threshold <- 0.25
   min_df <- draws_df %>%
     group_by_at(trait2) %>%
-    mutate(min = min(msci)) %>%
+    mutate(min = ifelse(min(msci) <= min_threshold, min(msci),
+                        min_threshold)) %>%
     ungroup() %>%
     select(all_of(c(trait1, trait2)), n_species, min) %>%
     distinct()
@@ -539,13 +542,20 @@ for (i in seq_along(summary_draw_list)) {
         msci.upper > 0 & msci.upper < 0.25 ~ "gold",
       TRUE ~ "skyblue",
     )) %>%
+    mutate(
+      "{trait1}" := factor(!!sym(trait1)), # nolint: object_name_linter.
+      "{trait2}" := factor(!!sym(trait2)), # nolint: object_name_linter.
+    ) %>%
     ggplot(aes(x = .data[[trait1]])) +
       stat_halfeye(aes(y = msci, fill = fill_var)) +
       geom_hline(yintercept = 0, linetype = 2) +
-      geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+      geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
       geom_label(data = min_df, aes(y = min, label = n_species)) +
+      scale_x_discrete(drop = FALSE) +
       scale_fill_identity() +
-      labs(x = "", y = "Multispecies Change Index") +
+      labs(x = "",
+           y = "Multispecies Change Index",
+           title = gsub("_", " ~ ", name)) +
       theme(
         legend.position = "",
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
