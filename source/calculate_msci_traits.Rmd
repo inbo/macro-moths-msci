@@ -290,7 +290,7 @@ names(model_msci_list) <- model_msci_list_names
 
 We check MCMC convergence based on posterior densities, trace plots and the potential scale reduction factors ($\hat{R}$) for each parameter in each model.
 
-```{r trace-plots, eval=FALSE}
+```{r trace-plots}
 for (i in seq_along(model_msci_list)) {
   model <- model_msci_list[[i]]
   name <- names(model_msci_list)[i]
@@ -299,7 +299,7 @@ for (i in seq_along(model_msci_list)) {
 }
 ```
 
-```{r rhats, eval=FALSE}
+```{r rhats}
 rhat_list <- get_rhats(model_msci_list)
 show_rhat(do.call(rbind.data.frame, rhat_list))
 ```
@@ -311,7 +311,7 @@ Convergence is good.
 
 We check model fit based on posterior predictive checks where we compare the observed outcome to simulated datasets from the posterior predictive distribution.
 
-```{r model-fit, eval=FALSE}
+```{r model-fit}
 for (i in seq_along(model_msci_list)) {
   title <- paste("Fit model", names(model_msci_list)[i])
   model <- model_msci_list[[i]]
