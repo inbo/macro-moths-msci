@@ -72,23 +72,122 @@ species_traits_final <- read_csv(file.path(data_path,
 ## Data preparation
 ### Traits of interest
 
-We consider a number of trait combinations
+We consider a number of traits.
 
-
+```{r trait-combinations}
+traits <- as.list(sort(unique(species_traits_final$trait_name)))
+traits
+```
 
 ### Filter dataframes per trait combination
-
-We create a list of dataframes per trait.
-We set reference levels for each trait such that reference group is most frequent trait value.
-We only keep trait values with more than `r filter_size` species.
 
 ```{r filter-size}
 filter_size <- 10
 ```
 
+We create a list of dataframes per trait.
+We set reference levels for each trait such that reference group is most frequent trait value.
+We only keep trait values with more than `r filter_size` species.
+
+```{r dataframe-per-trait}
+dataframe_per_trait <- function(combo) {
+  if (length(combo) == 2) {
+    row <- combo[1]
+    column <- combo[2]
+    out <- species_traits_final %>%
+      filter(trait_name %in% combo) %>%
+      pivot_wider(
+        id_cols = c("species_nl", "species_new", "n_grids", "period",
+                    "sum_per_period"),
+        names_from = "trait_name",
+        values_from = "trait_value"
+      ) %>%
+      # Fill in missing trait values for species that occur twice
+      group_by(species_nl) %>%
+      arrange(species_nl, species_new, !!sym(row), !!sym(column)) %>%
+      mutate(
+        "{row}" := ifelse(is.na(!!sym(row)), # nolint: object_name_linter.
+          first(!!sym(row)), !!sym(row)
+        ),
+        "{column}" := ifelse(is.na(!!sym(column)), # nolint: object_name_linter.
+          first(!!sym(column)), !!sym(column)
+        )
+      ) %>%
+      ungroup() %>%
+      # Reference group is most frequent group
+      mutate("{row}" := factor(!!sym(row), # nolint: object_name_linter.
+                               levels(fct_infreq(!!sym(row)))),
+             "{column}" := factor(!!sym(column), # nolint: object_name_linter.
+                                  levels(fct_infreq(!!sym(column))))) %>%
+      # How many species per trait combination?
+      group_by_at(c("period", combo)) %>%
+      mutate(n_species = n()) %>%
+      ungroup() %>%
+      select(-species_nl) %>%
+      mutate(species_nl = species_new) %>%
+      select(-species_new) %>%
+      select_at(c("species_nl", "n_grids", "period", "sum_per_period", combo,
+                  "n_species")) %>%
+      # How many species per trait separately?
+      group_by_at(c("period", row)) %>%
+      mutate(n_trait1 = n()) %>%
+      ungroup() %>%
+      group_by_at(c("period", column)) %>%
+      mutate(n_trait2 = n()) %>%
+      ungroup() %>%
+      # Filter out small trait groups
+      filter(n_trait1 > filter_size,
+             n_trait2 > filter_size) %>%
+      select(-c(n_trait1, n_trait2))
+  } else if (length(combo) == 1) {
+    out <- species_traits_final %>%
+      filter(trait_name == combo) %>%
+      pivot_wider(
+        id_cols = c("species_nl", "species_new", "n_grids", "period",
+                    "sum_per_period"),
+        names_from = "trait_name",
+        values_from = "trait_value"
+      ) %>%
+      # Reference group is most frequent group
+      mutate("{combo}" := factor(!!sym(combo), # nolint: object_name_linter.
+                                 levels(fct_infreq(!!sym(combo))))) %>%
+      # How many species per trait combination?
+      group_by_at(c("period", combo)) %>%
+      mutate(n_species = n()) %>%
+      ungroup() %>%
+      select(-species_nl) %>%
+      mutate(species_nl = species_new) %>%
+      select(-species_new) %>%
+      select_at(c("species_nl", "n_grids", "period", "sum_per_period", combo,
+                  "n_species")) %>%
+      # Filter out small trait groups
+      filter(n_species > filter_size)
+  } else {
+    stop("Function not implemented for combinations of more than 2 traits.",
+         call. = FALSE)
+  }
+  return(out)
+}
+```
+
+```{r trait-data}
+trait_df_list <- lapply(traits, dataframe_per_trait)
+names(trait_df_list) <- unlist(traits)
+```
+
+How many species do we have per trait combination?
+
+```{r trait-numbers}
+species_traits_final %>%
+  distinct(trait_name, trait_value, n_species = n_spec) %>%
+  filter(n_species > filter_size) %>%
+  arrange(trait_name, trait_value) %>%
+  kable()
+```
 
 
-
+## Model fitting
+### Model fit preparation
 
 ```{r}
 # create cache directory if not yet available
@@ -124,7 +223,6 @@ trait_combinations <- list(
 trait_combinations
 ```
 
-
 ### Filter dataframes per trait combination
 
 We create a list of dataframes per trait combination.
@@ -135,7 +233,7 @@ It is still possible that trait combinations will contain `r filter_size` specie
 These will be filtered out after model fitting.
 
 ```{r trait-data-combi}
-trait_df_list <- lapply(trait_combinations, function(combo) {
+trait_combi_df_list <- lapply(trait_combinations, function(combo) {
   if (length(combo) == 2) {
     row <- combo[1]
     column <- combo[2]
@@ -214,10 +312,10 @@ trait_df_list <- lapply(trait_combinations, function(combo) {
   return(out)
 })
 
-names_trait_df_list <- sapply(trait_combinations, function(combo) {
+names_trait_combi_df_list <- sapply(trait_combinations, function(combo) {
   paste(combo, collapse = "_")
 })
-names(trait_df_list) <- names_trait_df_list
+names(trait_combi_df_list) <- names_trait_combi_df_list
 ```
 
 How many species do we have per trait combination?
@@ -228,13 +326,13 @@ for (i in seq_along(trait_combinations)) {
   combo_name <- paste(combo, collapse = "_")
 
   if (length(combo) == 2) {
-    p <- trait_df_list[[combo_name]] %>%
+    p <- trait_combi_df_list[[combo_name]] %>%
       ggplot(aes(x = .data[[combo[1]]], y = .data[[combo[2]]])) +
         geom_tile(aes(fill = n_species), colour = "white") +
         geom_text(aes(label = n_species)) +
         scale_fill_gradient(low = "red", high = "green") +
         labs(fill = "number of\nspecies", x = "", y = "",
-             title = gsub("_", " ~ ", names(trait_df_list)[i]))
+             title = gsub("_", " ~ ", names(trait_combi_df_list)[i]))
 
     print(p)
   }
@@ -261,7 +359,7 @@ formula_list <- lapply(trait_combinations, function(combo) {
   bf(paste("n_grids", "~", paste(c("period", combo), collapse = " * "),
            " + offset(log(sum_per_period)) + (1 + period || species_nl)"))
 })
-names(formula_list) <- names(trait_df_list)
+names(formula_list) <- names(trait_combi_df_list)
 ```
 
 ### Fit models
@@ -270,22 +368,22 @@ We fit the models in a for loop and store them in a list.
 For missing trait value combinations we need to set constant priors of zero.
 
 ```{r model-fitting-combi}
-model_msci_list <- vector("list", length = length(trait_df_list))
-model_msci_list_names <- vector(length = length(trait_df_list))
+model_msci_list <- vector("list", length = length(trait_combi_df_list))
+model_msci_list_names <- vector(length = length(trait_combi_df_list))
 
-for (i in seq_along(trait_df_list)) {
-  combo_name <- names(trait_df_list)[i]
+for (i in seq_along(trait_combi_df_list)) {
+  combo_name <- names(trait_combi_df_list)[i]
   obj_name <- paste0("fit_msci_", combo_name)
 
   # set priors
   prior_combo <- set_priors_brms(combo_name,
-                                 trait_df_list[[combo_name]],
+                                 trait_combi_df_list[[combo_name]],
                                  formula_list[[combo_name]])
 
   print(paste("Busy fitting", obj_name, "..."))
   assign(obj_name,
          brm(formula = formula_list[[combo_name]],
-             data = trait_df_list[[combo_name]],
+             data = trait_combi_df_list[[combo_name]],
              family = poisson(),
              prior = prior_combo,
              chains = nchains,
@@ -423,7 +521,7 @@ msci_draw_list <- lapply(names(model_msci_list), function(name) {
 
   # get number of species per group
   out <- msci_df %>%
-    full_join(trait_df_list[[name]] %>%
+    full_join(trait_combi_df_list[[name]] %>%
                 select(all_of(c(trait1, trait2)), n_species),
               relationship = "many-to-many")
 
