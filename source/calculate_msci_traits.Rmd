@@ -290,7 +290,7 @@ names(model_msci_list) <- model_msci_list_names
 
 We check MCMC convergence based on posterior densities, trace plots and the potential scale reduction factors ($\hat{R}$) for each parameter in each model.
 
-```{r trace-plots}
+```{r trace-plots, eval=FALSE}
 for (i in seq_along(model_msci_list)) {
   model <- model_msci_list[[i]]
   name <- names(model_msci_list)[i]
@@ -299,7 +299,7 @@ for (i in seq_along(model_msci_list)) {
 }
 ```
 
-```{r rhats}
+```{r rhats, eval=FALSE}
 rhat_list <- get_rhats(model_msci_list)
 show_rhat(do.call(rbind.data.frame, rhat_list))
 ```
@@ -311,7 +311,7 @@ Convergence is good.
 
 We check model fit based on posterior predictive checks where we compare the observed outcome to simulated datasets from the posterior predictive distribution.
 
-```{r model-fit}
+```{r model-fit, eval=FALSE}
 for (i in seq_along(model_msci_list)) {
   title <- paste("Fit model", names(model_msci_list)[i])
   model <- model_msci_list[[i]]
@@ -537,15 +537,19 @@ for (i in seq_along(summary_draw_list)) {
     mutate(
       effects = case_when(
           msci.lower > 0 ~ "positive effect",
+          msci.lower > -0.2 & msci.upper > 0.25 ~ "potential positive effect",
           msci.upper < 0 ~ "negative effect",
+          msci.upper < 0.25 & msci.lower < -0.2  ~ "potential negative effect",
           msci.lower < 0 & msci.lower > -0.2 &
             msci.upper > 0 & msci.upper < 0.25 ~ "no effect",
           TRUE ~ "unknown effect",
       ),
       fill_var = factor(effects,
         levels = c("negative effect",
-                   "no effect",
+                   "potential negative effect",
+                   "potential positive effect",
                    "positive effect",
+                   "no effect",
                    "unknown effect"),
         ordered = TRUE)
     ) %>%
@@ -559,9 +563,11 @@ for (i in seq_along(summary_draw_list)) {
       geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
       geom_label(data = min_df, aes(y = min, label = n_species)) +
       scale_x_discrete(drop = FALSE) +
-      scale_fill_manual(values =  c("coral",
-                                    "gold",
+      scale_fill_manual(values =  c("firebrick1",
+                                    "coral",
+                                    "darkseagreen",
                                     "chartreuse3",
+                                    "gold",
                                     "skyblue"),
                         drop = FALSE) +
       labs(x = "",
