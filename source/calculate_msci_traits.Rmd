@@ -536,15 +536,18 @@ for (i in seq_along(summary_draw_list)) {
     select(all_of(c(trait1, trait2)), everything()) %>%
     full_join(summary_df) %>%
     mutate(
-      colours = case_when(
-          msci.lower > 0 ~ "chartreuse3",
-          msci.upper < 0 ~ "coral",
+      effects = case_when(
+          msci.lower > 0 ~ "positive effect",
+          msci.upper < 0 ~ "negative effect",
           msci.lower < 0 & msci.lower > -0.2 &
-            msci.upper > 0 & msci.upper < 0.25 ~ "gold",
-          TRUE ~ "skyblue",
+            msci.upper > 0 & msci.upper < 0.25 ~ "no effect",
+          TRUE ~ "unknown effect",
       ),
-      fill_var = factor(colours,
-        levels = c("coral", "gold", "chartreuse3", "skyblue"),
+      fill_var = factor(effects,
+        levels = c("negative effect",
+                   "no effect",
+                   "positive effect",
+                   "unknown effect"),
         ordered = TRUE)
     ) %>%
     mutate(
@@ -557,11 +560,12 @@ for (i in seq_along(summary_draw_list)) {
       geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
       geom_label(data = min_df, aes(y = min, label = n_species)) +
       scale_x_discrete(drop = FALSE) +
-      scale_fill_identity(guide = "legend",
-                          labels = c("negative effect", "no effect",
-                                     "positive effect", "unknown effect")) +
+      scale_fill_manual(values =  c("coral",
+                                    "gold",
+                                    "chartreuse3",
+                                    "skyblue")) +
       labs(x = "",
-           y = "Multispecies Change Index",
+           y = "Multi-Species Change Index",
            fill = "",
            title = gsub("_", " ~ ", name)) +
       theme(
