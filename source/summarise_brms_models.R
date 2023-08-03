@@ -92,7 +92,7 @@ order_traits <- function(df) {
 
   if ("EllenbergN" %in% names(out)) {
     out <- out %>%
-      mutate(EllenbergN = factor(EllenbergN,
+      mutate(EllenbergN = factor(.data$EllenbergN,
                                  levels = c(
                                    "VeryNutrientPoor",
                                    "NutrientPoor",
@@ -103,7 +103,7 @@ order_traits <- function(df) {
   }
   if ("Size" %in% names(out)) {
     out <- out %>%
-      mutate(Size = factor(Size,
+      mutate(Size = factor(.data$Size,
                            levels = c(
                              "VerySmall",
                              "Small",
@@ -115,7 +115,7 @@ order_traits <- function(df) {
   }
   if ("nGenerations" %in% names(out)) {
     out <- out %>%
-      mutate(nGenerations = factor(nGenerations,
+      mutate(nGenerations = factor(.data$nGenerations,
                                    levels = c(
                                      "1",
                                      "2"
@@ -124,7 +124,7 @@ order_traits <- function(df) {
   }
   if ("OverwinteringStage" %in% names(out)) {
     out <- out %>%
-      mutate(OverwinteringStage = factor(OverwinteringStage,
+      mutate(OverwinteringStage = factor(.data$OverwinteringStage,
                                          levels = c(
                                            "Egg",
                                            "Caterpillar",
@@ -135,7 +135,7 @@ order_traits <- function(df) {
   }
   if ("Phagy" %in% names(out)) {
     out <- out %>%
-      mutate(Phagy = factor(Phagy,
+      mutate(Phagy = factor(.data$Phagy,
                             levels = c(
                               "Monophagous",
                               "Oligophagous",
@@ -145,7 +145,7 @@ order_traits <- function(df) {
   }
   if ("TempHum" %in% names(out)) {
     out <- out %>%
-      mutate(TempHum = factor(TempHum,
+      mutate(TempHum = factor(.data$TempHum,
                               levels = c(
                                 "Cold_VeryWet",
                                 "Cold_Wet",
@@ -157,7 +157,7 @@ order_traits <- function(df) {
   }
   if ("Seasonality" %in% names(out)) {
     out <- out %>%
-      mutate(Seasonality = factor(Seasonality,
+      mutate(Seasonality = factor(.data$Seasonality,
                                   levels = c(
                                     "Spring",
                                     "SpringSummer",
@@ -166,7 +166,7 @@ order_traits <- function(df) {
                                     "Autumn",
                                     "Winter",
                                     "AutumnSpring",
-                                    "SpringSummerAutumn",
+                                    "SpringSummerAutumn"
                                   ), ordered = TRUE)
       )
   }

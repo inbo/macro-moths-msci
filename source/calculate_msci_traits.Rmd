@@ -91,6 +91,8 @@ We only keep trait values with more than `r filter_size` species.
 
 ```{r dataframe-per-trait}
 dataframe_per_trait <- function(combo) {
+  require("dplyr")
+  require("data.table")
   if (length(combo) == 2) {
     row <- combo[1]
     column <- combo[2]
@@ -103,8 +105,9 @@ dataframe_per_trait <- function(combo) {
         values_from = "trait_value"
       ) %>%
       # Fill in missing trait values for species that occur twice
-      group_by(species_nl) %>%
-      arrange(species_nl, species_new, !!sym(row), !!sym(column)) %>%
+      group_by(.data$species_nl) %>%
+      arrange(.data$species_nl, .data$species_new,
+              !!sym(row), !!sym(column)) %>%
       mutate(
         "{row}" := ifelse(is.na(!!sym(row)), # nolint: object_name_linter.
           first(!!sym(row)), !!sym(row)
@@ -123,9 +126,9 @@ dataframe_per_trait <- function(combo) {
       group_by_at(c("period", combo)) %>%
       mutate(n_species = n()) %>%
       ungroup() %>%
-      select(-species_nl) %>%
-      mutate(species_nl = species_new) %>%
-      select(-species_new) %>%
+      select(-.data$species_nl) %>%
+      mutate(species_nl = .data$species_new) %>%
+      select(-.data$species_new) %>%
       select_at(c("species_nl", "n_grids", "period", "sum_per_period", combo,
                   "n_species")) %>%
       # How many species per trait separately?
@@ -136,9 +139,9 @@ dataframe_per_trait <- function(combo) {
       mutate(n_trait2 = n()) %>%
       ungroup() %>%
       # Filter out small trait groups
-      filter(n_trait1 > filter_size,
-             n_trait2 > filter_size) %>%
-      select(-c(n_trait1, n_trait2))
+      filter(.data$n_trait1 > filter_size,
+             .data$n_trait2 > filter_size) %>%
+      select(-c(.data$n_trait1, .data$n_trait2))
   } else if (length(combo) == 1) {
     out <- species_traits_final %>%
       filter(trait_name == combo) %>%
@@ -155,13 +158,13 @@ dataframe_per_trait <- function(combo) {
       group_by_at(c("period", combo)) %>%
       mutate(n_species = n()) %>%
       ungroup() %>%
-      select(-species_nl) %>%
-      mutate(species_nl = species_new) %>%
-      select(-species_new) %>%
+      select(-.data$species_nl) %>%
+      mutate(species_nl = .data$species_new) %>%
+      select(-.data$species_new) %>%
       select_at(c("species_nl", "n_grids", "period", "sum_per_period", combo,
                   "n_species")) %>%
       # Filter out small trait groups
-      filter(n_species > filter_size)
+      filter(.data$n_species > filter_size)
   } else {
     stop("Function not implemented for combinations of more than 2 traits.",
          call. = FALSE)
@@ -275,7 +278,7 @@ We check model fit based on posterior predictive checks where we compare the obs
 for (i in seq_along(model_msci_list)) {
   title <- paste("Fit model", names(model_msci_list)[i])
   model <- model_msci_list[[i]]
-  
+
   print(
     pp_check(
       model,
@@ -582,7 +585,7 @@ We check model fit based on posterior predictive checks where we compare the obs
 for (i in seq_along(model_msci_combi_list)) {
   title <- paste("Fit model", names(model_msci_combi_list)[i])
   model <- model_msci_combi_list[[i]]
-  
+
   print(
     pp_check(
       model,
@@ -624,7 +627,8 @@ draws_mat_combi_list <- lapply(model_msci_combi_list, function(model) {
 })
 
 # get contrast matrices for combinations of interest
-contrast_mat_combi_list <- vector("list", length = length(model_msci_combi_list))
+contrast_mat_combi_list <- vector("list",
+                                  length = length(model_msci_combi_list))
 for (i in seq_along(model_msci_combi_list)) {
   model <- model_msci_combi_list[[i]]
   name <- names(model_msci_combi_list)[i]
@@ -691,19 +695,21 @@ msci_draw_combi_list_filtered <- lapply(msci_draw_combi_list, function(draws) {
 })
 
 # get summary statistics
-summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered), function(name) {
-  trait1 <- stringr::str_split_i(name, "_", 1)
-  trait2 <- stringr::str_split_i(name, "_", 2)
+summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered),
+  function(name) {
+    trait1 <- stringr::str_split_i(name, "_", 1)
+    trait2 <- stringr::str_split_i(name, "_", 2)
 
-  msci_draws <- msci_draw_combi_list_filtered[[name]]
+    msci_draws <- msci_draw_combi_list_filtered[[name]]
 
-  msci_draws %>%
-    group_by_at(c(trait1, trait2)) %>%
-    mean_qi() %>%
-    ungroup() %>%
-    rename(msci.mean = msci) %>%
-    select(-c(n_species.lower, n_species.upper))
-})
+    msci_draws %>%
+      group_by_at(c(trait1, trait2)) %>%
+      mean_qi() %>%
+      ungroup() %>%
+      rename(msci.mean = msci) %>%
+      select(-c(n_species.lower, n_species.upper))
+  }
+)
 names(summary_draw_combi_list) <- names(model_msci_combi_list)
 ```
 
