@@ -40,6 +40,9 @@ library(tidybayes)
 # Source
 source(here("source", "summarise_brms_models.R"))
 source(here("source", "set_priors_brms.R"))
+
+# Seed
+seed <- 123
 ```
 
 # Goal
@@ -238,6 +241,7 @@ for (i in seq_along(trait_df_list)) {
              iter = niter,
              cores = nparallel,
              thin = thinning,
+             seed = seed,
              file = paste0("source/brms_cache/", obj_name),
              file_refit = "on_change"))
 
@@ -307,7 +311,7 @@ Model fit is good.
 # get posterior draws for parameters of interest
 draws_mat_list <- lapply(model_msci_list, function(model) {
   model %>%
-    spread_draws(`b_periodp2013_2022.*`, regex = TRUE) %>%
+    spread_draws(`b_periodp2013_2022.*`, regex = TRUE, seed = seed) %>%
     select(starts_with("b_periodp2013_2022")) %>%
     as.matrix()
 })
@@ -545,6 +549,7 @@ for (i in seq_along(trait_combi_df_list)) {
              iter = niter,
              cores = nparallel,
              thin = thinning,
+             seed = seed,
              file = paste0("source/brms_cache/", obj_name),
              file_refit = "on_change"))
 
@@ -621,7 +626,7 @@ Model fit is good.
 # get posterior draws for parameters of interest
 draws_mat_combi_list <- lapply(model_msci_combi_list, function(model) {
   model %>%
-    spread_draws(`b_periodp2013_2022.*`, regex = TRUE) %>%
+    spread_draws(`b_periodp2013_2022.*`, regex = TRUE, seed = seed) %>%
     select(starts_with("b_periodp2013_2022")) %>%
     as.matrix()
 })
