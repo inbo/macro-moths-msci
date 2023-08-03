@@ -96,11 +96,13 @@ We only keep trait values with more than `r filter_size` species.
 dataframe_per_trait <- function(combo) {
   require("dplyr")
   require("data.table")
+  require("tidyr")
+
   if (length(combo) == 2) {
     row <- combo[1]
     column <- combo[2]
     out <- species_traits_final %>%
-      filter(trait_name %in% combo) %>%
+      filter(.data$trait_name %in% combo) %>%
       pivot_wider(
         id_cols = c("species_nl", "species_new", "n_grids", "period",
                     "sum_per_period"),
@@ -122,9 +124,9 @@ dataframe_per_trait <- function(combo) {
       ungroup() %>%
       # Reference group is most frequent group
       mutate("{row}" := factor(!!sym(row), # nolint: object_name_linter.
-                               levels(fct_infreq(!!sym(row)))),
+               levels(forcats::fct_infreq(!!sym(row)))),
              "{column}" := factor(!!sym(column), # nolint: object_name_linter.
-                                  levels(fct_infreq(!!sym(column))))) %>%
+               levels(forcats::fct_infreq(!!sym(column))))) %>%
       # How many species per trait combination?
       group_by_at(c("period", combo)) %>%
       mutate(n_species = n()) %>%
@@ -147,7 +149,7 @@ dataframe_per_trait <- function(combo) {
       select(-c(.data$n_trait1, .data$n_trait2))
   } else if (length(combo) == 1) {
     out <- species_traits_final %>%
-      filter(trait_name == combo) %>%
+      filter(.data$trait_name == combo) %>%
       pivot_wider(
         id_cols = c("species_nl", "species_new", "n_grids", "period",
                     "sum_per_period"),
@@ -156,7 +158,7 @@ dataframe_per_trait <- function(combo) {
       ) %>%
       # Reference group is most frequent group
       mutate("{combo}" := factor(!!sym(combo), # nolint: object_name_linter.
-                                 levels(fct_infreq(!!sym(combo))))) %>%
+                                 levels(forcats::fct_infreq(!!sym(combo))))) %>%
       # How many species per trait combination?
       group_by_at(c("period", combo)) %>%
       mutate(n_species = n()) %>%
