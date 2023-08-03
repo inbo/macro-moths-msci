@@ -194,6 +194,111 @@ species_traits_final %>%
 dir.create(here("source", "source/brms_cache"), FALSE)
 ```
 
+We set the MCMC parameters and make a list of model formulae as specified in `model_specification_msci.Rmd`.
+
+```{r mcmc-params}
+# MCMC parameters
+nchains <- 3 # number of chains
+niter <- 10000 # number of iterations (incl. burn-in)
+burnin <- niter / 4 # number of initial samples to discard (burn-in)
+nparallel <- nchains # number of cores used for parallel computing
+thinning <- 3
+```
+
+```{r formulae}
+formula_list <- lapply(traits, function(trait) {
+  bf(paste("n_grids", "~", paste("period", trait, sep = " * "),
+           " + offset(log(sum_per_period)) + (1 + period || species_nl)"))
+})
+names(formula_list) <- names(trait_df_list)
+```
+
+### Fit models
+
+We fit the models in a for loop and store them in a list.
+
+```{r model-fitting}
+model_msci_list <- vector("list", length = length(trait_df_list))
+model_msci_list_names <- vector(length = length(trait_df_list))
+
+for (i in seq_along(trait_df_list)) {
+  trait_name_mod <- names(trait_df_list)[i]
+  obj_name <- paste0("fit_msci_", trait_name_mod)
+
+  print(paste("Busy fitting", obj_name, "..."))
+  assign(obj_name,
+         brm(formula = formula_list[[trait_name_mod]],
+             data = trait_df_list[[trait_name_mod]],
+             family = poisson(),
+             chains = nchains,
+             warmup = burnin,
+             iter = niter,
+             cores = nparallel,
+             thin = thinning,
+             file = paste0("source/brms_cache/", obj_name),
+             file_refit = "on_change"))
+
+  model_msci_list[[i]] <- get(obj_name)
+  model_msci_list_names[i] <- trait_name_mod
+}
+
+names(model_msci_list) <- model_msci_list_names
+```
+
+
+### Checking model convergence
+
+We check MCMC convergence based on posterior densities, trace plots and the potential scale reduction factors ($\hat{R}$) for each parameter in each model.
+
+```{r trace-plots}
+for (i in seq_along(model_msci_list)) {
+  model <- model_msci_list[[i]]
+  name <- names(model_msci_list)[i]
+  print(paste("Convergence model", name))
+  print(plot(model, ask = FALSE))
+}
+```
+
+```{r rhats}
+rhat_list <- get_rhats(model_msci_list)
+show_rhat(do.call(rbind.data.frame, rhat_list))
+```
+
+Convergence is good.
+
+
+### Checking model fit
+
+We check model fit based on posterior predictive checks where we compare the observed outcome to simulated datasets from the posterior predictive distribution.
+
+```{r model-fit}
+for (i in seq_along(model_msci_list)) {
+  title <- paste("Fit model", names(model_msci_list)[i])
+  model <- model_msci_list[[i]]
+  print(
+    pp_check(
+      model,
+      type = "dens_overlay_grouped", ndraws = 100,
+      group = "period"
+      ) +
+      ggtitle(title)
+    )
+
+  print(
+    pp_check(model,
+      type = "dens_overlay_grouped", ndraws = 100,
+      group = names(model_msci_list)[i]
+      ) +
+      ggtitle(title)
+    )
+}
+```
+
+Model fit is good.
+
+
+
+
 # Trait combinations
 ## Data preparation
 ### Traits of interest
@@ -233,84 +338,7 @@ It is still possible that trait combinations will contain `r filter_size` specie
 These will be filtered out after model fitting.
 
 ```{r trait-data-combi}
-trait_combi_df_list <- lapply(trait_combinations, function(combo) {
-  if (length(combo) == 2) {
-    row <- combo[1]
-    column <- combo[2]
-    out <- species_traits_final %>%
-      filter(trait_name %in% combo) %>%
-      pivot_wider(
-        id_cols = c("species_nl", "species_new", "n_grids", "period",
-                    "sum_per_period"),
-        names_from = "trait_name",
-        values_from = "trait_value"
-      ) %>%
-      # Fill in missing trait values for species that occur twice
-      group_by(species_nl) %>%
-      arrange(species_nl, species_new, !!sym(row), !!sym(column)) %>%
-      mutate(
-        "{row}" := ifelse(is.na(!!sym(row)), # nolint: object_name_linter.
-          first(!!sym(row)), !!sym(row)
-        ),
-        "{column}" := ifelse(is.na(!!sym(column)), # nolint: object_name_linter.
-          first(!!sym(column)), !!sym(column)
-        )
-      ) %>%
-      ungroup() %>%
-      # Reference group is most frequent group
-      mutate("{row}" := factor(!!sym(row), # nolint: object_name_linter.
-                               levels(fct_infreq(!!sym(row)))),
-             "{column}" := factor(!!sym(column), # nolint: object_name_linter.
-                                  levels(fct_infreq(!!sym(column))))) %>%
-      # How many species per trait combination?
-      group_by_at(c("period", combo)) %>%
-      mutate(n_species = n()) %>%
-      ungroup() %>%
-      select(-species_nl) %>%
-      mutate(species_nl = species_new) %>%
-      select(-species_new) %>%
-      select_at(c("species_nl", "n_grids", "period", "sum_per_period", combo,
-                  "n_species")) %>%
-      # How many species per trait separately?
-      group_by_at(c("period", row)) %>%
-      mutate(n_trait1 = n()) %>%
-      ungroup() %>%
-      group_by_at(c("period", column)) %>%
-      mutate(n_trait2 = n()) %>%
-      ungroup() %>%
-      # Filter out small trait groups
-      filter(n_trait1 > filter_size,
-             n_trait2 > filter_size) %>%
-      select(-c(n_trait1, n_trait2))
-  } else if (length(combo) == 1) {
-    out <- species_traits_final %>%
-      filter(trait_name == combo) %>%
-      pivot_wider(
-        id_cols = c("species_nl", "species_new", "n_grids", "period",
-                    "sum_per_period"),
-        names_from = "trait_name",
-        values_from = "trait_value"
-      ) %>%
-      # Reference group is most frequent group
-      mutate("{combo}" := factor(!!sym(combo), # nolint: object_name_linter.
-                                 levels(fct_infreq(!!sym(combo))))) %>%
-      # How many species per trait combination?
-      group_by_at(c("period", combo)) %>%
-      mutate(n_species = n()) %>%
-      ungroup() %>%
-      select(-species_nl) %>%
-      mutate(species_nl = species_new) %>%
-      select(-species_new) %>%
-      select_at(c("species_nl", "n_grids", "period", "sum_per_period", combo,
-                  "n_species")) %>%
-      # Filter out small trait groups
-      filter(n_species > filter_size)
-  } else {
-    stop("Function not implemented for combinations of more than 2 traits.",
-         call. = FALSE)
-  }
-  return(out)
-})
+trait_combi_df_list <- lapply(trait_combinations, dataframe_per_trait)
 
 names_trait_combi_df_list <- sapply(trait_combinations, function(combo) {
   paste(combo, collapse = "_")
@@ -355,11 +383,11 @@ thinning <- 3
 ```
 
 ```{r formulae-combi}
-formula_list <- lapply(trait_combinations, function(combo) {
+formula_combi_list <- lapply(trait_combinations, function(combo) {
   bf(paste("n_grids", "~", paste(c("period", combo), collapse = " * "),
            " + offset(log(sum_per_period)) + (1 + period || species_nl)"))
 })
-names(formula_list) <- names(trait_combi_df_list)
+names(formula_combi_list) <- names(trait_combi_df_list)
 ```
 
 ### Fit models
@@ -368,8 +396,8 @@ We fit the models in a for loop and store them in a list.
 For missing trait value combinations we need to set constant priors of zero.
 
 ```{r model-fitting-combi}
-model_msci_list <- vector("list", length = length(trait_combi_df_list))
-model_msci_list_names <- vector(length = length(trait_combi_df_list))
+model_msci_combi_list <- vector("list", length = length(trait_combi_df_list))
+model_msci_combi_list_names <- vector(length = length(trait_combi_df_list))
 
 for (i in seq_along(trait_combi_df_list)) {
   combo_name <- names(trait_combi_df_list)[i]
@@ -378,11 +406,11 @@ for (i in seq_along(trait_combi_df_list)) {
   # set priors
   prior_combo <- set_priors_brms(combo_name,
                                  trait_combi_df_list[[combo_name]],
-                                 formula_list[[combo_name]])
+                                 formula_combi_list[[combo_name]])
 
   print(paste("Busy fitting", obj_name, "..."))
   assign(obj_name,
-         brm(formula = formula_list[[combo_name]],
+         brm(formula = formula_combi_list[[combo_name]],
              data = trait_combi_df_list[[combo_name]],
              family = poisson(),
              prior = prior_combo,
@@ -394,11 +422,11 @@ for (i in seq_along(trait_combi_df_list)) {
              file = paste0("source/brms_cache/", obj_name),
              file_refit = "on_change"))
 
-  model_msci_list[[i]] <- get(obj_name)
-  model_msci_list_names[i] <- combo_name
+  model_msci_combi_list[[i]] <- get(obj_name)
+  model_msci_combi_list_names[i] <- combo_name
 }
 
-names(model_msci_list) <- model_msci_list_names
+names(model_msci_combi_list) <- model_msci_combi_list_names
 ```
 
 
@@ -407,17 +435,17 @@ names(model_msci_list) <- model_msci_list_names
 We check MCMC convergence based on posterior densities, trace plots and the potential scale reduction factors ($\hat{R}$) for each parameter in each model.
 
 ```{r trace-plots-combi}
-for (i in seq_along(model_msci_list)) {
-  model <- model_msci_list[[i]]
-  name <- names(model_msci_list)[i]
+for (i in seq_along(model_msci_combi_list)) {
+  model <- model_msci_combi_list[[i]]
+  name <- names(model_msci_combi_list)[i]
   print(paste("Convergence model", name))
   print(plot(model, ask = FALSE))
 }
 ```
 
 ```{r rhats-combi}
-rhat_list <- get_rhats(model_msci_list)
-show_rhat(do.call(rbind.data.frame, rhat_list))
+rhat_combi_list <- get_rhats(model_msci_combi_list)
+show_rhat(do.call(rbind.data.frame, rhat_combi_list))
 ```
 
 Convergence is good.
@@ -428,9 +456,9 @@ Convergence is good.
 We check model fit based on posterior predictive checks where we compare the observed outcome to simulated datasets from the posterior predictive distribution.
 
 ```{r model-fit-combi}
-for (i in seq_along(model_msci_list)) {
-  title <- paste("Fit model", names(model_msci_list)[i])
-  model <- model_msci_list[[i]]
+for (i in seq_along(model_msci_combi_list)) {
+  title <- paste("Fit model", names(model_msci_combi_list)[i])
+  model <- model_msci_combi_list[[i]]
   print(
     pp_check(
       model,
@@ -443,7 +471,7 @@ for (i in seq_along(model_msci_list)) {
   print(
     pp_check(model,
       type = "dens_overlay_grouped", ndraws = 100,
-      group = str_split_i(names(model_msci_list)[i], "_", 1)
+      group = str_split_i(names(model_msci_combi_list)[i], "_", 1)
       ) +
       ggtitle(title)
     )
@@ -451,7 +479,7 @@ for (i in seq_along(model_msci_list)) {
   print(
     pp_check(model,
       type = "dens_overlay_grouped", ndraws = 100,
-      group = str_split_i(names(model_msci_list)[i], "_", 2)
+      group = str_split_i(names(model_msci_combi_list)[i], "_", 2)
       ) +
       ggtitle(title)
     )
@@ -464,7 +492,7 @@ Model fit is good.
 
 ```{r summarise-draws-combi}
 # get posterior draws for parameters of interest
-draws_mat_list <- lapply(model_msci_list, function(model) {
+draws_mat_list <- lapply(model_msci_combi_list, function(model) {
   model %>%
     spread_draws(`b_periodp2013_2022.*`, regex = TRUE) %>%
     select(starts_with("b_periodp2013_2022")) %>%
@@ -472,20 +500,20 @@ draws_mat_list <- lapply(model_msci_list, function(model) {
 })
 
 # get contrast matrices for combinations of interest
-contrast_mat_list <- vector("list", length = length(model_msci_list))
-for (i in seq_along(model_msci_list)) {
-  model <- model_msci_list[[i]]
-  name <- names(model_msci_list)[i]
+contrast_mat_list <- vector("list", length = length(model_msci_combi_list))
+for (i in seq_along(model_msci_combi_list)) {
+  model <- model_msci_combi_list[[i]]
+  name <- names(model_msci_combi_list)[i]
 
   contrast_mat_list[[i]] <- get_contrast_matrix(model, name)
 }
-names(contrast_mat_list) <- names(model_msci_list)
+names(contrast_mat_list) <- names(model_msci_combi_list)
 
 # get combination names
-names_list <- vector("list", length = length(model_msci_list))
-for (i in seq_along(model_msci_list)) {
-  model <- model_msci_list[[i]]
-  name <- names(model_msci_list)[i]
+names_list <- vector("list", length = length(model_msci_combi_list))
+for (i in seq_along(model_msci_combi_list)) {
+  model <- model_msci_combi_list[[i]]
+  name <- names(model_msci_combi_list)[i]
 
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
@@ -499,10 +527,10 @@ for (i in seq_along(model_msci_list)) {
 
   names_list[[i]] <- col_names
 }
-names(names_list) <- names(model_msci_list)
+names(names_list) <- names(model_msci_combi_list)
 
 # calculate msci
-msci_draw_list <- lapply(names(model_msci_list), function(name) {
+msci_draw_list <- lapply(names(model_msci_combi_list), function(name) {
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
 
@@ -594,7 +622,7 @@ msci_draw_list <- lapply(names(model_msci_list), function(name) {
 
   return(out)
 })
-names(msci_draw_list) <- names(model_msci_list)
+names(msci_draw_list) <- names(model_msci_combi_list)
 
 # filter groups with too few species
 msci_draw_list_filtered <- lapply(msci_draw_list, function(draws) {
@@ -616,7 +644,7 @@ summary_draw_list <- lapply(names(msci_draw_list_filtered), function(name) {
     rename(msci.mean = msci) %>%
     select(-c(n_species.lower, n_species.upper))
 })
-names(summary_draw_list) <- names(model_msci_list)
+names(summary_draw_list) <- names(model_msci_combi_list)
 ```
 
 ```{r plot-results-combi, fig.width=10, fig.height=10}
