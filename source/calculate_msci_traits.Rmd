@@ -55,11 +55,10 @@ species_traits_final <- read_csv(file.path(data_path,
                                            "prop_data_per_trait.csv"))
 ```
 
-# Trait combinations
-## Workflow
+# Workflow
 
 -   make a list with each trait (combination)
--   `lapply()` to create list of dataframes for each trait combination
+-   `lapply()` to create list of dataframes for each trait (combination)
 -   `relevel()` traits and filter dataframes based on number of species
 -   visualise group sizes
 -   `lapply()` to create formula list
@@ -69,6 +68,7 @@ species_traits_final <- read_csv(file.path(data_path,
 -   summarise results
 -   visualise results
 
+# Trait combinations
 ## Data preparation
 ### Traits of interest
 
