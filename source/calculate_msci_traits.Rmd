@@ -503,7 +503,7 @@ summary_draw_list <- lapply(names(msci_draw_list_filtered), function(name) {
 names(summary_draw_list) <- names(model_msci_list)
 ```
 
-```{r plot-results, out.width=2000}
+```{r plot-results, fig.width=10, fig.height=10}
 for (i in seq_along(summary_draw_list)) {
   name <- names(summary_draw_list)[i]
   summary_df <- summary_draw_list[[name]]
