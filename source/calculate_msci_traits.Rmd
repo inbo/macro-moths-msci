@@ -483,8 +483,7 @@ names(msci_draw_list) <- names(model_msci_list)
 # filter groups with too few species
 msci_draw_list_filtered <- lapply(msci_draw_list, function(draws) {
   draws %>%
-    filter(n_species > filter_size) %>%
-    select(-n_species)
+    filter(n_species > filter_size)
 })
 
 # get summary statistics
@@ -497,7 +496,9 @@ summary_draw_list <- lapply(names(msci_draw_list_filtered), function(name) {
   msci_draws %>%
     group_by_at(c(trait1, trait2)) %>%
     mean_qi() %>%
-    rename(mean = msci)
+    ungroup() %>%
+    rename(msci.mean = msci) %>%
+    select(-c(n_species.lower, n_species.upper))
 })
 names(summary_draw_list) <- names(model_msci_list)
 ```
@@ -505,31 +506,43 @@ names(summary_draw_list) <- names(model_msci_list)
 
 ```{r}
 for (i in seq_along(summary_draw_list)) {
-  summary <- summary_draw_list[[i]]
+  summary_df <- summary_draw_list[[i]]
+  draws_df <- msci_draw_list_filtered[[name]]
   name <- names(summary_draw_list)[i]
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
   
-  summary %>%
+  # show summary_df table
+  summary_df %>%
     select(all_of(c(trait1, trait2)), everything()) %>%
     arrange(trait1, trait2) %>%
-    rename(msci = mean) %>%
     kable() %>%
     print()
   
-  p <- msci_draw_list_filtered[[name]] %>%
+  # create dataframe to plot number of species
+  min_df <- draws_df %>%
+    group_by_at(trait2) %>%
+    mutate(min = min(msci)) %>%
+    ungroup() %>%
+    select(all_of(c(trait1, trait2)), n_species, min) %>%
+    distinct()
+  
+  # visualise
+  p <- draws_df %>%
     select(all_of(c(trait1, trait2)), everything()) %>%
-    full_join(summary) %>%
+    full_join(summary_df) %>%
     mutate(fill_var = case_when(
-      .lower > 0 ~ "chartreuse3",
-      .upper < 0 ~ "coral",
-      .lower < 0 & .lower > -0.2 & .upper > 0 & .upper < 0.25 ~ "gold",
+      msci.lower > 0 ~ "chartreuse3",
+      msci.upper < 0 ~ "coral",
+      msci.lower < 0 & msci.lower > -0.2 &
+        msci.upper > 0 & msci.upper < 0.25 ~ "gold",
       TRUE ~ "skyblue",
     )) %>%
-    ggplot(aes(y = msci, x = .data[[trait1]], fill = fill_var)) +
-      stat_halfeye() +
+    ggplot(aes(x = .data[[trait1]])) +
+      stat_halfeye(aes(y = msci, fill = fill_var)) +
       geom_hline(yintercept = 0, linetype = 2) +
       geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
+      geom_label(data = min_df, aes(y = min, label = n_species)) +
       scale_fill_identity() +
       labs(x = "", y = "Multispecies Change Index") +
       theme(
