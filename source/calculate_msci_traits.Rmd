@@ -361,7 +361,7 @@ contrast_mat_list <- vector("list", length = length(model_msci_list))
 for (i in seq_along(model_msci_list)) {
   model <- model_msci_list[[i]]
   name <- names(model_msci_list)[i]
-  
+
   contrast_mat_list[[i]] <- get_contrast_matrix(model, name)
 }
 names(contrast_mat_list) <- names(model_msci_list)
@@ -371,17 +371,17 @@ names_list <- vector("list", length = length(model_msci_list))
 for (i in seq_along(model_msci_list)) {
   model <- model_msci_list[[i]]
   name <- names(model_msci_list)[i]
-  
+
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
-  
+
   trait_vals1 <- sort(unique(model$data[[trait1]]))
   trait_vals2 <- sort(unique(model$data[[trait2]]))
-  
+
   col_names <- lapply(trait_vals2, function(i) {
     paste(rep(i, length(trait_vals1)), trait_vals1, sep = ":")
   })
-  
+
   names_list[[i]] <- col_names
 }
 names(names_list) <- names(model_msci_list)
@@ -390,25 +390,26 @@ names(names_list) <- names(model_msci_list)
 msci_draw_list <- lapply(names(model_msci_list), function(name) {
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
-  
+
   # get draws and contrasts
   draw_matrix <- draws_mat_list[[name]]
   contrast_matrix <- contrast_mat_list[[name]]
-  
+
   # calculate msci
   msci_df <- as_tibble(
     exp(t(contrast_matrix %*% t(draw_matrix))) - 1
     ) %>%
     `colnames<-`(unlist(names_list[[name]])) %>%
-    pivot_longer(cols = everything(), names_to = "trait", values_to = "msci") %>%
+    pivot_longer(cols = everything(), names_to = "trait",
+                 values_to = "msci") %>%
     separate(trait, into = c(trait2, trait1), sep = ":")
-  
+
   # get number of species per group
   out <- msci_df %>%
     full_join(trait_df_list[[name]] %>%
                 select(all_of(c(trait1, trait2)), n_species),
               relationship = "many-to-many")
-  
+
   # ordered factors
   if ("EllenbergN" %in% names(out)) {
     out <- out %>%
@@ -475,7 +476,7 @@ msci_draw_list <- lapply(names(model_msci_list), function(name) {
                  ), ordered = TRUE)
              )
   }
-  
+
   return(out)
 })
 names(msci_draw_list) <- names(model_msci_list)
@@ -490,9 +491,9 @@ msci_draw_list_filtered <- lapply(msci_draw_list, function(draws) {
 summary_draw_list <- lapply(names(msci_draw_list_filtered), function(name) {
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
-  
+
   msci_draws <- msci_draw_list_filtered[[name]]
-  
+
   msci_draws %>%
     group_by_at(c(trait1, trait2)) %>%
     mean_qi() %>%
@@ -511,14 +512,14 @@ for (i in seq_along(summary_draw_list)) {
   name <- names(summary_draw_list)[i]
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
-  
+
   # show summary_df table
   summary_df %>%
     select(all_of(c(trait1, trait2)), everything()) %>%
     arrange(trait1, trait2) %>%
     kable() %>%
     print()
-  
+
   # create dataframe to plot number of species
   min_df <- draws_df %>%
     group_by_at(trait2) %>%
@@ -526,7 +527,7 @@ for (i in seq_along(summary_draw_list)) {
     ungroup() %>%
     select(all_of(c(trait1, trait2)), n_species, min) %>%
     distinct()
-  
+
   # visualise
   p <- draws_df %>%
     select(all_of(c(trait1, trait2)), everything()) %>%
