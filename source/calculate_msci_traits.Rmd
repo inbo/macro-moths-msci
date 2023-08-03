@@ -199,10 +199,10 @@ We set the MCMC parameters and make a list of model formulae as specified in `mo
 ```{r mcmc-params}
 # MCMC parameters
 nchains <- 3 # number of chains
-niter <- 10000 # number of iterations (incl. burn-in)
-burnin <- niter / 4 # number of initial samples to discard (burn-in)
+niter <- 20000 # number of iterations (incl. burn-in)
+burnin <- niter / 5 # number of initial samples to discard (burn-in)
 nparallel <- nchains # number of cores used for parallel computing
-thinning <- 3
+thinning <- 4
 ```
 
 ```{r formulae}
@@ -275,6 +275,7 @@ We check model fit based on posterior predictive checks where we compare the obs
 for (i in seq_along(model_msci_list)) {
   title <- paste("Fit model", names(model_msci_list)[i])
   model <- model_msci_list[[i]]
+  
   print(
     pp_check(
       model,
@@ -297,6 +298,145 @@ for (i in seq_along(model_msci_list)) {
 Model fit is good.
 
 
+## Results
+
+```{r summarise-draws}
+# get posterior draws for parameters of interest
+draws_mat_list <- lapply(model_msci_list, function(model) {
+  model %>%
+    spread_draws(`b_periodp2013_2022.*`, regex = TRUE) %>%
+    select(starts_with("b_periodp2013_2022")) %>%
+    as.matrix()
+})
+
+# get contrast matrices
+contrast_mat_list <- lapply(names(model_msci_list), function(name) {
+  trait_values <- levels(trait_df_list[[name]][[name]])
+  create_contrast_matrix(length(trait_values))
+})
+names(contrast_mat_list) <- names(model_msci_list)
+
+# calculate msci
+msci_draw_list <- lapply(names(model_msci_list), function(name) {
+  # get draws and contrasts
+  draw_matrix <- draws_mat_list[[name]]
+  contrast_matrix <- contrast_mat_list[[name]]
+  trait_values <- levels(trait_df_list[[name]][[name]])
+
+  # calculate msci
+  msci_df <- as_tibble(
+    exp(t(contrast_matrix %*% t(draw_matrix))) - 1
+    ) %>%
+    `colnames<-`(trait_values) %>%
+    pivot_longer(cols = everything(), names_to = name,
+                 values_to = "msci")
+
+  # get number of species per group
+  msci_df2 <- msci_df %>%
+    full_join(trait_df_list[[name]] %>%
+                select(all_of(name), n_species),
+              relationship = "many-to-many")
+
+  # order factors
+  out <- order_traits(msci_df2)
+
+  return(out)
+})
+names(msci_draw_list) <- names(model_msci_list)
+
+# get summary statistics
+summary_draw_list <- lapply(names(msci_draw_list), function(name) {
+  msci_draws <- msci_draw_list[[name]]
+
+  msci_draws %>%
+    group_by_at(c(name)) %>%
+    mean_qi() %>%
+    ungroup() %>%
+    rename(msci.mean = msci) %>%
+    select(-c(n_species.lower, n_species.upper))
+})
+names(summary_draw_list) <- names(model_msci_list)
+```
+
+```{r plot-results}
+for (i in seq_along(summary_draw_list)) {
+  name <- names(summary_draw_list)[i]
+  summary_df <- summary_draw_list[[name]]
+  draws_df <- msci_draw_list[[name]]
+  trait1 <- stringr::str_split_i(name, "_", 1)
+  trait2 <- stringr::str_split_i(name, "_", 2)
+
+  # show summary_df table
+  summary_df %>%
+    select(all_of(c(trait1, trait2)), everything()) %>%
+    arrange(trait1, trait2) %>%
+    kable() %>%
+    print()
+  cat("\n")
+
+  # create dataframe to plot number of species
+  min_threshold <- -0.2
+  max_threshold <- 0.25
+  min_df <- draws_df %>%
+    group_by_at(trait2) %>%
+    mutate(min = ifelse(min(msci) <= min_threshold, min(msci),
+                        min_threshold)) %>%
+    ungroup() %>%
+    select(all_of(c(trait1, trait2)), n_species, min) %>%
+    distinct()
+
+  # visualise
+  p <- draws_df %>%
+    select(all_of(c(trait1, trait2)), everything()) %>%
+    full_join(summary_df) %>%
+    mutate(
+      effects = case_when(
+          msci.lower > 0 ~ "positive effect",
+          msci.lower > -0.2 & msci.upper > 0.25 ~ "potential positive effect",
+          msci.upper < 0 ~ "negative effect",
+          msci.upper < 0.25 & msci.lower < -0.2  ~ "potential negative effect",
+          msci.lower < 0 & msci.lower > -0.2 &
+            msci.upper > 0 & msci.upper < 0.25 ~ "no effect",
+          TRUE ~ "unknown effect",
+      ),
+      fill_var = factor(effects,
+        levels = c("negative effect",
+                   "potential negative effect",
+                   "potential positive effect",
+                   "positive effect",
+                   "no effect",
+                   "unknown effect"),
+        ordered = TRUE)
+    ) %>%
+    mutate(
+      "{trait1}" := factor(!!sym(trait1)), # nolint: object_name_linter.
+      "{trait2}" := factor(!!sym(trait2)), # nolint: object_name_linter.
+    ) %>%
+    ggplot(aes(x = .data[[trait1]])) +
+      stat_halfeye(aes(y = msci, fill = fill_var)) +
+      geom_hline(yintercept = 0, linetype = 2) +
+      geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
+      geom_label(data = min_df, aes(y = min, label = n_species)) +
+      scale_x_discrete(drop = FALSE) +
+      scale_fill_manual(values =  c("firebrick1",
+                                    "coral",
+                                    "darkseagreen",
+                                    "chartreuse3",
+                                    "gold",
+                                    "skyblue"),
+                        drop = FALSE) +
+      labs(x = "",
+           y = "Multi-Species Change Index",
+           fill = "",
+           title = gsub("_", " ~ ", name)) +
+      theme(
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
+      ) +
+      facet_wrap(~.data[[trait2]], scales = "free")
+  print(p)
+}
+```
 
 
 # Trait combinations
@@ -459,6 +599,7 @@ We check model fit based on posterior predictive checks where we compare the obs
 for (i in seq_along(model_msci_combi_list)) {
   title <- paste("Fit model", names(model_msci_combi_list)[i])
   model <- model_msci_combi_list[[i]]
+  
   print(
     pp_check(
       model,
@@ -492,7 +633,7 @@ Model fit is good.
 
 ```{r summarise-draws-combi}
 # get posterior draws for parameters of interest
-draws_mat_list <- lapply(model_msci_combi_list, function(model) {
+draws_mat_combi_list <- lapply(model_msci_combi_list, function(model) {
   model %>%
     spread_draws(`b_periodp2013_2022.*`, regex = TRUE) %>%
     select(starts_with("b_periodp2013_2022")) %>%
@@ -500,17 +641,17 @@ draws_mat_list <- lapply(model_msci_combi_list, function(model) {
 })
 
 # get contrast matrices for combinations of interest
-contrast_mat_list <- vector("list", length = length(model_msci_combi_list))
+contrast_mat_combi_list <- vector("list", length = length(model_msci_combi_list))
 for (i in seq_along(model_msci_combi_list)) {
   model <- model_msci_combi_list[[i]]
   name <- names(model_msci_combi_list)[i]
 
-  contrast_mat_list[[i]] <- get_contrast_matrix(model, name)
+  contrast_mat_combi_list[[i]] <- get_contrast_matrix(model, name)
 }
-names(contrast_mat_list) <- names(model_msci_combi_list)
+names(contrast_mat_combi_list) <- names(model_msci_combi_list)
 
 # get combination names
-names_list <- vector("list", length = length(model_msci_combi_list))
+names_combi_list <- vector("list", length = length(model_msci_combi_list))
 for (i in seq_along(model_msci_combi_list)) {
   model <- model_msci_combi_list[[i]]
   name <- names(model_msci_combi_list)[i]
@@ -525,117 +666,53 @@ for (i in seq_along(model_msci_combi_list)) {
     paste(rep(i, length(trait_vals1)), trait_vals1, sep = ":")
   })
 
-  names_list[[i]] <- col_names
+  names_combi_list[[i]] <- col_names
 }
-names(names_list) <- names(model_msci_combi_list)
+names(names_combi_list) <- names(model_msci_combi_list)
 
 # calculate msci
-msci_draw_list <- lapply(names(model_msci_combi_list), function(name) {
+msci_draw_combi_list <- lapply(names(model_msci_combi_list), function(name) {
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
 
   # get draws and contrasts
-  draw_matrix <- draws_mat_list[[name]]
-  contrast_matrix <- contrast_mat_list[[name]]
+  draw_matrix <- draws_mat_combi_list[[name]]
+  contrast_matrix <- contrast_mat_combi_list[[name]]
 
   # calculate msci
   msci_df <- as_tibble(
     exp(t(contrast_matrix %*% t(draw_matrix))) - 1
     ) %>%
-    `colnames<-`(unlist(names_list[[name]])) %>%
+    `colnames<-`(unlist(names_combi_list[[name]])) %>%
     pivot_longer(cols = everything(), names_to = "trait",
                  values_to = "msci") %>%
     separate(trait, into = c(trait2, trait1), sep = ":")
 
   # get number of species per group
-  out <- msci_df %>%
+  msci_df2 <- msci_df %>%
     full_join(trait_combi_df_list[[name]] %>%
                 select(all_of(c(trait1, trait2)), n_species),
               relationship = "many-to-many")
 
-  # ordered factors
-  if ("EllenbergN" %in% names(out)) {
-    out <- out %>%
-      mutate(EllenbergN = factor(EllenbergN,
-               levels = c(
-                 "VeryNutrientPoor",
-                 "NutrientPoor",
-                 "NutrientRich",
-                 "VeryNutrientRich"
-                 ), ordered = TRUE)
-             )
-  }
-  if ("Size" %in% names(out)) {
-    out <- out %>%
-      mutate(Size = factor(Size,
-               levels = c(
-                 "VerySmall",
-                 "Small",
-                 "Intermediate",
-                 "Large",
-                 "VeryLarge"
-                 ), ordered = TRUE)
-             )
-  }
-  if ("nGenerations" %in% names(out)) {
-    out <- out %>%
-      mutate(nGenerations = factor(nGenerations,
-               levels = c(
-                 "1",
-                 "2"
-                 ), ordered = TRUE)
-             )
-  }
-  if ("OverwinteringStage" %in% names(out)) {
-    out <- out %>%
-      mutate(OverwinteringStage = factor(OverwinteringStage,
-               levels = c(
-                 "Egg",
-                 "Caterpillar",
-                 "Pupa",
-                 "Adult"
-                 ), ordered = TRUE)
-             )
-  }
-  if ("Phagy" %in% names(out)) {
-    out <- out %>%
-      mutate(Phagy = factor(Phagy,
-               levels = c(
-                 "Monophagous",
-                 "Oligophagous",
-                 "Polyphagous"
-                 ), ordered = TRUE)
-             )
-  }
-  if ("TempHum" %in% names(out)) {
-    out <- out %>%
-      mutate(TempHum = factor(TempHum,
-               levels = c(
-                 "Cold_VeryWet",
-                 "Cold_Wet",
-                 "Hot_Wet",
-                 "Hot_Dry",
-                 "VeryHot_Dry"
-                 ), ordered = TRUE)
-             )
-  }
+  # order factors
+  out <- order_traits(msci_df2)
 
   return(out)
 })
-names(msci_draw_list) <- names(model_msci_combi_list)
+names(msci_draw_combi_list) <- names(model_msci_combi_list)
 
 # filter groups with too few species
-msci_draw_list_filtered <- lapply(msci_draw_list, function(draws) {
+msci_draw_combi_list_filtered <- lapply(msci_draw_combi_list, function(draws) {
   draws %>%
     filter(n_species > filter_size)
 })
 
 # get summary statistics
-summary_draw_list <- lapply(names(msci_draw_list_filtered), function(name) {
+summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered), function(name) {
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
 
-  msci_draws <- msci_draw_list_filtered[[name]]
+  msci_draws <- msci_draw_combi_list_filtered[[name]]
 
   msci_draws %>%
     group_by_at(c(trait1, trait2)) %>%
@@ -644,14 +721,14 @@ summary_draw_list <- lapply(names(msci_draw_list_filtered), function(name) {
     rename(msci.mean = msci) %>%
     select(-c(n_species.lower, n_species.upper))
 })
-names(summary_draw_list) <- names(model_msci_combi_list)
+names(summary_draw_combi_list) <- names(model_msci_combi_list)
 ```
 
 ```{r plot-results-combi, fig.width=10, fig.height=10}
-for (i in seq_along(summary_draw_list)) {
-  name <- names(summary_draw_list)[i]
-  summary_df <- summary_draw_list[[name]]
-  draws_df <- msci_draw_list_filtered[[name]]
+for (i in seq_along(summary_draw_combi_list)) {
+  name <- names(summary_draw_combi_list)[i]
+  summary_df <- summary_draw_combi_list[[name]]
+  draws_df <- msci_draw_combi_list_filtered[[name]]
   trait1 <- stringr::str_split_i(name, "_", 1)
   trait2 <- stringr::str_split_i(name, "_", 2)
 
