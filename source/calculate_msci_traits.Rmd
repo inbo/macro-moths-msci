@@ -199,10 +199,10 @@ We set the MCMC parameters and make a list of model formulae as specified in `mo
 ```{r mcmc-params}
 # MCMC parameters
 nchains <- 3 # number of chains
-niter <- 20000 # number of iterations (incl. burn-in)
-burnin <- niter / 5 # number of initial samples to discard (burn-in)
+niter <- 10000 # number of iterations (incl. burn-in)
+burnin <- niter / 4 # number of initial samples to discard (burn-in)
 nparallel <- nchains # number of cores used for parallel computing
-thinning <- 4
+thinning <- 3
 ```
 
 ```{r formulae}
@@ -363,13 +363,9 @@ for (i in seq_along(summary_draw_list)) {
   name <- names(summary_draw_list)[i]
   summary_df <- summary_draw_list[[name]]
   draws_df <- msci_draw_list[[name]]
-  trait1 <- stringr::str_split_i(name, "_", 1)
-  trait2 <- stringr::str_split_i(name, "_", 2)
 
   # show summary_df table
   summary_df %>%
-    select(all_of(c(trait1, trait2)), everything()) %>%
-    arrange(trait1, trait2) %>%
     kable() %>%
     print()
   cat("\n")
@@ -378,16 +374,13 @@ for (i in seq_along(summary_draw_list)) {
   min_threshold <- -0.2
   max_threshold <- 0.25
   min_df <- draws_df %>%
-    group_by_at(trait2) %>%
     mutate(min = ifelse(min(msci) <= min_threshold, min(msci),
                         min_threshold)) %>%
-    ungroup() %>%
-    select(all_of(c(trait1, trait2)), n_species, min) %>%
+    select(all_of(name), n_species, min) %>%
     distinct()
 
   # visualise
   p <- draws_df %>%
-    select(all_of(c(trait1, trait2)), everything()) %>%
     full_join(summary_df) %>%
     mutate(
       effects = case_when(
@@ -402,38 +395,37 @@ for (i in seq_along(summary_draw_list)) {
       fill_var = factor(effects,
         levels = c("negative effect",
                    "potential negative effect",
-                   "potential positive effect",
                    "positive effect",
+                   "potential positive effect",
                    "no effect",
                    "unknown effect"),
         ordered = TRUE)
     ) %>%
     mutate(
-      "{trait1}" := factor(!!sym(trait1)), # nolint: object_name_linter.
-      "{trait2}" := factor(!!sym(trait2)), # nolint: object_name_linter.
+      "{name}" := factor(!!sym(name)), # nolint: object_name_linter.
     ) %>%
-    ggplot(aes(x = .data[[trait1]])) +
+    ggplot(aes(x = .data[[name]])) +
       stat_halfeye(aes(y = msci, fill = fill_var)) +
       geom_hline(yintercept = 0, linetype = 2) +
       geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
-      geom_label(data = min_df, aes(y = min, label = n_species)) +
+      geom_label(data = min_df, aes(y = min, label = n_species),
+                 size = 3, vjust = 0.5) +
       scale_x_discrete(drop = FALSE) +
       scale_fill_manual(values =  c("firebrick1",
                                     "coral",
-                                    "darkseagreen",
                                     "chartreuse3",
+                                    "darkseagreen",
                                     "gold",
                                     "skyblue"),
                         drop = FALSE) +
       labs(x = "",
            y = "Multi-Species Change Index",
            fill = "",
-           title = gsub("_", " ~ ", name)) +
+           title = name) +
       theme(
         legend.position = "bottom",
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
-      ) +
-      facet_wrap(~.data[[trait2]], scales = "free")
+      )
   print(p)
 }
 ```
@@ -512,15 +504,6 @@ for (i in seq_along(trait_combinations)) {
 ### Model fit preparation
 
 We set the MCMC parameters and make a list of model formulae as specified in `model_specification_msci.Rmd`.
-
-```{r mcmc-params-combi}
-# MCMC parameters
-nchains <- 3 # number of chains
-niter <- 10000 # number of iterations (incl. burn-in)
-burnin <- niter / 4 # number of initial samples to discard (burn-in)
-nparallel <- nchains # number of cores used for parallel computing
-thinning <- 3
-```
 
 ```{r formulae-combi}
 formula_combi_list <- lapply(trait_combinations, function(combo) {
@@ -768,8 +751,8 @@ for (i in seq_along(summary_draw_combi_list)) {
       fill_var = factor(effects,
         levels = c("negative effect",
                    "potential negative effect",
-                   "potential positive effect",
                    "positive effect",
+                   "potential positive effect",
                    "no effect",
                    "unknown effect"),
         ordered = TRUE)
@@ -786,8 +769,8 @@ for (i in seq_along(summary_draw_combi_list)) {
       scale_x_discrete(drop = FALSE) +
       scale_fill_manual(values =  c("firebrick1",
                                     "coral",
-                                    "darkseagreen",
                                     "chartreuse3",
+                                    "darkseagreen",
                                     "gold",
                                     "skyblue"),
                         drop = FALSE) +
