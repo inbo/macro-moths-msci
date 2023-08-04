@@ -207,10 +207,10 @@ We set the MCMC parameters and make a list of model formulae as specified in `mo
 ```{r mcmc-params}
 # MCMC parameters
 nchains <- 3 # number of chains
-niter <- 10000 # number of iterations (incl. burn-in)
-burnin <- niter / 4 # number of initial samples to discard (burn-in)
+niter <- 20000 # number of iterations (incl. burn-in)
+burnin <- niter / 5 # number of initial samples to discard (burn-in)
 nparallel <- nchains # number of cores used for parallel computing
-thinning <- 3
+thinning <- 8
 ```
 
 ```{r formulae}
@@ -320,7 +320,7 @@ draws_mat_list <- lapply(model_msci_list, function(model) {
 
 # get contrast matrices
 contrast_mat_list <- lapply(names(model_msci_list), function(name) {
-  trait_values <- levels(trait_df_list[[name]][[name]])
+  trait_values <- sort(unique(trait_df_list[[name]][[name]]))
   create_contrast_matrix(length(trait_values))
 })
 names(contrast_mat_list) <- names(model_msci_list)
@@ -330,7 +330,7 @@ msci_draw_list <- lapply(names(model_msci_list), function(name) {
   # get draws and contrasts
   draw_matrix <- draws_mat_list[[name]]
   contrast_matrix <- contrast_mat_list[[name]]
-  trait_values <- levels(trait_df_list[[name]][[name]])
+  trait_values <- sort(unique(trait_df_list[[name]][[name]]))
 
   # calculate msci
   msci_df <- as_tibble(
