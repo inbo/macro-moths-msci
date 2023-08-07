@@ -122,9 +122,9 @@ dataframe_per_trait <- function(combo, df, filter_n) {
       ) %>%
       ungroup() %>%
       # Reference group is most frequent group
-      mutate("{row}" := factor(!!sym(row), # nolint: object_name_linter.
+      mutate("{row}" := factor(!!sym(row), # nolint.
                levels(forcats::fct_infreq(!!sym(row)))),
-             "{column}" := factor(!!sym(column), # nolint: object_name_linter.
+             "{column}" := factor(!!sym(column), # nolint.
                levels(forcats::fct_infreq(!!sym(column))))) %>%
       # How many species per trait combination?
       group_by_at(c("period", combo)) %>%
