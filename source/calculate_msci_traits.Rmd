@@ -264,7 +264,7 @@ for (i in seq_along(model_msci_list)) {
   model <- model_msci_list[[i]]
   name <- names(model_msci_list)[i]
   print(paste("Convergence model", name))
-  print(plot(model, ask = FALSE))
+  plot(model, ask = FALSE)
 }
 ```
 
@@ -575,7 +575,7 @@ for (i in seq_along(model_msci_combi_list)) {
   model <- model_msci_combi_list[[i]]
   name <- names(model_msci_combi_list)[i]
   print(paste("Convergence model", name))
-  print(plot(model, ask = FALSE))
+  plot(model, ask = FALSE)
 }
 ```
 
