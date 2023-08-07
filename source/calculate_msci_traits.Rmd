@@ -382,9 +382,11 @@ for (i in seq_along(summary_draw_list)) {
   # create dataframe to plot number of species
   min_threshold <- -0.2
   max_threshold <- 0.25
+  mult <- 0.4
   min_df <- draws_df %>%
     mutate(min = ifelse(min(msci) <= min_threshold, min(msci),
-                        min_threshold)) %>%
+                        min_threshold),
+           min = min + min * mult) %>%
     select(all_of(name), n_species, min) %>%
     distinct()
 
@@ -418,7 +420,7 @@ for (i in seq_along(summary_draw_list)) {
       geom_hline(yintercept = 0, linetype = 2) +
       geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
       geom_label(data = min_df, aes(y = min, label = n_species),
-                 size = 3, vjust = 0.5) +
+                 size = 3) +
       scale_x_discrete(drop = FALSE) +
       scale_fill_manual(values =  c("firebrick1",
                                     "coral",
