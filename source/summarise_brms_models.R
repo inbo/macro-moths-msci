@@ -86,3 +86,90 @@ get_contrast_matrix <- function(model, combo) {
 
   return(rbind(ref_group, rest_group))
 }
+
+order_traits <- function(df) {
+  out <- df
+
+  if ("EllenbergN" %in% names(out)) {
+    out <- out %>%
+      mutate(EllenbergN = factor(.data$EllenbergN,
+                                 levels = c(
+                                   "VeryNutrientPoor",
+                                   "NutrientPoor",
+                                   "NutrientRich",
+                                   "VeryNutrientRich"
+                                 ), ordered = TRUE)
+      )
+  }
+  if ("Size" %in% names(out)) {
+    out <- out %>%
+      mutate(Size = factor(.data$Size,
+                           levels = c(
+                             "VerySmall",
+                             "Small",
+                             "Intermediate",
+                             "Large",
+                             "VeryLarge"
+                           ), ordered = TRUE)
+      )
+  }
+  if ("nGenerations" %in% names(out)) {
+    out <- out %>%
+      mutate(nGenerations = factor(.data$nGenerations,
+                                   levels = c(
+                                     "1",
+                                     "2"
+                                   ), ordered = TRUE)
+      )
+  }
+  if ("OverwinteringStage" %in% names(out)) {
+    out <- out %>%
+      mutate(OverwinteringStage = factor(.data$OverwinteringStage,
+                                         levels = c(
+                                           "Egg",
+                                           "Caterpillar",
+                                           "Pupa",
+                                           "Adult"
+                                         ), ordered = TRUE)
+      )
+  }
+  if ("Phagy" %in% names(out)) {
+    out <- out %>%
+      mutate(Phagy = factor(.data$Phagy,
+                            levels = c(
+                              "Monophagous",
+                              "Oligophagous",
+                              "Polyphagous"
+                            ), ordered = TRUE)
+      )
+  }
+  if ("TempHum" %in% names(out)) {
+    out <- out %>%
+      mutate(TempHum = factor(.data$TempHum,
+                              levels = c(
+                                "Cold_VeryWet",
+                                "Cold_Wet",
+                                "Hot_Wet",
+                                "Hot_Dry",
+                                "VeryHot_Dry"
+                              ), ordered = TRUE)
+      )
+  }
+  if ("Seasonality" %in% names(out)) {
+    out <- out %>%
+      mutate(Seasonality = factor(.data$Seasonality,
+                                  levels = c(
+                                    "Spring",
+                                    "SpringSummer",
+                                    "Summer",
+                                    "SummerAutumn",
+                                    "Autumn",
+                                    "Winter",
+                                    "AutumnSpring",
+                                    "SpringSummerAutumn"
+                                  ), ordered = TRUE)
+      )
+  }
+
+  return(out)
+}
