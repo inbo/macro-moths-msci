@@ -342,9 +342,9 @@ msci_draw_list <- lapply(names(model_msci_list), function(name) {
 
   # get number of species per group
   msci_df2 <- msci_df %>%
-    full_join(trait_df_list[[name]] %>%
-                select(all_of(name), n_species),
-              relationship = "many-to-many")
+    left_join(trait_df_list[[name]] %>%
+                select(all_of(name), n_species) %>%
+                distinct())
 
   # order factors
   out <- order_traits(msci_df2)
@@ -685,9 +685,9 @@ msci_draw_combi_list <- lapply(names(model_msci_combi_list), function(name) {
 
   # get number of species per group
   msci_df2 <- msci_df %>%
-    full_join(trait_combi_df_list[[name]] %>%
-                select(all_of(c(trait1, trait2)), n_species),
-              relationship = "many-to-many")
+    left_join(trait_combi_df_list[[name]] %>%
+                select(all_of(c(trait1, trait2)), n_species) %>%
+                distinct())
 
   # order factors
   out <- order_traits(msci_df2)
