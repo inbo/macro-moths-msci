@@ -26,7 +26,7 @@ show_rhat <- function(rhat_df) {
     scale_colour_manual(values = palette) +
     theme(legend.position = "",
           axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-    labs(x = "", y = "Gelman-Rubin diagnostic")
+    labs(x = "", y = "potential scale reduction factor")
 }
 
 get_traits <- function(model) {
