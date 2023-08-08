@@ -85,12 +85,12 @@ traits
 ### Filter dataframes per trait combination
 
 ```{r filter-size}
-filter_size <- 10
+filter_size <- 14
 ```
 
 We create a list of dataframes per trait.
 We set reference levels for each trait such that reference group is most frequent trait value.
-We only keep trait values with more than `r filter_size` species.
+We only keep trait values with at least `r filter_size + 1` species.
 
 ```{r dataframe-per-trait}
 dataframe_per_trait <- function(combo, df, filter_n) {
