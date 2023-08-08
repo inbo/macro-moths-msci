@@ -190,26 +190,25 @@ species_traits <- read_delim(
 ) %>%
   rename(species_nl = nameDutch)
 
-species_traits$EllenbergN <- as.factor(species_traits$EllenbergN)
-species_traits$nGenerations <- as.factor(species_traits$nGenerations)
+species_traits$Voltinism <- as.factor(species_traits$Voltinism)
 
 # Biotope is in it 2 times, so we have to split up
 species_traits_df1 <- species_traits %>%
   select(
     species_nl,
     Biotope1,
-    colourVariation,
-    Activity,
+    colourVariability,
+    Photoperiod,
     OverwinteringStage,
-    Phagy,
+    HostPlantSpecificity,
     LarvalFoodSource2,
-    EllenbergN,
-    nGenerations,
-    Seasonality,
+    NutrientValueBiotope,
+    Voltinism,
+    FlightPeriod,
     WingDevelopment,
     Distribution,
     Migration,
-    Size,
+    ForewingLength,
     TempHum,
     HabitatTemperature,
     HabitatHumidity
@@ -224,18 +223,18 @@ species_traits_df2 <- species_traits_df2 %>%
   select(
     species_nl,
     Biotope2,
-    colourVariation,
-    Activity,
+    colourVariability,
+    Photoperiod,
     OverwinteringStage,
-    Phagy,
+    HostPlantSpecificity,
     LarvalFoodSource2,
-    EllenbergN,
-    nGenerations,
-    Seasonality,
+    NutrientValueBiotope,
+    Voltinism,
+    FlightPeriod,
     WingDevelopment,
     Distribution,
     Migration,
-    Size,
+    ForewingLength,
     TempHum,
     HabitatTemperature,
     HabitatHumidity
