@@ -742,10 +742,12 @@ for (i in seq_along(summary_draw_combi_list)) {
   # create dataframe to plot number of species
   min_threshold <- -0.2
   max_threshold <- 0.25
+  mult <- 0.4
   min_df <- draws_df %>%
     group_by_at(trait2) %>%
     mutate(min = ifelse(min(msci) <= min_threshold, min(msci),
-                        min_threshold)) %>%
+                        min_threshold),
+           min = min + min * mult) %>%
     ungroup() %>%
     select(all_of(c(trait1, trait2)), n_species, min) %>%
     distinct()
