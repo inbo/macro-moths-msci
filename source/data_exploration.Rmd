@@ -52,6 +52,27 @@ species_traits_final <- read_csv(file.path(data_path,
                                            "prop_data_per_trait_intermed.csv"))
 ```
 
+In total we have the following number of species.
+
+```{r}
+species_traits_final %>%
+  select(species_nl, trait_name, trait_value) %>%
+  filter(trait_name == "Migration") %>%
+  distinct() %>%
+  count(trait_value)
+```
+
+If we exclude species with zero counts:
+
+```{r}
+species_traits_final_nozero %>%
+  select(species_nl, trait_name, trait_value) %>%
+  filter(trait_name == "Migration") %>%
+  distinct() %>%
+  count(trait_value)
+```
+
+
 # Missing data and duplicates
 
 We do not know all the traits for the following species.
