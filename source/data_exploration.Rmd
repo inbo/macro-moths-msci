@@ -271,9 +271,11 @@ for (i in seq_len(ncol(combinations))) {
 ## Multivariate
 
 Multiple Correspondence Analysis ([MCA](http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/114-mca-multiple-correspondence-analysis-in-r-essentials/)) is an alternative to PCA for categorical variables. The `MCA()` function from the **FactoMineR** package can be used to implement MCA.
+We do not include `Family`.
 
 ```{r}
 dat_mca <- filtered_df %>%
+  filter(trait_name != "Family") %>%
   select(species_new, trait_name, trait_value) %>%
   distinct() %>%
   pivot_wider(
