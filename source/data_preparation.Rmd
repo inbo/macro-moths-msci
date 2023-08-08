@@ -213,7 +213,8 @@ species_traits_df1 <- species_traits %>%
     HabitatTemperature,
     HabitatHumidity
   ) %>%
-  rename(Biotope = Biotope1) %>%
+  rename(Biotope = Biotope1,
+         LarvalFoodSource = LarvalFoodSource2) %>%
   filter(!is.na(species_nl))
 
 species_traits_df2 <- species_traits %>%
@@ -239,7 +240,8 @@ species_traits_df2 <- species_traits_df2 %>%
     HabitatTemperature,
     HabitatHumidity
   ) %>%
-  rename(Biotope = Biotope2)
+  rename(Biotope = Biotope2,
+         LarvalFoodSource = LarvalFoodSource2)
 
 species_traits_complete <- rbind(
   species_traits_df1,
