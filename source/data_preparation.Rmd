@@ -199,12 +199,12 @@ species_traits_raw <- read_delim(
   delim = ";"
 )
 
-# Add correct Status and Family variables
+# Add Family variable
 species_traits <- species_traits_raw %>%
   rename(species_nl = nameDutch) %>%
-  select(-c(Status, Family)) %>%
+  select(-c(Family)) %>%
   left_join(check_list_flanders_raw %>%
-              select(species_nl, Familie, Status),
+              select(species_nl, Familie),
             by = join_by(species_nl)) %>%
   rename(Family = Familie)
 
@@ -230,8 +230,7 @@ species_traits_df1 <- species_traits %>%
     TempHum,
     HabitatTemperature,
     HabitatHumidity,
-    Family,
-    Status
+    Family
   ) %>%
   rename(Biotope = Biotope1,
          LarvalFoodSource = LarvalFoodSource2) %>%
@@ -259,8 +258,7 @@ species_traits_df2 <- species_traits_df2 %>%
     TempHum,
     HabitatTemperature,
     HabitatHumidity,
-    Family,
-    Status
+    Family
   ) %>%
   rename(Biotope = Biotope2,
          LarvalFoodSource = LarvalFoodSource2)
@@ -277,9 +275,9 @@ species_traits_joined_nozero <- prop_df_nozero %>%
     relationship = "many-to-many"
   )
 
-species_traits_final_nozero <- species_traits_joined_nozero %>%
+species_traits_final_nozero_unfiltered <- species_traits_joined_nozero %>%
   pivot_longer(
-    cols = Biotope:Status,
+    cols = Biotope:Family,
     names_to = "trait_name",
     values_to = "trait_value",
     values_transform = as.character
@@ -293,15 +291,34 @@ species_traits_joined <- prop_df %>%
     relationship = "many-to-many"
   )
 
-species_traits_final <- species_traits_joined %>%
+species_traits_final_unfiltered <- species_traits_joined %>%
   pivot_longer(
-    cols = Biotope:Status,
+    cols = Biotope:Family,
     names_to = "trait_name",
     values_to = "trait_value",
     values_transform = as.character
   ) %>%
   distinct()
 ```
+
+We only keep resident species ("Standvlinder") unless for the 'Migration' trait where we keep both resident and migratory species ("Standvlinder" and "Trekvlinder").
+
+```{r}
+species_traits_final_nozero <- species_traits_final_nozero_unfiltered %>%
+  left_join(check_list_flanders_raw %>%
+                select(species_nl, Status),
+              by = join_by(species_nl)) %>%
+  filter(Status == "Standvlinder" | trait_name == "Migration") %>%
+  select(-Status)
+
+species_traits_final <- species_traits_final_unfiltered %>%
+  left_join(check_list_flanders_raw %>%
+                select(species_nl, Status),
+              by = join_by(species_nl)) %>%
+  filter(Status == "Standvlinder" | trait_name == "Migration") %>%
+  select(-Status)
+```
+
 
 ```{r}
 # Visualise
