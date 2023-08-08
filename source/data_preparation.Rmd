@@ -203,7 +203,7 @@ species_traits_raw <- read_delim(
 species_traits <- species_traits_raw %>%
   rename(species_nl = nameDutch) %>%
   select(-c(Status, Family)) %>%
-  left_join(check_list_flanders_raw %>% 
+  left_join(check_list_flanders_raw %>%
               select(species_nl, Familie, Status),
             by = join_by(species_nl)) %>%
   rename(Family = Familie)
