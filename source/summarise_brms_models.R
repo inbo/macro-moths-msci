@@ -90,9 +90,9 @@ get_contrast_matrix <- function(model, combo) {
 order_traits <- function(df) {
   out <- df
 
-  if ("EllenbergN" %in% names(out)) {
+  if ("NutrientValueBiotope" %in% names(out)) {
     out <- out %>%
-      mutate(EllenbergN = factor(.data$EllenbergN,
+      mutate(NutrientValueBiotope = factor(.data$NutrientValueBiotope,
                                  levels = c(
                                    "VeryNutrientPoor",
                                    "NutrientPoor",
@@ -101,9 +101,9 @@ order_traits <- function(df) {
                                  ), ordered = TRUE)
       )
   }
-  if ("Size" %in% names(out)) {
+  if ("ForewingLength" %in% names(out)) {
     out <- out %>%
-      mutate(Size = factor(.data$Size,
+      mutate(ForewingLength = factor(.data$ForewingLength,
                            levels = c(
                              "VerySmall",
                              "Small",
@@ -113,9 +113,9 @@ order_traits <- function(df) {
                            ), ordered = TRUE)
       )
   }
-  if ("nGenerations" %in% names(out)) {
+  if ("Voltinism" %in% names(out)) {
     out <- out %>%
-      mutate(nGenerations = factor(.data$nGenerations,
+      mutate(Voltinism = factor(.data$Voltinism,
                                    levels = c(
                                      "1",
                                      "2"
@@ -133,9 +133,9 @@ order_traits <- function(df) {
                                          ), ordered = TRUE)
       )
   }
-  if ("Phagy" %in% names(out)) {
+  if ("HostPlantSpecificity" %in% names(out)) {
     out <- out %>%
-      mutate(Phagy = factor(.data$Phagy,
+      mutate(HostPlantSpecificity = factor(.data$HostPlantSpecificity,
                             levels = c(
                               "Monophagous",
                               "Oligophagous",
@@ -155,9 +155,9 @@ order_traits <- function(df) {
                               ), ordered = TRUE)
       )
   }
-  if ("Seasonality" %in% names(out)) {
+  if ("FlightPeriod" %in% names(out)) {
     out <- out %>%
-      mutate(Seasonality = factor(.data$Seasonality,
+      mutate(FlightPeriod = factor(.data$FlightPeriod,
                                   levels = c(
                                     "Spring",
                                     "SpringSummer",

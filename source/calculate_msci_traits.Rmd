@@ -450,23 +450,23 @@ We consider a number of trait combinations.
 
 ```{r trait-combinations-combi}
 trait_combinations <- list(
-  c("Biotope", "Phagy"),
-  c("Biotope", "EllenbergN"),
-  c("colourVariation", "Size"),
-  c("Activity", "nGenerations"),
-  c("OverwinteringStage", "nGenerations"),
-  c("Phagy", "LarvalFoodSource2"),
-  c("Phagy", "EllenbergN"),
-  c("Phagy", "nGenerations"),
-  c("Phagy", "Size"),
-  c("Phagy", "TempHum"),
-  c("LarvalFoodSource2", "EllenbergN"),
-  c("EllenbergN", "TempHum"),
-  c("nGenerations", "Distribution"),
-  c("nGenerations", "Size"),
-  c("nGenerations", "TempHum"),
+  c("Biotope", "HostPlantSpecificity"),
+  c("Biotope", "NutrientValueBiotope"),
+  c("colourVariability", "ForewingLength"),
+  c("Photoperiod", "Voltinism"),
+  c("OverwinteringStage", "Voltinism"),
+  c("HostPlantSpecificity", "LarvalFoodSource"),
+  c("HostPlantSpecificity", "NutrientValueBiotope"),
+  c("HostPlantSpecificity", "Voltinism"),
+  c("HostPlantSpecificity", "ForewingLength"),
+  c("HostPlantSpecificity", "TempHum"),
+  c("LarvalFoodSource", "NutrientValueBiotope"),
+  c("NutrientValueBiotope", "TempHum"),
+  c("Voltinism", "Distribution"),
+  c("Voltinism", "ForewingLength"),
+  c("Voltinism", "TempHum"),
   c("Distribution", "TempHum"),
-  c("Size", "TempHum")
+  c("ForewingLength", "TempHum")
 )
 trait_combinations
 ```
