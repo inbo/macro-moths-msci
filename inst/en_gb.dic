@@ -1,6 +1,6 @@
 DayActive
 DayNightActive
-EllenbergN
+NutrientValueBiotope
 Havenlaan
 Langeraert
 MSCI
@@ -8,6 +8,8 @@ Maes
 Monophagous
 Multinom
 NightActive
+HostPlantSpecificity
+Photoperiod
 Phagy
 Teirlinckgebouw
 etc
