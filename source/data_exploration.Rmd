@@ -59,7 +59,8 @@ species_traits_final %>%
   select(species_nl, trait_name, trait_value) %>%
   filter(trait_name == "Migration") %>%
   distinct() %>%
-  count(trait_value)
+  count(trait_value) %>%
+  kable()
 ```
 
 If we exclude species with zero counts:
@@ -69,7 +70,8 @@ species_traits_final_nozero %>%
   select(species_nl, trait_name, trait_value) %>%
   filter(trait_name == "Migration") %>%
   distinct() %>%
-  count(trait_value)
+  count(trait_value) %>%
+  kable()
 ```
 
 
