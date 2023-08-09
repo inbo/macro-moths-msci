@@ -57,3 +57,15 @@ data_path <- file.path("data", "processed")
 species_traits_final <- read_csv(file.path(data_path,
                                            "prop_data_per_trait.csv"))
 ```
+
+# Data preparation
+
+```{r}
+species_df <- species_traits_final %>%
+  filter(trait_value == "Resident") %>%
+  select(species_nl, n_grids, period, sum_per_period)
+```
+
+In total we have `r length(unique(species_df$species_nl))` resident species.
+
+
