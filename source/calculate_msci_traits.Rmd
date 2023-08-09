@@ -121,11 +121,6 @@ dataframe_per_trait <- function(combo, df, filter_n) {
         )
       ) %>%
       ungroup() %>%
-      # Reference group is most frequent group
-      mutate("{row}" := factor(!!sym(row), # nolint.
-               levels(forcats::fct_infreq(!!sym(row)))),
-             "{column}" := factor(!!sym(column), # nolint.
-               levels(forcats::fct_infreq(!!sym(column))))) %>%
       # How many species per trait combination?
       group_by_at(c("period", combo)) %>%
       mutate(n_species = n()) %>%
@@ -145,7 +140,12 @@ dataframe_per_trait <- function(combo, df, filter_n) {
       # Filter out small trait groups
       filter(.data$n_trait1 > filter_n,
              .data$n_trait2 > filter_n) %>%
-      select(-c(.data$n_trait1, .data$n_trait2))
+      select(-c(.data$n_trait1, .data$n_trait2)) %>%
+      # Reference group is most frequent group
+      mutate("{row}" := factor(!!sym(row), # nolint.
+               levels(forcats::fct_infreq(!!sym(row)))),
+             "{column}" := factor(!!sym(column), # nolint.
+               levels(forcats::fct_infreq(!!sym(column)))))
   } else if (length(combo) == 1) {
     out <- df %>%
       filter(.data$trait_name == combo) %>%
@@ -155,9 +155,6 @@ dataframe_per_trait <- function(combo, df, filter_n) {
         names_from = "trait_name",
         values_from = "trait_value"
       ) %>%
-      # Reference group is most frequent group
-      mutate("{combo}" := factor(!!sym(combo), # nolint.
-                                 levels(forcats::fct_infreq(!!sym(combo))))) %>%
       # How many species per trait combination?
       group_by_at(c("period", combo)) %>%
       mutate(n_species = n()) %>%
@@ -168,7 +165,10 @@ dataframe_per_trait <- function(combo, df, filter_n) {
       select_at(c("species_nl", "n_grids", "period", "sum_per_period", combo,
                   "n_species")) %>%
       # Filter out small trait groups
-      filter(.data$n_species > filter_n)
+      filter(.data$n_species > filter_n) %>%
+      # Reference group is most frequent group
+      mutate("{combo}" := factor(!!sym(combo), # nolint.
+                                 levels(forcats::fct_infreq(!!sym(combo)))))
   } else {
     stop("Function not implemented for combinations of more than 2 traits.",
          call. = FALSE)
