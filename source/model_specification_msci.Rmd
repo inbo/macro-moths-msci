@@ -92,7 +92,7 @@ We set $corr(b_0, b_1) = 0$ since we want a separate (uncorrelated) deviation fo
 
 ## Testing model structure
 
-Example for trait 'Activity'. First for trait value 'DayActive'.
+Example for trait 'Photoperiod'. First for trait value 'DayActive'.
 
 ```{r}
 # create cache directory if not yet available
@@ -171,11 +171,11 @@ msci_draws_df1 %>%
   theme(legend.position = "")
 ```
 
-We also create a single model for all trait values in 'Activity'.
+We also create a single model for all trait values in 'Photoperiod'.
 
 ```{r}
 dat2 <- species_traits_final %>%
-  filter(trait_name == "Activity")
+  filter(trait_name == "Photoperiod")
 
 # MCMC parameters
 nchains <- 3 # number of chains
@@ -264,36 +264,36 @@ The models perform well. We have a good fit and convergence. We can use these mo
 
 ## Exploration Simpson's paradox
 
-What if we compare two traits? We look at 'Phagy' and 'EllenbergN'.
+What if we compare two traits? We look at 'HostPlantSpecificity' (='Phagy') and 'NutrientValueBiotope'.
 
 ```{r}
 species_traits_final %>%
-  filter(trait_name %in% c("EllenbergN", "Phagy")) %>%
+  filter(trait_name %in% c("NutrientValueBiotope", "HostPlantSpecificity")) %>%
   pivot_wider(
     id_cols = c(species_nl, n_grids, period, sum_per_period),
     names_from = trait_name, values_from = trait_value
   ) %>%
-  group_by(EllenbergN, Phagy) %>%
+  group_by(NutrientValueBiotope, HostPlantSpecificity) %>%
   mutate(n = n_distinct(species_nl)) %>%
   ungroup() %>%
-  mutate(EllenbergN = factor(EllenbergN, levels = c(
+  mutate(NutrientValueBiotope = factor(NutrientValueBiotope, levels = c(
     "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
     "VeryNutrientRich"
     ), ordered = TRUE)
   ) %>%
-  ggplot(aes(x = EllenbergN, y = Phagy)) +
+  ggplot(aes(x = NutrientValueBiotope, y = HostPlantSpecificity)) +
     geom_tile(aes(fill = n), colour = "white") +
     geom_text(aes(label = n)) +
     scale_fill_gradient(low = "blue", high = "red") +
     labs(fill = "number of\nspecies", x = "", y = "")
 ```
 
-We look at 'Phagy' and 'EllenbergN' separately. Afterwards we combine the traits. First we look at 'Phagy'.
+We look at 'HostPlantSpecificity' and 'NutrientValueBiotope' separately. Afterwards we combine the traits. First we look at 'HostPlantSpecificity'.
 
 ```{r}
-## Phagy
+## HostPlantSpecificity (= phagy)
 dat_phagy <- species_traits_final %>%
-  filter(trait_name == "Phagy")
+  filter(trait_name == "HostPlantSpecificity")
 
 # MCMC parameters
 nchains <- 3 # number of chains
@@ -357,12 +357,12 @@ msci_draws_df_phag %>%
   theme(legend.position = "")
 ```
 
-Then at 'EllenbergN':
+Then at 'NutrientValueBiotope':
 
 ```{r}
-## EllenbergN
+## NutrientValueBiotope
 dat_ellenbergy <- species_traits_final %>%
-  filter(trait_name == "EllenbergN")
+  filter(trait_name == "NutrientValueBiotope")
 
 # MCMC parameters
 nchains <- 3 # number of chains
@@ -436,7 +436,7 @@ Do the trends change when the groups are combined (= Simpson's paradox)?
 
 ```{r}
 dat3 <- species_traits_final %>%
-  filter(trait_name %in% c("EllenbergN", "Phagy")) %>%
+  filter(trait_name %in% c("NutrientValueBiotope", "HostPlantSpecificity")) %>%
   pivot_wider(
     id_cols = c(species_nl, n_grids, period, sum_per_period),
     names_from = trait_name, values_from = trait_value
@@ -450,8 +450,8 @@ nparallel <- nchains # number of cores used for parallel computing
 thinning <- 2
 
 fit3 <- brm(
-  bf(n_grids ~ period * Phagy * EllenbergN + offset(log(sum_per_period)) +
-    (1 + period || species_nl)),
+  bf(n_grids ~ period * HostPlantSpecificity * NutrientValueBiotope +
+       offset(log(sum_per_period)) + (1 + period || species_nl)),
   data = dat3, family = poisson(),
   chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
   thin = thinning,
@@ -491,8 +491,8 @@ contrast_mat <- rbind(
   ), nrow = 3)
 )
 
-ellenbergn <- sort(unique(fit3$data$EllenbergN))
-phagy <- sort(unique(fit3$data$Phagy))
+ellenbergn <- sort(unique(fit3$data$NutrientValueBiotope))
+phagy <- sort(unique(fit3$data$HostPlantSpecificity))
 col_names <- lapply(ellenbergn, function(i) {
   paste(rep(i, 3), phagy, sep = "_")
 })
@@ -502,9 +502,9 @@ msci_draws_ellenberg_phagy <- as_tibble(
   ) %>%
   `colnames<-`(unlist(col_names)) %>%
   pivot_longer(cols = everything(), names_to = "trait", values_to = "msci") %>%
-  separate(trait, into = c("EllenbergN", "Phagy")) %>%
-  mutate(EllenbergN = factor(
-    EllenbergN,
+  separate(trait, into = c("NutrientValueBiotope", "HostPlantSpecificity")) %>%
+  mutate(NutrientValueBiotope = factor(
+    NutrientValueBiotope,
     levels = c(
       "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
       "VeryNutrientRich"
@@ -512,29 +512,30 @@ msci_draws_ellenberg_phagy <- as_tibble(
   ))
 
 summ_ellenberg_phagy <- msci_draws_ellenberg_phagy %>%
-  group_by(EllenbergN, Phagy) %>%
+  group_by(NutrientValueBiotope, HostPlantSpecificity) %>%
   mean_qi() %>%
   rename(mean = msci)
 ```
 
 ```{r}
 summ_ellenberg_phagy %>%
-  select(Phagy, EllenbergN, everything()) %>%
-  arrange(Phagy, EllenbergN) %>%
+  select(HostPlantSpecificity, NutrientValueBiotope, everything()) %>%
+  arrange(HostPlantSpecificity, NutrientValueBiotope) %>%
   rename(msci = mean) %>%
   kable()
 ```
 
 ```{r}
 msci_draws_ellenberg_phagy %>%
-  full_join(summ_ellenberg_phagy, by = join_by(EllenbergN, Phagy)) %>%
+  full_join(summ_ellenberg_phagy, by = join_by(NutrientValueBiotope,
+                                               HostPlantSpecificity)) %>%
   mutate(fill_var = case_when(
     .lower > 0 ~ "chartreuse3",
     .upper < 0 ~ "coral",
     .lower < 0 & .lower > -0.2 & .upper > 0 & .upper < 0.25 ~ "gold",
     TRUE ~ "skyblue",
   )) %>%
-  ggplot(aes(y = msci, x = EllenbergN, fill = fill_var)) +
+  ggplot(aes(y = msci, x = NutrientValueBiotope, fill = fill_var)) +
   stat_halfeye() +
   geom_hline(yintercept = 0, linetype = 2) +
   geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
@@ -544,7 +545,7 @@ msci_draws_ellenberg_phagy %>%
     legend.position = "",
     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
   ) +
-  facet_wrap(~Phagy, scales = "free")
+  facet_wrap(~HostPlantSpecificity, scales = "free")
 ```
 
 ### Conclusion
@@ -564,20 +565,20 @@ Do we see large differences when we exclude zeroes?
 
 ```{r}
 species_traits_final_nozero %>%
-  filter(trait_name %in% c("EllenbergN", "Phagy")) %>%
+  filter(trait_name %in% c("NutrientValueBiotope", "HostPlantSpecificity")) %>%
   pivot_wider(
     id_cols = c(species_nl, n_grids, period, sum_per_period),
     names_from = trait_name, values_from = trait_value
   ) %>%
-  group_by(EllenbergN, Phagy) %>%
+  group_by(NutrientValueBiotope, HostPlantSpecificity) %>%
   mutate(n = n_distinct(species_nl)) %>%
   ungroup() %>%
-  mutate(EllenbergN = factor(EllenbergN, levels = c(
+  mutate(NutrientValueBiotope = factor(NutrientValueBiotope, levels = c(
     "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
     "VeryNutrientRich"
     ), ordered = TRUE)
   ) %>%
-  ggplot(aes(x = EllenbergN, y = Phagy)) +
+  ggplot(aes(x = NutrientValueBiotope, y = HostPlantSpecificity)) +
     geom_tile(aes(fill = n), colour = "white") +
     geom_text(aes(label = n)) +
     scale_fill_gradient(low = "blue", high = "red") +
@@ -588,7 +589,7 @@ We see that one group does not contain at least 10 species, but for this example
 
 ```{r}
 dat_nozero <- species_traits_final_nozero %>%
-  filter(trait_name %in% c("EllenbergN", "Phagy")) %>%
+  filter(trait_name %in% c("NutrientValueBiotope", "HostPlantSpecificity")) %>%
   pivot_wider(
     id_cols = c(species_nl, n_grids, period, sum_per_period),
     names_from = trait_name, values_from = trait_value
@@ -602,8 +603,8 @@ nparallel <- nchains # number of cores used for parallel computing
 thinning <- 2
 
 fit_nozero <- brm(
-  bf(n_grids ~ period * Phagy * EllenbergN + offset(log(sum_per_period)) +
-    (1 + period || species_nl)),
+  bf(n_grids ~ period * HostPlantSpecificity * NutrientValueBiotope +
+       offset(log(sum_per_period)) + (1 + period || species_nl)),
   data = dat_nozero, family = poisson(),
   chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
   thin = thinning,
@@ -625,9 +626,9 @@ msci_draws_nozero <- as_tibble(
   ) %>%
   `colnames<-`(unlist(col_names)) %>%
   pivot_longer(cols = everything(), names_to = "trait", values_to = "msci") %>%
-  separate(trait, into = c("EllenbergN", "Phagy")) %>%
-  mutate(EllenbergN = factor(
-    EllenbergN,
+  separate(trait, into = c("NutrientValueBiotope", "HostPlantSpecificity")) %>%
+  mutate(NutrientValueBiotope = factor(
+    NutrientValueBiotope,
     levels = c(
       "VeryNutrientPoor", "NutrientPoor", "NutrientRich",
       "VeryNutrientRich"
@@ -635,29 +636,30 @@ msci_draws_nozero <- as_tibble(
   ))
 
 summ_ellenberg_phagy_nozero <- msci_draws_nozero %>%
-  group_by(EllenbergN, Phagy) %>%
+  group_by(NutrientValueBiotope, HostPlantSpecificity) %>%
   mean_qi() %>%
   rename(mean = msci)
 ```
 
 ```{r}
 summ_ellenberg_phagy_nozero %>%
-  select(Phagy, EllenbergN, everything()) %>%
-  arrange(Phagy, EllenbergN) %>%
+  select(HostPlantSpecificity, NutrientValueBiotope, everything()) %>%
+  arrange(HostPlantSpecificity, NutrientValueBiotope) %>%
   rename(msci = mean) %>%
   kable()
 ```
 
 ```{r}
 msci_draws_nozero %>%
-  full_join(summ_ellenberg_phagy_nozero, by = join_by(EllenbergN, Phagy)) %>%
+  full_join(summ_ellenberg_phagy_nozero, by = join_by(NutrientValueBiotope,
+                                                      HostPlantSpecificity)) %>%
   mutate(fill_var = case_when(
     .lower > 0 ~ "chartreuse3",
     .upper < 0 ~ "coral",
     .lower < 0 & .lower > -0.2 & .upper > 0 & .upper < 0.25 ~ "gold",
     TRUE ~ "skyblue",
   )) %>%
-  ggplot(aes(y = msci, x = EllenbergN, fill = fill_var)) +
+  ggplot(aes(y = msci, x = NutrientValueBiotope, fill = fill_var)) +
   stat_halfeye() +
   geom_hline(yintercept = 0, linetype = 2) +
   geom_hline(yintercept = c(-0.2, 0.25), linetype = 3) +
@@ -667,14 +669,19 @@ msci_draws_nozero %>%
     legend.position = "",
     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
   ) +
-  facet_wrap(~Phagy, scales = "free")
+  facet_wrap(~HostPlantSpecificity, scales = "free")
 ```
 
 There are differences, but they are not large.
 
 
-# General conclusion
+## General conclusion
 
 -   The models fit very well with the data in each case. This indicates that the specified Poisson model performs well.
 -   Selection of a limited number of (combinations of) traits needs to be done a priori based on expert knowledge
 -   Inclusion of zeroes
+
+
+# Figures
+
+> test some figures

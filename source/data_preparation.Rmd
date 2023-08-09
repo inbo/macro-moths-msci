@@ -42,10 +42,12 @@ We read in the data and prepare it for further processing. We select stationary 
 data_path <- file.path("data", "raw")
 
 # Species list
-check_list_flanders <- read_delim(
+check_list_flanders_raw <- read_delim(
   file.path(data_path, "tblChecklistFlanders.csv"),
   delim = ";"
-) %>%
+)
+
+check_list_flanders <-  check_list_flanders_raw %>%
   filter(Status == "Standvlinder" | Status == "Trekvlinder") %>%
   select(species_nl)
 
@@ -60,9 +62,13 @@ presence_data <- read_delim(
   )
 ```
 
+In total `r nrow(check_list_flanders)` are considered.
+
 # Data processing
 
-We merge the species list and presence list and count the number of occupied UTM grids per species per period. We store both a dataset with and without zero counts.
+We merge the species list and presence list and count the number of occupied UTM grids per species per period.
+We store both a dataset with and without zero counts.
+We only keep species seen in at least 5 grid cells in at least one of the two time periods.
 
 ```{r}
 # Join dataframes
@@ -110,13 +116,17 @@ df_wide[c("p1980_2012", "p2013_2022")][is.na(df_wide[c(
 
 # Save dataframe without zeroes
 df_wide_sum_nozero <- df_wide %>%
-  filter(p1980_2012 > 0 & p2013_2022 > 0) %>%
+  filter(p1980_2012 > 0 & p2013_2022 > 0,
+         p1980_2012 >= 5 | p2013_2022 >= 5) %>%
   mutate(sum = p1980_2012 + p2013_2022)
 
 # Save dataframe with zeroes
 df_wide_sum <- df_wide %>%
+  filter(p1980_2012 >= 5 | p2013_2022 >= 5) %>%
   mutate(sum = p1980_2012 + p2013_2022)
 ```
+
+In total `r length(unique(df_long$species_nl))` species were seen between 1980-2022 of which `r nrow(df_wide_sum)` were seen in at least 5 grid cells in at least one of the two time periods.
 
 ```{r}
 # Visualise
@@ -184,37 +194,46 @@ We add species traits to the dataframes.
 
 ```{r}
 # Read in data
-species_traits <- read_delim(
+species_traits_raw <- read_delim(
   file.path(data_path, "tblMacromoths_Traits_v2022.csv"),
   delim = ";"
-) %>%
-  rename(species_nl = nameDutch)
+)
 
-species_traits$EllenbergN <- as.factor(species_traits$EllenbergN)
-species_traits$nGenerations <- as.factor(species_traits$nGenerations)
+# Add Family variable
+species_traits <- species_traits_raw %>%
+  rename(species_nl = nameDutch) %>%
+  select(-c(Family)) %>%
+  left_join(check_list_flanders_raw %>%
+              select(species_nl, Familie),
+            by = join_by(species_nl)) %>%
+  rename(Family = Familie)
+
+species_traits$Voltinism <- as.factor(species_traits$Voltinism)
 
 # Biotope is in it 2 times, so we have to split up
 species_traits_df1 <- species_traits %>%
   select(
     species_nl,
     Biotope1,
-    colourVariation,
-    Activity,
+    colourVariability,
+    Photoperiod,
     OverwinteringStage,
-    Phagy,
+    HostPlantSpecificity,
     LarvalFoodSource2,
-    EllenbergN,
-    nGenerations,
-    Seasonality,
+    NutrientValueBiotope,
+    Voltinism,
+    FlightPeriod,
     WingDevelopment,
     Distribution,
     Migration,
-    Size,
+    ForewingLength,
     TempHum,
     HabitatTemperature,
-    HabitatHumidity
+    HabitatHumidity,
+    Family
   ) %>%
-  rename(Biotope = Biotope1) %>%
+  rename(Biotope = Biotope1,
+         LarvalFoodSource = LarvalFoodSource2) %>%
   filter(!is.na(species_nl))
 
 species_traits_df2 <- species_traits %>%
@@ -224,23 +243,25 @@ species_traits_df2 <- species_traits_df2 %>%
   select(
     species_nl,
     Biotope2,
-    colourVariation,
-    Activity,
+    colourVariability,
+    Photoperiod,
     OverwinteringStage,
-    Phagy,
+    HostPlantSpecificity,
     LarvalFoodSource2,
-    EllenbergN,
-    nGenerations,
-    Seasonality,
+    NutrientValueBiotope,
+    Voltinism,
+    FlightPeriod,
     WingDevelopment,
     Distribution,
     Migration,
-    Size,
+    ForewingLength,
     TempHum,
     HabitatTemperature,
-    HabitatHumidity
+    HabitatHumidity,
+    Family
   ) %>%
-  rename(Biotope = Biotope2)
+  rename(Biotope = Biotope2,
+         LarvalFoodSource = LarvalFoodSource2)
 
 species_traits_complete <- rbind(
   species_traits_df1,
@@ -254,9 +275,9 @@ species_traits_joined_nozero <- prop_df_nozero %>%
     relationship = "many-to-many"
   )
 
-species_traits_final_nozero <- species_traits_joined_nozero %>%
+spec_traits_final_nozero_unf <- species_traits_joined_nozero %>%
   pivot_longer(
-    cols = Biotope:HabitatHumidity,
+    cols = Biotope:Family,
     names_to = "trait_name",
     values_to = "trait_value",
     values_transform = as.character
@@ -270,15 +291,34 @@ species_traits_joined <- prop_df %>%
     relationship = "many-to-many"
   )
 
-species_traits_final <- species_traits_joined %>%
+spec_traits_final_unf <- species_traits_joined %>%
   pivot_longer(
-    cols = Biotope:HabitatHumidity,
+    cols = Biotope:Family,
     names_to = "trait_name",
     values_to = "trait_value",
     values_transform = as.character
   ) %>%
   distinct()
 ```
+
+We only keep resident species ("Standvlinder") unless for the 'Migration' trait where we keep both resident and migratory species ("Standvlinder" and "Trekvlinder").
+
+```{r}
+species_traits_final_nozero <- spec_traits_final_nozero_unf %>%
+  left_join(check_list_flanders_raw %>%
+                select(species_nl, Status),
+              by = join_by(species_nl)) %>%
+  filter(Status == "Standvlinder" | trait_name == "Migration") %>%
+  select(-Status)
+
+species_traits_final <- spec_traits_final_unf %>%
+  left_join(check_list_flanders_raw %>%
+                select(species_nl, Status),
+              by = join_by(species_nl)) %>%
+  filter(Status == "Standvlinder" | trait_name == "Migration") %>%
+  select(-Status)
+```
+
 
 ```{r}
 # Visualise

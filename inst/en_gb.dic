@@ -1,6 +1,8 @@
 DayActive
 DayNightActive
-EllenbergN
+NutrientValueBiotope
+Trekvlinder
+Standvlinder
 Havenlaan
 Langeraert
 MSCI
@@ -8,6 +10,8 @@ Maes
 Monophagous
 Multinom
 NightActive
+HostPlantSpecificity
+Photoperiod
 Phagy
 Teirlinckgebouw
 etc

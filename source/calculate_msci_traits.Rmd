@@ -78,19 +78,21 @@ species_traits_final <- read_csv(file.path(data_path,
 We consider a number of traits.
 
 ```{r trait-combinations}
-traits <- as.list(sort(unique(species_traits_final$trait_name)))
+traits_raw <- sort(unique(species_traits_final$trait_name))
+traits_filtered <- traits_raw[traits_raw != "WingDevelopment"]
+traits <- as.list(traits_filtered)
 traits
 ```
 
 ### Filter dataframes per trait combination
 
 ```{r filter-size}
-filter_size <- 10
+filter_size <- 14
 ```
 
 We create a list of dataframes per trait.
 We set reference levels for each trait such that reference group is most frequent trait value.
-We only keep trait values with more than `r filter_size` species.
+We only keep trait values with at least `r filter_size + 1` species.
 
 ```{r dataframe-per-trait}
 dataframe_per_trait <- function(combo, df, filter_n) {
@@ -121,11 +123,6 @@ dataframe_per_trait <- function(combo, df, filter_n) {
         )
       ) %>%
       ungroup() %>%
-      # Reference group is most frequent group
-      mutate("{row}" := factor(!!sym(row), # nolint.
-               levels(forcats::fct_infreq(!!sym(row)))),
-             "{column}" := factor(!!sym(column), # nolint.
-               levels(forcats::fct_infreq(!!sym(column))))) %>%
       # How many species per trait combination?
       group_by_at(c("period", combo)) %>%
       mutate(n_species = n()) %>%
@@ -145,7 +142,12 @@ dataframe_per_trait <- function(combo, df, filter_n) {
       # Filter out small trait groups
       filter(.data$n_trait1 > filter_n,
              .data$n_trait2 > filter_n) %>%
-      select(-c(.data$n_trait1, .data$n_trait2))
+      select(-c(.data$n_trait1, .data$n_trait2)) %>%
+      # Reference group is most frequent group
+      mutate("{row}" := factor(!!sym(row), # nolint.
+               levels(forcats::fct_infreq(!!sym(row)))),
+             "{column}" := factor(!!sym(column), # nolint.
+               levels(forcats::fct_infreq(!!sym(column)))))
   } else if (length(combo) == 1) {
     out <- df %>%
       filter(.data$trait_name == combo) %>%
@@ -155,9 +157,6 @@ dataframe_per_trait <- function(combo, df, filter_n) {
         names_from = "trait_name",
         values_from = "trait_value"
       ) %>%
-      # Reference group is most frequent group
-      mutate("{combo}" := factor(!!sym(combo), # nolint.
-                                 levels(forcats::fct_infreq(!!sym(combo))))) %>%
       # How many species per trait combination?
       group_by_at(c("period", combo)) %>%
       mutate(n_species = n()) %>%
@@ -168,7 +167,10 @@ dataframe_per_trait <- function(combo, df, filter_n) {
       select_at(c("species_nl", "n_grids", "period", "sum_per_period", combo,
                   "n_species")) %>%
       # Filter out small trait groups
-      filter(.data$n_species > filter_n)
+      filter(.data$n_species > filter_n) %>%
+      # Reference group is most frequent group
+      mutate("{combo}" := factor(!!sym(combo), # nolint.
+                                 levels(forcats::fct_infreq(!!sym(combo)))))
   } else {
     stop("Function not implemented for combinations of more than 2 traits.",
          call. = FALSE)
@@ -450,23 +452,23 @@ We consider a number of trait combinations.
 
 ```{r trait-combinations-combi}
 trait_combinations <- list(
-  c("Biotope", "Phagy"),
-  c("Biotope", "EllenbergN"),
-  c("colourVariation", "Size"),
-  c("Activity", "nGenerations"),
-  c("OverwinteringStage", "nGenerations"),
-  c("Phagy", "LarvalFoodSource2"),
-  c("Phagy", "EllenbergN"),
-  c("Phagy", "nGenerations"),
-  c("Phagy", "Size"),
-  c("Phagy", "TempHum"),
-  c("LarvalFoodSource2", "EllenbergN"),
-  c("EllenbergN", "TempHum"),
-  c("nGenerations", "Distribution"),
-  c("nGenerations", "Size"),
-  c("nGenerations", "TempHum"),
+  c("Biotope", "HostPlantSpecificity"),
+  c("Biotope", "NutrientValueBiotope"),
+  c("colourVariability", "ForewingLength"),
+  c("Photoperiod", "Voltinism"),
+  c("OverwinteringStage", "Voltinism"),
+  c("HostPlantSpecificity", "LarvalFoodSource"),
+  c("HostPlantSpecificity", "NutrientValueBiotope"),
+  c("HostPlantSpecificity", "Voltinism"),
+  c("HostPlantSpecificity", "ForewingLength"),
+  c("HostPlantSpecificity", "TempHum"),
+  c("LarvalFoodSource", "NutrientValueBiotope"),
+  c("NutrientValueBiotope", "TempHum"),
+  c("Voltinism", "Distribution"),
+  c("Voltinism", "ForewingLength"),
+  c("Voltinism", "TempHum"),
   c("Distribution", "TempHum"),
-  c("Size", "TempHum")
+  c("ForewingLength", "TempHum")
 )
 trait_combinations
 ```
