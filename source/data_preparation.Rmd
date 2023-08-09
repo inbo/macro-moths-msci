@@ -275,7 +275,7 @@ species_traits_joined_nozero <- prop_df_nozero %>%
     relationship = "many-to-many"
   )
 
-species_traits_final_nozero_unfiltered <- species_traits_joined_nozero %>%
+spec_traits_final_nozero_unf <- species_traits_joined_nozero %>%
   pivot_longer(
     cols = Biotope:Family,
     names_to = "trait_name",
@@ -291,7 +291,7 @@ species_traits_joined <- prop_df %>%
     relationship = "many-to-many"
   )
 
-species_traits_final_unfiltered <- species_traits_joined %>%
+spec_traits_final_unf <- species_traits_joined %>%
   pivot_longer(
     cols = Biotope:Family,
     names_to = "trait_name",
@@ -304,14 +304,14 @@ species_traits_final_unfiltered <- species_traits_joined %>%
 We only keep resident species ("Standvlinder") unless for the 'Migration' trait where we keep both resident and migratory species ("Standvlinder" and "Trekvlinder").
 
 ```{r}
-species_traits_final_nozero <- species_traits_final_nozero_unfiltered %>%
+species_traits_final_nozero <- spec_traits_final_nozero_unf %>%
   left_join(check_list_flanders_raw %>%
                 select(species_nl, Status),
               by = join_by(species_nl)) %>%
   filter(Status == "Standvlinder" | trait_name == "Migration") %>%
   select(-Status)
 
-species_traits_final <- species_traits_final_unfiltered %>%
+species_traits_final <- spec_traits_final_unf %>%
   left_join(check_list_flanders_raw %>%
                 select(species_nl, Status),
               by = join_by(species_nl)) %>%
