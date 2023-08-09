@@ -78,7 +78,9 @@ species_traits_final <- read_csv(file.path(data_path,
 We consider a number of traits.
 
 ```{r trait-combinations}
-traits <- as.list(sort(unique(species_traits_final$trait_name)))
+traits_raw <- sort(unique(species_traits_final$trait_name))
+traits_filtered <- traits_raw[traits_raw != "WingDevelopment"]
+traits <- as.list(traits_filtered)
 traits
 ```
 
