@@ -60,12 +60,70 @@ species_traits_final <- read_csv(file.path(data_path,
 
 # Data preparation
 
-```{r}
+```{r data-prep}
 species_df <- species_traits_final %>%
   filter(trait_value == "Resident") %>%
-  select(species_nl, n_grids, period, sum_per_period)
+  select(species_nl, n_grids, period, sum_per_period) %>%
+  mutate(species_nl = factor(species_nl))
 ```
 
 In total we have `r length(unique(species_df$species_nl))` resident species.
 
 
+# Fit model
+
+```{r cache-dir}
+# create cache directory if not yet available
+dir.create(here("source", "source/brms_cache"), FALSE)
+```
+
+```{r mcmc-params}
+# MCMC parameters
+nchains <- 3 # number of chains
+niter <- 20000 # number of iterations (incl. burn-in)
+burnin <- niter / 5 # number of initial samples to discard (burn-in)
+nparallel <- nchains # number of cores used for parallel computing
+thinning <- 8
+```
+
+```{r fit-model}
+fit_msci_species <- brm(
+  bf(n_grids ~ period * species_nl + offset(log(sum_per_period))),
+  data = species_df, family = poisson(),
+  chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
+  file = "source/brms_cache/fit_msci_species",
+  file_refit = "on_change"
+)
+```
+
+
+# Model convergence
+
+We check MCMC convergence based on posterior densities, trace plots and the potential scale reduction factors ($\hat{R}$) for each parameter in each model.
+
+```{r trace-plots}
+plot(fit_msci_species, ask = FALSE)
+```
+
+```{r rhat}
+rhat_list <- get_rhats(list(species_model = fit_msci_species))
+show_rhat(do.call(rbind.data.frame, rhat_list))
+```
+
+Convergence is good.
+
+# Checking model fit
+
+We check model fit based on posterior predictive checks where we compare the observed outcome to simulated datasets from the posterior predictive distribution.
+
+```{r}
+pp_check(fit_msci_species,
+  type = "dens_overlay_grouped", ndraws = 100,
+  group = "period"
+)
+```
+
+Model fit is good.
+
+
+# Results
