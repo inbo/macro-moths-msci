@@ -96,7 +96,7 @@ Example for trait 'Photoperiod'. First for trait value 'DayActive'.
 
 ```{r}
 # create cache directory if not yet available
-dir.create(here("source", "source/brms_cache"), FALSE)
+dir.create(here("source", "brms_cache"), FALSE)
 ```
 
 ```{r}

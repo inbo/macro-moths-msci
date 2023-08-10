@@ -201,7 +201,7 @@ species_traits_final %>%
 
 ```{r}
 # create cache directory if not yet available
-dir.create(here("source", "source/brms_cache"), FALSE)
+dir.create(here("source", "brms_cache"), FALSE)
 ```
 
 We set the MCMC parameters and make a list of model formulae as specified in `model_specification_msci.Rmd`.
