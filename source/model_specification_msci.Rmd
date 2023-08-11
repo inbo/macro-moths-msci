@@ -684,4 +684,154 @@ There are differences, but they are not large.
 
 # Figures
 
-> test some figures
+We test different visualisations.
+We have the following table.
+
+```{r}
+# prepare dataset
+n_species_df2 <- dat2 %>%
+  distinct(Activity = trait_value, n_species = n_spec)
+
+summary_figtest <- msci_draws_df2 %>%
+  group_by(trait) %>%
+  mean_qi(.width = 0.9) %>%
+  rename(msci.mean = msci,
+         msci.lower = .lower,
+         msci.upper = .upper,
+         Activity = trait) %>%
+  full_join(n_species_df2, by = join_by(Activity))
+
+msci_draws_figtest <- msci_draws_df2 %>%
+  rename(Activity = trait) %>%
+  full_join(summary_figtest, by = join_by(Activity))
+```
+
+```{r}
+# create dataframe to plot number of species
+min_threshold <- -0.2
+max_threshold <- 0.25
+mult <- 0.4
+min_df <- msci_draws_figtest %>%
+  mutate(min = ifelse(min(msci) <= min_threshold, min(msci),
+                      min_threshold),
+         min = min + min * mult) %>%
+  select(all_of("Activity"), n_species, min) %>%
+  distinct()
+  
+msci_draws_figtest <- msci_draws_figtest %>%
+  mutate(
+    effects = case_when(
+        msci.lower > 0 ~ "increase",
+        msci.upper < 0 ~ "decrease",
+        msci.lower < 0 & msci.lower > -0.2 &
+          msci.upper > 0 & msci.upper < 0.25 ~ "stable",
+        TRUE ~ "uncertain",
+    ),
+    fill_var = factor(effects,
+      levels = c("decrease",
+                 "increase",
+                 "stable",
+                 "uncertain"),
+      ordered = TRUE)
+  )
+```
+
+- half dist and 2 intervals vertical
+
+```{r}
+msci_draws_figtest %>%
+  ggplot(aes(x = Activity)) +
+    stat_halfeye(aes(y = msci, fill = fill_var),
+             .width = c(0.6, 0.9)) +
+    geom_hline(yintercept = 0, linetype = 2) +
+    geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
+    geom_label(data = min_df, aes(y = min, label = paste("n =", n_species)),
+               size = 3) +
+    scale_fill_manual(values =  c("firebrick1",
+                                  "chartreuse3",
+                                  "gold",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(x = "",
+         y = "Multi-Species Change Index",
+         fill = "") +
+    theme(
+      legend.position = "bottom"
+    )
+```
+
+- half dist and 2 intervals horizontal
+
+```{r}
+msci_draws_figtest %>%
+  mutate(Activity = paste0(Activity, "\n", "(n = ", n_species, ")")) %>%
+  ggplot(aes(y = Activity)) +
+    stat_halfeye(aes(x = msci, fill = fill_var), orientation = "horizontal",
+             .width = c(0.6, 0.9)) +
+    geom_vline(xintercept = 0, linetype = 2) +
+    geom_vline(xintercept = c(min_threshold, max_threshold), linetype = 3) +
+    scale_fill_manual(values =  c("firebrick1",
+                                  "chartreuse3",
+                                  "gold",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "") +
+    theme(
+      legend.position = "bottom"
+    )
+```
+
+- violin and whiskers vertical
+
+```{r}
+msci_draws_figtest %>%
+  ggplot(aes(x = Activity)) +
+    stat_eye(aes(y = msci, fill = fill_var),
+             .width = c(0.9), linewidth = 1) +
+    geom_errorbar(data = summary_figtest, 
+                  aes(ymin = msci.lower, ymax = msci.upper), width = 0.1) +
+    geom_hline(yintercept = 0, linetype = 2) +
+    geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
+    geom_label(data = min_df, aes(y = min, label = paste("n =", n_species)),
+               size = 3) +
+    scale_fill_manual(values =  c("firebrick1",
+                                  "chartreuse3",
+                                  "gold",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(x = "",
+         y = "Multi-Species Change Index",
+         fill = "") +
+    theme(
+      legend.position = "bottom"
+    )
+```
+
+- violin and whiskers horizontal
+
+```{r}
+msci_draws_figtest %>%
+  mutate(Activity = paste0(Activity, "\n", "(n = ", n_species, ")")) %>%
+  ggplot(aes(y = Activity)) +
+    stat_eye(aes(x = msci, fill = fill_var), orientation = "horizontal",
+             .width = c(0.9), linewidth = 1) +
+    geom_errorbar(data = summary_figtest %>%
+                    mutate(Activity = paste0(Activity,
+                             "\n", "(n = ", n_species, ")")),
+                  aes(xmin = msci.lower, xmax = msci.upper), width = 0.1) +
+    geom_vline(xintercept = 0, linetype = 2) +
+    geom_vline(xintercept = c(min_threshold, max_threshold), linetype = 3) +
+    scale_fill_manual(values =  c("firebrick1",
+                                  "chartreuse3",
+                                  "gold",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "") +
+    theme(
+      legend.position = "bottom"
+    )
+```
