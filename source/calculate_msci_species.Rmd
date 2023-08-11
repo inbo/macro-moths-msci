@@ -80,10 +80,10 @@ dir.create(here("source", "brms_cache"), FALSE)
 ```{r mcmc-params}
 # MCMC parameters
 nchains <- 3 # number of chains
-niter <- 20000 # number of iterations (incl. burn-in)
-burnin <- niter / 5 # number of initial samples to discard (burn-in)
+niter <- 40000 # number of iterations (incl. burn-in)
+burnin <- niter / 10 # number of initial samples to discard (burn-in)
 nparallel <- nchains # number of cores used for parallel computing
-thinning <- 8
+thinning <- 16
 ```
 
 ```{r fit-model}
@@ -91,6 +91,7 @@ fit_msci_species <- brm(
   bf(n_grids ~ period * species_nl + offset(log(sum_per_period))),
   data = species_df, family = poisson(),
   chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
+  control = list(max_treedepth = 12),
   file = "source/brms_cache/fit_msci_species",
   file_refit = "on_change"
 )
