@@ -741,7 +741,6 @@ library(INBOtheme)
 theme_set(theme_inbo(base_size = 12, transparent = TRUE))
 ```
 
-
 - half distribution and 2 intervals vertical
 
 ```{r}
@@ -770,14 +769,14 @@ msci_draws_figtest %>%
 - half distribution and 2 intervals horizontal
 
 ```{r}
-msci_draws_figtest %>%
+p_halfeye <- msci_draws_figtest %>%
   mutate(Activity = paste0(Activity, "\n", "(n = ", n_species, ")")) %>%
   ggplot(aes(y = Activity)) +
     stat_slab(aes(x = msci, fill = fill_var), orientation = "horizontal") +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
-    stat_pointinterval(aes(x = msci, fill = fill_var),
+    stat_pointinterval(aes(x = msci),
                        orientation = "horizontal", .width = c(0.6, 0.9)) +
     scale_fill_manual(values =  c("firebrick1",
                                   "chartreuse3",
@@ -790,6 +789,7 @@ msci_draws_figtest %>%
     theme(
       legend.position = "bottom"
     )
+p_halfeye
 ```
 
 - violin and whiskers vertical
@@ -804,7 +804,7 @@ msci_draws_figtest %>%
     geom_hline(yintercept = 0, linetype = "longdash", colour = "black") +
     geom_hline(yintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
-    stat_pointinterval(aes(y = msci, fill = fill_var),
+    stat_pointinterval(aes(y = msci),
                        .width = c(0.9), linewidth = 1) +
     geom_label(data = min_df, aes(y = min, label = paste("n =", n_species)),
                size = 3) +
@@ -837,7 +837,7 @@ p_final <- msci_draws_figtest %>%
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
-    stat_pointinterval(aes(x = msci, fill = fill_var),
+    stat_pointinterval(aes(x = msci),
                        .width = c(0.9), linewidth = 1) +
     scale_fill_manual(values =  c("firebrick1",
                                   "chartreuse3",
@@ -947,4 +947,33 @@ p_final +
                          ends = "both"))
 ```
 
+- half distribution with annotation
+
+```{r}
+p_halfeye +
+  scale_x_continuous(limits = c(-1, 1),
+                     breaks = c(seq(-1, 1, 0.25)[-4], -0.2)) +
+  annotate("text",
+           y = c(0.6, 0.6), x = c(max_threshold / 2, max_threshold + 0.02),
+           label = c("moderate\nincrease", "strong increase"), size = 2,
+           hjust = c("center", "left"), vjust = "top") +
+  annotate("segment", y = c(0.65), x = c(max_threshold + 0.02),
+           xend = c(max_threshold + 0.1), yend = c(0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("segment", y = c(0.65), x = c(0 + 0.02),
+           xend = c(max_threshold - 0.02), yend = c(0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"),
+                         ends = "both")) +
+  annotate("text",
+           y = c(0.6, 0.6), x = c(min_threshold / 2, min_threshold - 0.02),
+           label = c("moderate\ndecrease", "strong decrease"), size = 2,
+           hjust = c("center", "right"), vjust = "top") +
+  annotate("segment", y = c(0.65), x = c(min_threshold - 0.02),
+           xend = c(min_threshold - 0.1), yend = c(0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("segment", y = c(0.65), x = c(0 - 0.02),
+           xend = c(min_threshold + 0.02), yend = c(0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"),
+                         ends = "both"))
+```
 
