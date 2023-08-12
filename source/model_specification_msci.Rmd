@@ -717,7 +717,7 @@ min_df <- msci_draws_figtest %>%
          min = min + min * mult) %>%
   select(all_of("Activity"), n_species, min) %>%
   distinct()
-  
+
 msci_draws_figtest <- msci_draws_figtest %>%
   mutate(
     effects = case_when(
@@ -736,15 +736,22 @@ msci_draws_figtest <- msci_draws_figtest %>%
   )
 ```
 
-- half dist and 2 intervals vertical
+```{r}
+library(INBOtheme)
+theme_set(theme_inbo(base_size = 12, transparent = TRUE))
+```
+
+
+- half distribution and 2 intervals vertical
 
 ```{r}
 msci_draws_figtest %>%
   ggplot(aes(x = Activity)) +
-    stat_halfeye(aes(y = msci, fill = fill_var),
-             .width = c(0.6, 0.9)) +
-    geom_hline(yintercept = 0, linetype = 2) +
-    geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
+    stat_slab(aes(y = msci, fill = fill_var)) +
+    geom_hline(yintercept = 0, linetype = "longdash", colour = "black") +
+    geom_hline(yintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    stat_pointinterval(aes(y = msci, fill = fill_var), .width = c(0.6, 0.9)) +
     geom_label(data = min_df, aes(y = min, label = paste("n =", n_species)),
                size = 3) +
     scale_fill_manual(values =  c("firebrick1",
@@ -760,16 +767,18 @@ msci_draws_figtest %>%
     )
 ```
 
-- half dist and 2 intervals horizontal
+- half distribution and 2 intervals horizontal
 
 ```{r}
 msci_draws_figtest %>%
   mutate(Activity = paste0(Activity, "\n", "(n = ", n_species, ")")) %>%
   ggplot(aes(y = Activity)) +
-    stat_halfeye(aes(x = msci, fill = fill_var), orientation = "horizontal",
-             .width = c(0.6, 0.9)) +
-    geom_vline(xintercept = 0, linetype = 2) +
-    geom_vline(xintercept = c(min_threshold, max_threshold), linetype = 3) +
+    stat_slab(aes(x = msci, fill = fill_var), orientation = "horizontal") +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    stat_pointinterval(aes(x = msci, fill = fill_var),
+                       orientation = "horizontal", .width = c(0.6, 0.9)) +
     scale_fill_manual(values =  c("firebrick1",
                                   "chartreuse3",
                                   "gold",
@@ -790,10 +799,13 @@ msci_draws_figtest %>%
   ggplot(aes(x = Activity)) +
     stat_eye(aes(y = msci, fill = fill_var),
              .width = c(0.9), linewidth = 1) +
-    geom_errorbar(data = summary_figtest, 
+    geom_errorbar(data = summary_figtest, linewidth = 1, colour = "black",
                   aes(ymin = msci.lower, ymax = msci.upper), width = 0.1) +
-    geom_hline(yintercept = 0, linetype = 2) +
-    geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
+    geom_hline(yintercept = 0, linetype = "longdash", colour = "black") +
+    geom_hline(yintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    stat_pointinterval(aes(y = msci, fill = fill_var),
+                       .width = c(0.9), linewidth = 1) +
     geom_label(data = min_df, aes(y = min, label = paste("n =", n_species)),
                size = 3) +
     scale_fill_manual(values =  c("firebrick1",
@@ -812,17 +824,21 @@ msci_draws_figtest %>%
 - violin and whiskers horizontal
 
 ```{r}
-msci_draws_figtest %>%
+p_final <- msci_draws_figtest %>%
   mutate(Activity = paste0(Activity, "\n", "(n = ", n_species, ")")) %>%
   ggplot(aes(y = Activity)) +
-    stat_eye(aes(x = msci, fill = fill_var), orientation = "horizontal",
+    stat_eye(aes(x = msci, fill = fill_var),
              .width = c(0.9), linewidth = 1) +
     geom_errorbar(data = summary_figtest %>%
                     mutate(Activity = paste0(Activity,
                              "\n", "(n = ", n_species, ")")),
+                  linewidth = 1, colour = "black",
                   aes(xmin = msci.lower, xmax = msci.upper), width = 0.1) +
-    geom_vline(xintercept = 0, linetype = 2) +
-    geom_vline(xintercept = c(min_threshold, max_threshold), linetype = 3) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    stat_pointinterval(aes(x = msci, fill = fill_var),
+                       .width = c(0.9), linewidth = 1) +
     scale_fill_manual(values =  c("firebrick1",
                                   "chartreuse3",
                                   "gold",
@@ -834,4 +850,101 @@ msci_draws_figtest %>%
     theme(
       legend.position = "bottom"
     )
+p_final
 ```
+
+
+- add thresholds
+
+```{r}
+p_final +
+  scale_x_continuous(limits = c(-1, 1),
+                     breaks = c(seq(-1, 1, 0.25)[-4], -0.2)) +
+  annotate("text", y = c(0.5, 0.5), x = c(0 + 0.1, max_threshold + 0.15),
+           label = c("increase", "strong increase"), size = 2) +
+  annotate("segment", y = c(0.6, 0.6), x = c(0 + 0.03, max_threshold + 0.03),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.6, 0.6),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", y = c(0.5, 0.5), x = c(0 - 0.1, min_threshold - 0.15),
+           label = c("decrease", "strong decrease"), size = 2) +
+  annotate("segment", y = c(0.6, 0.6), x = c(0 - 0.03, min_threshold - 0.03),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.6, 0.6),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc")))
+```
+
+
+```{r}
+p_final +
+  scale_x_continuous(limits = c(-1, 1),
+                     breaks = c(seq(-1, 1, 0.25)[-4], -0.2)) +
+  annotate("text", y = c(0.6, 0.6), x = c(0 + 0.02, max_threshold + 0.02),
+           label = c("moderate\nincrease", "strong increase"), size = 2,
+           hjust = "left", vjust = "top") +
+  annotate("segment", y = c(0.65, 0.65), x = c(0 + 0.02, max_threshold + 0.02),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.65, 0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", y = c(0.6, 0.6), x = c(0 - 0.02, min_threshold - 0.02),
+           label = c("moderate\ndecrease", "strong decrease"), size = 2,
+           hjust = "right", vjust = "top") +
+  annotate("segment", y = c(0.65, 0.65), x = c(0 - 0.02, min_threshold - 0.02),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.65, 0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc")))
+```
+
+```{r}
+p_final +
+  scale_x_continuous(limits = c(-1, 1),
+                     breaks = c(seq(-1, 1, 0.25)[-4], -0.2)) +
+  annotate("text",
+           y = c(0.6, 0.6), x = c(max_threshold / 2, max_threshold + 0.02),
+           label = c("moderate\nincrease", "strong increase"), size = 2,
+           hjust = c("center", "left"), vjust = "top") +
+  annotate("segment",
+           y = c(0.65, 0.65), x = c(0 + 0.02, max_threshold + 0.02),
+           xend = c(0 + 0.07, max_threshold + 0.1), yend = c(0.65, 0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("segment", y = c(0.65), x = c(max_threshold - 0.02),
+           xend = c(max_threshold - 0.07), yend = c(0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text",
+           y = c(0.6, 0.6), x = c(min_threshold / 2, min_threshold - 0.02),
+           label = c("moderate\ndecrease", "strong decrease"), size = 2,
+           hjust = c("center", "right"), vjust = "top") +
+  annotate("segment",
+           y = c(0.65, 0.65), x = c(0 - 0.02, min_threshold - 0.02),
+           xend = c(0 - 0.07, min_threshold - 0.1), yend = c(0.65, 0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("segment", y = c(0.65), x = c(min_threshold + 0.02),
+           xend = c(min_threshold + 0.07), yend = c(0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc")))
+```
+
+```{r}
+p_final +
+  scale_x_continuous(limits = c(-1, 1),
+                     breaks = c(seq(-1, 1, 0.25)[-4], -0.2)) +
+  annotate("text",
+           y = c(0.6, 0.6), x = c(max_threshold / 2, max_threshold + 0.02),
+           label = c("moderate\nincrease", "strong increase"), size = 2,
+           hjust = c("center", "left"), vjust = "top") +
+  annotate("segment", y = c(0.65), x = c(max_threshold + 0.02),
+           xend = c(max_threshold + 0.1), yend = c(0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("segment", y = c(0.65), x = c(0 + 0.02),
+           xend = c(max_threshold - 0.02), yend = c(0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"),
+                         ends = "both")) +
+  annotate("text",
+           y = c(0.6, 0.6), x = c(min_threshold / 2, min_threshold - 0.02),
+           label = c("moderate\ndecrease", "strong decrease"), size = 2,
+           hjust = c("center", "right"), vjust = "top") +
+  annotate("segment", y = c(0.65), x = c(min_threshold - 0.02),
+           xend = c(min_threshold - 0.1), yend = c(0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("segment", y = c(0.65), x = c(0 - 0.02),
+           xend = c(min_threshold + 0.02), yend = c(0.65),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"),
+                         ends = "both"))
+```
+
+
