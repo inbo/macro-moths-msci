@@ -694,8 +694,8 @@ n_species_df2 <- dat2 %>%
 
 summary_figtest <- msci_draws_df2 %>%
   group_by(trait) %>%
-  mean_qi(.width = 0.9) %>%
-  rename(msci.mean = msci,
+  median_qi(.width = 0.9) %>%
+  rename(msci.median = msci,
          msci.lower = .lower,
          msci.upper = .upper,
          Activity = trait) %>%
@@ -797,15 +797,14 @@ p_halfeye
 ```{r}
 msci_draws_figtest %>%
   ggplot(aes(x = Activity)) +
-    stat_eye(aes(y = msci, fill = fill_var),
-             .width = c(0.9), linewidth = 1) +
-    geom_errorbar(data = summary_figtest, linewidth = 1, colour = "black",
-                  aes(ymin = msci.lower, ymax = msci.upper), width = 0.1) +
+    geom_violin(aes(y = msci, fill = fill_var), colour = alpha("white", 0)) +
     geom_hline(yintercept = 0, linetype = "longdash", colour = "black") +
     geom_hline(yintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
-    stat_pointinterval(aes(y = msci),
-                       .width = c(0.9), linewidth = 1) +
+    geom_errorbar(data = summary_figtest, linewidth = 1, colour = "black",
+                  aes(ymin = msci.lower, ymax = msci.upper), width = 0.1) +
+    geom_point(data = summary_figtest, size = 2.2, colour = "black",
+                  aes(y = msci.median)) +
     geom_label(data = min_df, aes(y = min, label = paste("n =", n_species)),
                size = 3) +
     scale_fill_manual(values =  c("firebrick1",
@@ -827,18 +826,20 @@ msci_draws_figtest %>%
 p_final <- msci_draws_figtest %>%
   mutate(Activity = paste0(Activity, "\n", "(n = ", n_species, ")")) %>%
   ggplot(aes(y = Activity)) +
-    stat_eye(aes(x = msci, fill = fill_var),
-             .width = c(0.9), linewidth = 1) +
+    geom_violin(aes(x = msci, fill = fill_var), colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
     geom_errorbar(data = summary_figtest %>%
                     mutate(Activity = paste0(Activity,
                              "\n", "(n = ", n_species, ")")),
                   linewidth = 1, colour = "black",
                   aes(xmin = msci.lower, xmax = msci.upper), width = 0.1) +
-    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
-    geom_vline(xintercept = c(min_threshold, max_threshold),
-               linetype = "dotdash") +
-    stat_pointinterval(aes(x = msci),
-                       .width = c(0.9), linewidth = 1) +
+    geom_point(data = summary_figtest %>%
+                    mutate(Activity = paste0(Activity,
+                             "\n", "(n = ", n_species, ")")),
+               size = 2.2, colour = "black",
+               aes(x = msci.median)) +
     scale_fill_manual(values =  c("firebrick1",
                                   "chartreuse3",
                                   "gold",
@@ -976,4 +977,3 @@ p_halfeye +
            arrow = arrow(type = "closed", length = unit(0.01, "npc"),
                          ends = "both"))
 ```
-
