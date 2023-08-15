@@ -61,13 +61,38 @@ species_traits_final <- read_csv(file.path(data_path,
 # Data preparation
 
 ```{r data-prep}
-species_df <- species_traits_final %>%
+species_df_raw <- species_traits_final %>%
   filter(trait_value == "Resident") %>%
   select(species_nl, n_grids, period, sum_per_period) %>%
   mutate(species_nl = factor(species_nl))
 ```
 
-In total we have `r length(unique(species_df$species_nl))` resident species.
+In total we have `r length(unique(species_df_raw$species_nl))` resident species.
+The following species have disapeared or emerged.
+We cannot calculate a species change index.
+
+```{r}
+species_df_raw %>%
+  pivot_wider(id_cols = species_nl,
+              names_from = period,
+              values_from = n_grids) %>%
+  filter(p1980_2012 == 0 | p2013_2022 == 0) %>%
+  kable()
+```
+
+```{r}
+inf_species <- species_df_raw %>%
+  pivot_wider(id_cols = species_nl,
+              names_from = period,
+              values_from = n_grids) %>%
+  filter(p1980_2012 == 0 | p2013_2022 == 0) %>%
+  pull(species_nl) %>%
+  as.vector()
+
+species_df <- species_df_raw %>%
+  filter(!species_nl %in% inf_species) %>%
+  mutate(species_nl = factor(species_nl))
+```
 
 
 # Fit model
@@ -80,10 +105,10 @@ dir.create(here("source", "brms_cache"), FALSE)
 ```{r mcmc-params}
 # MCMC parameters
 nchains <- 3 # number of chains
-niter <- 40000 # number of iterations (incl. burn-in)
-burnin <- niter / 10 # number of initial samples to discard (burn-in)
+niter <- 20000 # number of iterations (incl. burn-in)
+burnin <- niter / 5 # number of initial samples to discard (burn-in)
 nparallel <- nchains # number of cores used for parallel computing
-thinning <- 16
+thinning <- 8
 ```
 
 ```{r fit-model}
@@ -91,7 +116,6 @@ fit_msci_species <- brm(
   bf(n_grids ~ period * species_nl + offset(log(sum_per_period))),
   data = species_df, family = poisson(),
   chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
-  control = list(max_treedepth = 12),
   file = "source/brms_cache/fit_msci_species",
   file_refit = "on_change"
 )
@@ -128,3 +152,6 @@ Model fit is good.
 
 
 # Results
+
+
+
