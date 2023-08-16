@@ -1,5 +1,5 @@
 ---
-title: "Calculate MSCI for resident species"
+title: "Calculate SCI for resident species"
 author: "Ward Langeraert"
 date: "`r Sys.Date()`"
 output:
@@ -47,7 +47,7 @@ seed <- 123
 
 # Goal
 
-Fit models and calculate MSCI for all resident species.
+Fit models and calculate SCI for all resident species.
 
 # Load data
 
@@ -69,7 +69,7 @@ species_df_raw <- species_traits_final %>%
 
 In total we have `r length(unique(species_df_raw$species_nl))` resident species.
 The following species have disappeared or emerged.
-We cannot calculate a species change index.
+We cannot calculate a species change index for these.
 
 ```{r}
 species_df_raw %>%
