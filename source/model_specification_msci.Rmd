@@ -858,19 +858,22 @@ p_final
 - add thresholds
 
 ```{r}
-p_final +
+p_finalfinal <- p_final +
   scale_x_continuous(limits = c(-1, 1),
                      breaks = c(seq(-1, 1, 0.25)[-4], -0.2)) +
-  annotate("text", y = c(0.5, 0.5), x = c(0 + 0.1, max_threshold + 0.15),
-           label = c("increase", "strong increase"), size = 2) +
+  annotate("text", y = c(0.5, 0.5), x = c(0 + 0.02, max_threshold + 0.02),
+           label = c("increase", "strong increase"), size = 2,
+           hjust = "left") +
   annotate("segment", y = c(0.6, 0.6), x = c(0 + 0.03, max_threshold + 0.03),
            xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.6, 0.6),
            arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
-  annotate("text", y = c(0.5, 0.5), x = c(0 - 0.1, min_threshold - 0.15),
-           label = c("decrease", "strong decrease"), size = 2) +
+  annotate("text", y = c(0.5, 0.5), x = c(0 - 0.02, min_threshold - 0.02),
+           label = c("decrease", "strong decrease"), size = 2,
+           hjust = "right") +
   annotate("segment", y = c(0.6, 0.6), x = c(0 - 0.03, min_threshold - 0.03),
            xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.6, 0.6),
            arrow = arrow(type = "closed", length = unit(0.01, "npc")))
+p_finalfinal
 ```
 
 
@@ -977,3 +980,13 @@ p_halfeye +
            arrow = arrow(type = "closed", length = unit(0.01, "npc"),
                          ends = "both"))
 ```
+
+
+## Conclusion
+
+We choose this layout as final:
+
+```{r}
+p_finalfinal
+```
+
