@@ -418,7 +418,9 @@ for (i in seq_along(summary_draw_list)) {
       "{name}" := factor(!!sym(name)), # nolint.
     ) %>%
     ggplot(aes(x = .data[[name]])) +
-      stat_halfeye(aes(y = msci, fill = fill_var)) +
+      stat_halfeye(aes(y = msci, fill = fill_var),
+                   point_interval = "mean_qi",
+                   .width = c(0.6, 0.9)) +
       geom_hline(yintercept = 0, linetype = 2) +
       geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
       geom_label(data = min_df, aes(y = min, label = n_species),
@@ -781,7 +783,9 @@ for (i in seq_along(summary_draw_combi_list)) {
       "{trait2}" := factor(!!sym(trait2)), # nolint.
     ) %>%
     ggplot(aes(x = .data[[trait1]])) +
-      stat_halfeye(aes(y = msci, fill = fill_var)) +
+      stat_halfeye(aes(y = msci, fill = fill_var),
+                   point_interval = "mean_qi",
+                   .width = c(0.6, 0.9)) +
       geom_hline(yintercept = 0, linetype = 2) +
       geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
       geom_label(data = min_df, aes(y = min, label = n_species)) +
