@@ -186,34 +186,69 @@ summary_draw <- sci_df %>%
 ```{r}
 library(INBOtheme)
 theme_set(theme_inbo(base_size = 12, transparent = TRUE))
+library(effectclass)
 
 min_threshold <- -0.2
 max_threshold <- 0.25
 limits <- c(-1.5, 10)
 
-summary_draw %>%
+summary_draw$effect_loose <- classification(
+  lcl = summary_draw$sci.lower,
+  ucl = summary_draw$sci.upper,
+  threshold = c(min_threshold, max_threshold))
+summary_draw$effect_coarse <- coarse_classification(summary_draw$effect_loose)
+
+summary_draw <- summary_draw %>%
   mutate(
-    effects = case_when(
-        sci.lower > 0 ~ "increase",
-        sci.upper < 0 ~ "decrease",
-        sci.lower < 0 & sci.lower > -0.2 &
-          sci.upper > 0 & sci.upper < 0.25 ~ "stable",
+    effect_coarse2 = case_when(
+        effect_coarse == "+" ~ "increase",
+        effect_coarse == "-" ~ "decrease",
+        effect_coarse == "~" ~ "stable",
         TRUE ~ "uncertain",
     ),
-    fill_var = factor(effects,
+    effect_coarse2 = factor(effect_coarse2,
       levels = c("increase",
                  "stable",
                  "decrease",
                  "uncertain"),
       ordered = TRUE)
   ) %>%
-  arrange(fill_var, desc(sci.mean)) %>%
+  mutate(
+    effect_loose2 = case_when(
+        effect_loose == "++" ~ "strong increase",
+        effect_loose == "+" ~ "increase",
+        effect_loose == "+~" ~ "moderate increase",
+        effect_loose == "~" ~ "stable",
+        effect_loose == "-" ~ "decrease",
+        effect_loose == "-~" ~ "moderate decrease",
+        effect_loose == "--" ~ "strong decrease",
+        effect_loose == "?+" ~ "potential increase",
+        effect_loose == "?-" ~ "potential decrease",
+        TRUE ~ "uncertain",
+    ),
+    effect_loose2 = factor(effect_loose2,
+      levels = c(
+        "strong increase",
+        "increase",
+        "moderate increase",
+        "stable",
+        "decrease",
+        "moderate decrease",
+        "strong decrease",
+        "potential increase",
+        "potential decrease",
+        "uncertain"),
+      ordered = TRUE)
+  ) %>%
+  arrange(effect_loose2, desc(sci.mean)) %>%
   rownames_to_column(var = "id") %>%
   mutate(
     id = as.numeric(id),
     species_nl = reorder(species_nl, id,  decreasing = TRUE)
-    ) %>%
-  ggplot(aes(y = species_nl, colour = fill_var)) +
+    )
+
+summary_draw %>%
+  ggplot(aes(y = species_nl, colour = effect_loose2)) +
     geom_segment(aes(x = sci.lower,
                      xend = ifelse(sci.upper > limits[2],
                                    limits[2], sci.upper),
@@ -221,9 +256,9 @@ summary_draw %>%
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                  linetype = "dotdash") +
-    scale_colour_manual(values =  c("chartreuse3",
-                                    "gold",
-                                    "firebrick1",
+    scale_colour_manual(values =  c(rev(traffic_palette(7)),
+                                    "turquoise",
+                                    "deepskyblue",
                                     "skyblue"),
                         drop = FALSE) +
     labs(x = "Species Change Index",
@@ -234,3 +269,38 @@ summary_draw %>%
     theme(panel.grid.major.y = element_blank())
 ```
 
+```{r}
+summary_draw %>%
+  ggplot(aes(x = effect_coarse2, fill = effect_coarse2)) +
+    geom_bar() +
+    geom_text(aes(label = after_stat(count)),
+              stat = "count",
+              vjust = -0.5) +
+    scale_x_discrete(drop = FALSE) +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    theme(legend.position = "",
+          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    labs(y = "Number of species",
+         x = "")
+```
+
+```{r}
+summary_draw %>%
+  ggplot(aes(x = effect_loose2, fill = effect_loose2)) +
+    geom_bar() +
+    geom_text(aes(label = after_stat(count)),
+              stat = "count",
+              vjust = -0.5) +
+    scale_x_discrete(drop = FALSE) +
+    scale_fill_manual(values =  c(rev(traffic_palette(7)),
+                                  rep("skyblue", 3)),
+                      drop = FALSE) +
+    theme(legend.position = "",
+          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    labs(y = "Number of species",
+         x = "")
+```
