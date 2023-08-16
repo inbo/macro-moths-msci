@@ -116,6 +116,7 @@ fit_msci_species <- brm(
   bf(n_grids ~ period * species_nl + offset(log(sum_per_period))),
   data = species_df, family = poisson(),
   chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
+  thin = thinning,
   file = "source/brms_cache/fit_msci_species",
   file_refit = "on_change"
 )
@@ -153,5 +154,82 @@ Model fit is good.
 
 # Results
 
+```{r summarise-draws}
+# get posterior draws for parameters of interest
+draws_matrix <- fit_msci_species %>%
+  spread_draws(`b_periodp2013_2022.*`, regex = TRUE, seed = seed) %>%
+  select(starts_with("b_periodp2013_2022")) %>%
+  as.matrix()
 
+# get contrast matrix
+species <- sort(unique(species_df$species_nl))
+contrast_matrix <- create_contrast_matrix(length(species))
+
+# calculate msci
+sci_df <- as_tibble(
+  exp(t(contrast_matrix %*% t(draws_matrix))) - 1
+  ) %>%
+  `colnames<-`(species) %>%
+  pivot_longer(cols = everything(), names_to = "species_nl",
+               values_to = "sci")
+
+# get summary statistics
+summary_draw <- sci_df %>%
+  group_by(species_nl) %>%
+  mean_qi(.width = 0.95) %>%
+  ungroup() %>%
+  rename(sci.mean = sci,
+         sci.lower = .lower,
+         sci.upper = .upper)
+```
+
+```{r}
+library(INBOtheme)
+theme_set(theme_inbo(base_size = 12, transparent = TRUE))
+
+min_threshold <- -0.2
+max_threshold <- 0.25
+limits <- c(-1.5, 10)
+
+summary_draw %>%
+  mutate(
+    effects = case_when(
+        sci.lower > 0 ~ "increase",
+        sci.upper < 0 ~ "decrease",
+        sci.lower < 0 & sci.lower > -0.2 &
+          sci.upper > 0 & sci.upper < 0.25 ~ "stable",
+        TRUE ~ "uncertain",
+    ),
+    fill_var = factor(effects,
+      levels = c("increase",
+                 "stable",
+                 "decrease",
+                 "uncertain"),
+      ordered = TRUE)
+  ) %>%
+  arrange(fill_var, desc(sci.mean)) %>%
+  rownames_to_column(var = "id") %>%
+  mutate(
+    id = as.numeric(id),
+    species_nl = reorder(species_nl, id,  decreasing = TRUE)
+    ) %>%
+  ggplot(aes(y = species_nl, colour = fill_var)) +
+    geom_segment(aes(x = sci.lower, xend = ifelse(sci.upper > limits[2],
+                                                  limits[2], sci.upper), 
+                     yend = species_nl)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+                 linetype = "dotdash") +
+    scale_colour_manual(values =  c("chartreuse3",
+                                    "gold",
+                                    "firebrick1",
+                                    "skyblue"),
+                        drop = FALSE) +
+    labs(x = "Species Change Index",
+         y = "",
+         colour = "Legend") +
+    scale_x_continuous(limits = limits, expand = c(0, 0),
+                       breaks = c(-1, 1, seq(0, 10, 2.5))) +
+    theme(panel.grid.major.y = element_blank())
+```
 
