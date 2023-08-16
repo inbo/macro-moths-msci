@@ -330,8 +330,7 @@ summary_draw %>%
                                   "firebrick1",
                                   "skyblue"),
                       drop = FALSE) +
-    theme(legend.position = "",
-          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    theme(legend.position = "") +
     labs(y = "Number of species",
          x = "")
 ```
