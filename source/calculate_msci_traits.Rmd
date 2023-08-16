@@ -453,7 +453,6 @@ We consider a number of trait combinations.
 ```{r trait-combinations-combi}
 trait_combinations <- list(
   c("Biotope", "HostPlantSpecificity"),
-  c("Biotope", "NutrientValueBiotope"),
   c("colourVariability", "ForewingLength"),
   c("Photoperiod", "Voltinism"),
   c("OverwinteringStage", "Voltinism"),
