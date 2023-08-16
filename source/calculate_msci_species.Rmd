@@ -183,7 +183,7 @@ summary_draw <- sci_df %>%
          sci.upper = .upper)
 ```
 
-```{r}
+```{r fig.height=10}
 library(INBOtheme)
 theme_set(theme_inbo(base_size = 12, transparent = TRUE))
 library(effectclass)
@@ -266,7 +266,9 @@ summary_draw %>%
          colour = "Legend") +
     scale_x_continuous(limits = limits, expand = c(0, 0),
                        breaks = c(-1, 1, seq(0, 10, 2.5))) +
-    theme(panel.grid.major.y = element_blank())
+    theme(axis.text.y = element_text(size = 2),
+          axis.ticks.y = element_blank()) +
+    guides(colour = guide_legend(override.aes = list(linewidth = 3)))
 ```
 
 ```{r}
