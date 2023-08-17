@@ -176,9 +176,9 @@ sci_df <- as_tibble(
 # get summary statistics
 summary_draw <- sci_df %>%
   group_by(species_nl) %>%
-  mean_qi(.width = 0.95) %>%
+  median_qi(.width = 0.9) %>%
   ungroup() %>%
-  rename(sci.mean = sci,
+  rename(sci.median = sci,
          sci.lower = .lower,
          sci.upper = .upper)
 ```
@@ -244,13 +244,13 @@ summary_draw <- summary_draw %>%
                             "certain trends"))
 ```
 
-We show the posterior mean and 90 % credible intervals for each species.
+We show the posterior median and 90 % credible intervals for each species.
 For some species, the credible intervals are very large and are cut off.
-Ordered according to posterior mean:
+Ordered according to posterior median:
 
 ```{r fig.height=10}
 summary_draw %>%
-  arrange(desc(sci.mean)) %>%
+  arrange(desc(sci.median)) %>%
   rownames_to_column(var = "id") %>%
   mutate(
     id = as.numeric(id),
@@ -262,7 +262,7 @@ summary_draw %>%
                                    limits[2], sci.upper),
                      yend = species_nl,
                      colour = effect_loose2)) +
-    geom_point(aes(x = sci.mean), size = 0.1, colour = "black") +
+    geom_point(aes(x = sci.median), size = 0.1, colour = "black") +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                  linetype = "dotdash") +
@@ -286,7 +286,7 @@ Ordered according to effect:
 
 ```{r fig.height=10}
 summary_draw %>%
-  arrange(effect_loose2, desc(sci.mean)) %>%
+  arrange(effect_loose2, desc(sci.median)) %>%
   rownames_to_column(var = "id") %>%
   mutate(
     id = as.numeric(id),
@@ -298,7 +298,7 @@ summary_draw %>%
                                    limits[2], sci.upper),
                      yend = species_nl,
                      colour = effect_loose2)) +
-    geom_point(aes(x = sci.mean), size = 0.1, colour = "black") +
+    geom_point(aes(x = sci.median), size = 0.1, colour = "black") +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                  linetype = "dotdash") +
