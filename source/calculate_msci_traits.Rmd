@@ -36,6 +36,7 @@ conflicted::conflicts_prefer(brms::rstudent_t)
 library(tidyverse)
 library(brms)
 library(tidybayes)
+library(effectclass)
 
 # Source
 source(here("source", "summarise_brms_models.R"))
@@ -356,15 +357,72 @@ msci_draw_list <- lapply(names(model_msci_list), function(name) {
 names(msci_draw_list) <- names(model_msci_list)
 
 # get summary statistics
+min_threshold <- -0.2
+max_threshold <- 0.25
+
 summary_draw_list <- lapply(names(msci_draw_list), function(name) {
   msci_draws <- msci_draw_list[[name]]
 
-  msci_draws %>%
+  summary_draw <- msci_draws %>%
     group_by_at(c(name)) %>%
     median_qi(.width = c(0.9)) %>%
     ungroup() %>%
     rename(msci.median = msci) %>%
     select(-c(n_species.lower, n_species.upper))
+
+  summary_draw$effect_fine <- classification(
+    lcl = summary_draw$msci.lower,
+    ucl = summary_draw$msci.upper,
+    threshold = c(min_threshold, max_threshold))
+
+  summary_draw$effect_coarse <- coarse_classification(summary_draw$effect_fine)
+
+  out <- summary_draw %>%
+    mutate(
+      trend_fine = case_when(
+          effect_fine == "++" ~ "strong increase",
+          effect_fine == "+" ~ "increase",
+          effect_fine == "+~" ~ "moderate increase",
+          effect_fine == "~" ~ "stable",
+          effect_fine == "-" ~ "decrease",
+          effect_fine == "-~" ~ "moderate decrease",
+          effect_fine == "--" ~ "strong decrease",
+          effect_fine == "?+" ~ "potential increase",
+          effect_fine == "?-" ~ "potential decrease",
+          TRUE ~ "uncertain",
+      ),
+      trend_fine = factor(trend_fine,
+        levels = c(
+          "strong increase",
+          "increase",
+          "moderate increase",
+          "stable",
+          "decrease",
+          "moderate decrease",
+          "strong decrease",
+          "potential increase",
+          "potential decrease",
+          "uncertain"),
+        ordered = TRUE)
+    ) %>%
+    mutate(
+      trend_coarse = case_when(
+          effect_coarse == "+" ~ "increase",
+          effect_coarse == "-" ~ "decrease",
+          effect_coarse == "~" ~ "stable",
+          TRUE ~ "uncertain",
+      ),
+      trend_coarse = factor(trend_coarse,
+        levels = c("increase",
+                   "stable",
+                   "decrease",
+                   "uncertain"),
+        ordered = TRUE)
+    ) %>%
+    mutate(certainty = ifelse(trend_coarse == "uncertain", "uncertain trend",
+                              "certain trend"))
+
+  return(out)
 })
 names(summary_draw_list) <- names(model_msci_list)
 ```
@@ -377,13 +435,12 @@ for (i in seq_along(summary_draw_list)) {
 
   # show summary_df table
   summary_df %>%
+    select(-c(effect_fine, effect_coarse, certainty)) %>%
     kable() %>%
     print()
   cat("\n")
 
   # create dataframe to plot number of species
-  min_threshold <- -0.2
-  max_threshold <- 0.25
   mult <- 0.4
   min_df <- draws_df %>%
     mutate(min = ifelse(min(msci) <= min_threshold, min(msci),
@@ -396,46 +453,25 @@ for (i in seq_along(summary_draw_list)) {
   p <- draws_df %>%
     full_join(summary_df) %>%
     mutate(
-      effects = case_when(
-          msci.lower > 0 ~ "positive effect",
-          msci.lower > -0.2 & msci.upper > 0.25 ~ "potential positive effect",
-          msci.upper < 0 ~ "negative effect",
-          msci.upper < 0.25 & msci.lower < -0.2  ~ "potential negative effect",
-          msci.lower < 0 & msci.lower > -0.2 &
-            msci.upper > 0 & msci.upper < 0.25 ~ "no effect",
-          TRUE ~ "unknown effect",
-      ),
-      fill_var = factor(effects,
-        levels = c("negative effect",
-                   "potential negative effect",
-                   "positive effect",
-                   "potential positive effect",
-                   "no effect",
-                   "unknown effect"),
-        ordered = TRUE)
-    ) %>%
-    mutate(
       "{name}" := factor(!!sym(name)), # nolint.
     ) %>%
     ggplot(aes(x = .data[[name]])) +
-      stat_halfeye(aes(y = msci, fill = fill_var),
+      stat_halfeye(aes(y = msci, fill = trend_coarse),
                    point_interval = "median_qi",
                    .width = c(0.6, 0.9)) +
       geom_hline(yintercept = 0, linetype = 2) +
       geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
-      geom_label(data = min_df, aes(y = min, label = n_species),
+      geom_label(data = min_df, aes(y = min, label = paste("n =", n_species)),
                  size = 3) +
       scale_x_discrete(drop = FALSE) +
-      scale_fill_manual(values =  c("firebrick1",
-                                    "coral",
-                                    "chartreuse3",
-                                    "darkseagreen",
+      scale_fill_manual(values =  c("chartreuse3",
                                     "gold",
+                                    "firebrick1",
                                     "skyblue"),
                         drop = FALSE) +
       labs(x = "",
            y = "Multi-Species Change Index",
-           fill = "",
+           fill = "Legend:",
            title = name) +
       theme(
         legend.position = "bottom",
@@ -708,6 +744,9 @@ msci_draw_combi_list_filtered <- lapply(msci_draw_combi_list, function(draws) {
 })
 
 # get summary statistics
+min_threshold <- -0.2
+max_threshold <- 0.25
+
 summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered),
   function(name) {
     trait1 <- stringr::str_split_i(name, "_", 1)
@@ -715,12 +754,67 @@ summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered),
 
     msci_draws <- msci_draw_combi_list_filtered[[name]]
 
-    msci_draws %>%
+    summary_draw <- msci_draws %>%
       group_by_at(c(trait1, trait2)) %>%
       median_qi(.width = c(0.9)) %>%
       ungroup() %>%
       rename(msci.median = msci) %>%
       select(-c(n_species.lower, n_species.upper))
+
+    summary_draw$effect_fine <- classification(
+      lcl = summary_draw$msci.lower,
+      ucl = summary_draw$msci.upper,
+      threshold = c(min_threshold, max_threshold))
+
+    summary_draw$effect_coarse <- coarse_classification(
+      summary_draw$effect_fine)
+
+    out <- summary_draw %>%
+      mutate(
+        trend_fine = case_when(
+            effect_fine == "++" ~ "strong increase",
+            effect_fine == "+" ~ "increase",
+            effect_fine == "+~" ~ "moderate increase",
+            effect_fine == "~" ~ "stable",
+            effect_fine == "-" ~ "decrease",
+            effect_fine == "-~" ~ "moderate decrease",
+            effect_fine == "--" ~ "strong decrease",
+            effect_fine == "?+" ~ "potential increase",
+            effect_fine == "?-" ~ "potential decrease",
+            TRUE ~ "uncertain",
+        ),
+        trend_fine = factor(trend_fine,
+          levels = c(
+            "strong increase",
+            "increase",
+            "moderate increase",
+            "stable",
+            "decrease",
+            "moderate decrease",
+            "strong decrease",
+            "potential increase",
+            "potential decrease",
+            "uncertain"),
+          ordered = TRUE)
+      ) %>%
+      mutate(
+        trend_coarse = case_when(
+            effect_coarse == "+" ~ "increase",
+            effect_coarse == "-" ~ "decrease",
+            effect_coarse == "~" ~ "stable",
+            TRUE ~ "uncertain",
+        ),
+        trend_coarse = factor(trend_coarse,
+          levels = c("increase",
+                     "stable",
+                     "decrease",
+                     "uncertain"),
+          ordered = TRUE)
+      ) %>%
+      mutate(certainty = ifelse(trend_coarse == "uncertain", "uncertain trend",
+                                "certain trend"))
+
+    return(out)
   }
 )
 names(summary_draw_combi_list) <- names(model_msci_combi_list)
@@ -737,14 +831,13 @@ for (i in seq_along(summary_draw_combi_list)) {
   # show summary_df table
   summary_df %>%
     select(all_of(c(trait1, trait2)), everything()) %>%
+    select(-c(effect_fine, effect_coarse, certainty)) %>%
     arrange(trait1, trait2) %>%
     kable() %>%
     print()
   cat("\n")
 
   # create dataframe to plot number of species
-  min_threshold <- -0.2
-  max_threshold <- 0.25
   mult <- 0.4
   min_df <- draws_df %>%
     group_by_at(trait2) %>%
@@ -760,46 +853,26 @@ for (i in seq_along(summary_draw_combi_list)) {
     select(all_of(c(trait1, trait2)), everything()) %>%
     full_join(summary_df) %>%
     mutate(
-      effects = case_when(
-          msci.lower > 0 ~ "positive effect",
-          msci.lower > -0.2 & msci.upper > 0.25 ~ "potential positive effect",
-          msci.upper < 0 ~ "negative effect",
-          msci.upper < 0.25 & msci.lower < -0.2  ~ "potential negative effect",
-          msci.lower < 0 & msci.lower > -0.2 &
-            msci.upper > 0 & msci.upper < 0.25 ~ "no effect",
-          TRUE ~ "unknown effect",
-      ),
-      fill_var = factor(effects,
-        levels = c("negative effect",
-                   "potential negative effect",
-                   "positive effect",
-                   "potential positive effect",
-                   "no effect",
-                   "unknown effect"),
-        ordered = TRUE)
-    ) %>%
-    mutate(
       "{trait1}" := factor(!!sym(trait1)), # nolint.
       "{trait2}" := factor(!!sym(trait2)), # nolint.
     ) %>%
     ggplot(aes(x = .data[[trait1]])) +
-      stat_halfeye(aes(y = msci, fill = fill_var),
+      stat_halfeye(aes(y = msci, fill = trend_coarse),
                    point_interval = "median_qi",
                    .width = c(0.6, 0.9)) +
       geom_hline(yintercept = 0, linetype = 2) +
       geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
-      geom_label(data = min_df, aes(y = min, label = n_species)) +
+      geom_label(data = min_df, aes(y = min, label = paste("n =", n_species)),
+                 size = 3) +
       scale_x_discrete(drop = FALSE) +
-      scale_fill_manual(values =  c("firebrick1",
-                                    "coral",
-                                    "chartreuse3",
-                                    "darkseagreen",
+      scale_fill_manual(values =  c("chartreuse3",
                                     "gold",
+                                    "firebrick1",
                                     "skyblue"),
                         drop = FALSE) +
       labs(x = "",
            y = "Multi-Species Change Index",
-           fill = "",
+           fill = "Legend:",
            title = gsub("_", " ~ ", name)) +
       theme(
         legend.position = "bottom",
