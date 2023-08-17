@@ -1,0 +1,353 @@
+---
+title: "Calculate SCI for resident species"
+author: "Ward Langeraert"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# Set up
+library(knitr)
+library(here)
+opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+opts_knit$set(root.dir = here::here())
+
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+conflicted::conflicts_prefer(stats::lag)
+conflicted::conflicts_prefer(brms::ar)
+conflicted::conflicts_prefer(brms::dstudent_t)
+conflicted::conflicts_prefer(brms::pstudent_t)
+conflicted::conflicts_prefer(brms::qstudent_t)
+conflicted::conflicts_prefer(brms::rstudent_t)
+
+# Packages
+library(tidyverse)
+library(brms)
+library(tidybayes)
+
+# Source
+source(here("source", "summarise_brms_models.R"))
+source(here("source", "set_priors_brms.R"))
+
+# Seed
+seed <- 123
+```
+
+# Goal
+
+Fit models and calculate SCI for all resident species.
+
+# Load data
+
+```{r load-data}
+data_path <- file.path("data", "processed")
+
+species_traits_final <- read_csv(file.path(data_path,
+                                           "prop_data_per_trait.csv"))
+```
+
+# Data preparation
+
+```{r data-prep}
+species_df_raw <- species_traits_final %>%
+  filter(trait_value == "Resident") %>%
+  select(species_nl, n_grids, period, sum_per_period) %>%
+  mutate(species_nl = factor(species_nl))
+```
+
+In total we have `r length(unique(species_df_raw$species_nl))` resident species.
+The following species have disappeared or emerged.
+We cannot calculate a species change index for these.
+
+```{r}
+species_df_raw %>%
+  pivot_wider(id_cols = species_nl,
+              names_from = period,
+              values_from = n_grids) %>%
+  filter(p1980_2012 == 0 | p2013_2022 == 0) %>%
+  kable()
+```
+
+```{r}
+inf_species <- species_df_raw %>%
+  pivot_wider(id_cols = species_nl,
+              names_from = period,
+              values_from = n_grids) %>%
+  filter(p1980_2012 == 0 | p2013_2022 == 0) %>%
+  pull(species_nl) %>%
+  as.vector()
+
+species_df <- species_df_raw %>%
+  filter(!species_nl %in% inf_species) %>%
+  mutate(species_nl = factor(species_nl))
+```
+
+
+# Fit model
+
+```{r cache-dir}
+# create cache directory if not yet available
+dir.create(here("source", "brms_cache"), FALSE)
+```
+
+```{r mcmc-params}
+# MCMC parameters
+nchains <- 3 # number of chains
+niter <- 20000 # number of iterations (incl. burn-in)
+burnin <- niter / 5 # number of initial samples to discard (burn-in)
+nparallel <- nchains # number of cores used for parallel computing
+thinning <- 8
+```
+
+```{r fit-model}
+fit_msci_species <- brm(
+  bf(n_grids ~ period * species_nl + offset(log(sum_per_period))),
+  data = species_df, family = poisson(),
+  chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
+  thin = thinning,
+  file = "source/brms_cache/fit_msci_species",
+  file_refit = "on_change"
+)
+```
+
+
+# Model convergence
+
+We check MCMC convergence based on posterior densities, trace plots and the potential scale reduction factors ($\hat{R}$) for each parameter in each model.
+
+```{r trace-plots}
+plot(fit_msci_species, ask = FALSE)
+```
+
+```{r rhat}
+rhat_list <- get_rhats(list(species_model = fit_msci_species))
+show_rhat(do.call(rbind.data.frame, rhat_list))
+```
+
+Convergence is good.
+
+# Checking model fit
+
+We check model fit based on posterior predictive checks where we compare the observed outcome to simulated datasets from the posterior predictive distribution.
+
+```{r}
+pp_check(fit_msci_species,
+  type = "dens_overlay_grouped", ndraws = 100,
+  group = "period"
+)
+```
+
+Model fit is good.
+
+
+# Results
+
+```{r summarise-draws}
+# get posterior draws for parameters of interest
+draws_matrix <- fit_msci_species %>%
+  spread_draws(`b_periodp2013_2022.*`, regex = TRUE, seed = seed) %>%
+  select(starts_with("b_periodp2013_2022")) %>%
+  as.matrix()
+
+# get contrast matrix
+species <- sort(unique(species_df$species_nl))
+contrast_matrix <- create_contrast_matrix(length(species))
+
+# calculate msci
+sci_df <- as_tibble(
+  exp(t(contrast_matrix %*% t(draws_matrix))) - 1
+  ) %>%
+  `colnames<-`(species) %>%
+  pivot_longer(cols = everything(), names_to = "species_nl",
+               values_to = "sci")
+
+# get summary statistics
+summary_draw <- sci_df %>%
+  group_by(species_nl) %>%
+  mean_qi(.width = 0.95) %>%
+  ungroup() %>%
+  rename(sci.mean = sci,
+         sci.lower = .lower,
+         sci.upper = .upper)
+```
+
+```{r}
+library(INBOtheme)
+theme_set(theme_inbo(base_size = 12, transparent = TRUE))
+library(effectclass)
+
+min_threshold <- -0.2
+max_threshold <- 0.25
+limits <- c(-1.5, 10)
+
+summary_draw$effect_loose <- classification(
+  lcl = summary_draw$sci.lower,
+  ucl = summary_draw$sci.upper,
+  threshold = c(min_threshold, max_threshold))
+summary_draw$effect_coarse <- coarse_classification(summary_draw$effect_loose)
+
+summary_draw <- summary_draw %>%
+  mutate(
+    effect_coarse2 = case_when(
+        effect_coarse == "+" ~ "increase",
+        effect_coarse == "-" ~ "decrease",
+        effect_coarse == "~" ~ "stable",
+        TRUE ~ "uncertain",
+    ),
+    effect_coarse2 = factor(effect_coarse2,
+      levels = c("increase",
+                 "stable",
+                 "decrease",
+                 "uncertain"),
+      ordered = TRUE)
+  ) %>%
+  mutate(
+    effect_loose2 = case_when(
+        effect_loose == "++" ~ "strong increase",
+        effect_loose == "+" ~ "increase",
+        effect_loose == "+~" ~ "moderate increase",
+        effect_loose == "~" ~ "stable",
+        effect_loose == "-" ~ "decrease",
+        effect_loose == "-~" ~ "moderate decrease",
+        effect_loose == "--" ~ "strong decrease",
+        effect_loose == "?+" ~ "potential increase",
+        effect_loose == "?-" ~ "potential decrease",
+        TRUE ~ "uncertain",
+    ),
+    effect_loose2 = factor(effect_loose2,
+      levels = c(
+        "strong increase",
+        "increase",
+        "moderate increase",
+        "stable",
+        "decrease",
+        "moderate decrease",
+        "strong decrease",
+        "potential increase",
+        "potential decrease",
+        "uncertain"),
+      ordered = TRUE)
+  ) %>%
+  mutate(certainty = ifelse(effect_coarse2 == "uncertain", "uncertain trends",
+                            "certain trends"))
+```
+
+We show the posterior mean and 90 % credible intervals for each species.
+For some species, the credible intervals are very large and are cut off.
+Ordered according to posterior mean:
+
+```{r fig.height=10}
+summary_draw %>%
+  arrange(desc(sci.mean)) %>%
+  rownames_to_column(var = "id") %>%
+  mutate(
+    id = as.numeric(id),
+    species_nl = reorder(species_nl, id,  decreasing = TRUE)
+  ) %>%
+  ggplot(aes(y = species_nl)) +
+    geom_segment(aes(x = sci.lower,
+                     xend = ifelse(sci.upper > limits[2],
+                                   limits[2], sci.upper),
+                     yend = species_nl,
+                     colour = effect_loose2)) +
+    geom_point(aes(x = sci.mean), size = 0.1, colour = "black") +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+                 linetype = "dotdash") +
+    scale_colour_manual(values =  c(rev(traffic_palette(7)),
+                                    "turquoise",
+                                    "deepskyblue",
+                                    "skyblue"),
+                        drop = FALSE) +
+    labs(x = "Species Change Index",
+         y = "",
+         colour = "Legend") +
+    scale_x_continuous(limits = limits, expand = c(0, 0),
+                       breaks = c(-1, 1, seq(0, 10, 2.5))) +
+    theme(axis.text.y = element_text(size = 2),
+          axis.ticks.y = element_blank()) +
+    guides(colour = guide_legend(override.aes = list(linewidth = 3))) +
+    facet_wrap(~certainty, scales = "free_y")
+```
+
+Ordered according to effect:
+
+```{r fig.height=10}
+summary_draw %>%
+  arrange(effect_loose2, desc(sci.mean)) %>%
+  rownames_to_column(var = "id") %>%
+  mutate(
+    id = as.numeric(id),
+    species_nl = reorder(species_nl, id,  decreasing = TRUE)
+  ) %>%
+  ggplot(aes(y = species_nl)) +
+    geom_segment(aes(x = sci.lower,
+                     xend = ifelse(sci.upper > limits[2],
+                                   limits[2], sci.upper),
+                     yend = species_nl,
+                     colour = effect_loose2)) +
+    geom_point(aes(x = sci.mean), size = 0.1, colour = "black") +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+                 linetype = "dotdash") +
+    scale_colour_manual(values =  c(rev(traffic_palette(7)),
+                                    "turquoise",
+                                    "deepskyblue",
+                                    "skyblue"),
+                        drop = FALSE) +
+    labs(x = "Species Change Index",
+         y = "",
+         colour = "Legend") +
+    scale_x_continuous(limits = limits, expand = c(0, 0),
+                       breaks = c(-1, 1, seq(0, 10, 2.5))) +
+    theme(axis.text.y = element_text(size = 2),
+          axis.ticks.y = element_blank()) +
+    guides(colour = guide_legend(override.aes = list(linewidth = 3)))
+```
+
+```{r}
+summary_draw %>%
+  ggplot(aes(x = effect_coarse2, fill = effect_coarse2)) +
+    geom_bar() +
+    geom_text(aes(label = after_stat(count)),
+              stat = "count",
+              vjust = -0.5) +
+    scale_x_discrete(drop = FALSE) +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    theme(legend.position = "") +
+    labs(y = "Number of species",
+         x = "")
+```
+
+```{r}
+summary_draw %>%
+  ggplot(aes(x = effect_loose2, fill = effect_loose2)) +
+    geom_bar() +
+    geom_text(aes(label = after_stat(count)),
+              stat = "count",
+              vjust = -0.5) +
+    scale_x_discrete(drop = FALSE) +
+    scale_fill_manual(values =  c(rev(traffic_palette(7)),
+                                  rep("skyblue", 3)),
+                      drop = FALSE) +
+    theme(legend.position = "",
+          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    labs(y = "Number of species",
+         x = "")
+```

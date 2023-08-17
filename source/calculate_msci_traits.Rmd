@@ -201,7 +201,7 @@ species_traits_final %>%
 
 ```{r}
 # create cache directory if not yet available
-dir.create(here("source", "source/brms_cache"), FALSE)
+dir.create(here("source", "brms_cache"), FALSE)
 ```
 
 We set the MCMC parameters and make a list of model formulae as specified in `model_specification_msci.Rmd`.
@@ -361,7 +361,7 @@ summary_draw_list <- lapply(names(msci_draw_list), function(name) {
 
   msci_draws %>%
     group_by_at(c(name)) %>%
-    mean_qi() %>%
+    mean_qi(.width = c(0.9)) %>%
     ungroup() %>%
     rename(msci.mean = msci) %>%
     select(-c(n_species.lower, n_species.upper))
@@ -418,7 +418,9 @@ for (i in seq_along(summary_draw_list)) {
       "{name}" := factor(!!sym(name)), # nolint.
     ) %>%
     ggplot(aes(x = .data[[name]])) +
-      stat_halfeye(aes(y = msci, fill = fill_var)) +
+      stat_halfeye(aes(y = msci, fill = fill_var),
+                   point_interval = "mean_qi",
+                   .width = c(0.6, 0.9)) +
       geom_hline(yintercept = 0, linetype = 2) +
       geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
       geom_label(data = min_df, aes(y = min, label = n_species),
@@ -453,7 +455,6 @@ We consider a number of trait combinations.
 ```{r trait-combinations-combi}
 trait_combinations <- list(
   c("Biotope", "HostPlantSpecificity"),
-  c("Biotope", "NutrientValueBiotope"),
   c("colourVariability", "ForewingLength"),
   c("Photoperiod", "Voltinism"),
   c("OverwinteringStage", "Voltinism"),
@@ -716,7 +717,7 @@ summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered),
 
     msci_draws %>%
       group_by_at(c(trait1, trait2)) %>%
-      mean_qi() %>%
+      mean_qi(.width = c(0.9)) %>%
       ungroup() %>%
       rename(msci.mean = msci) %>%
       select(-c(n_species.lower, n_species.upper))
@@ -782,7 +783,9 @@ for (i in seq_along(summary_draw_combi_list)) {
       "{trait2}" := factor(!!sym(trait2)), # nolint.
     ) %>%
     ggplot(aes(x = .data[[trait1]])) +
-      stat_halfeye(aes(y = msci, fill = fill_var)) +
+      stat_halfeye(aes(y = msci, fill = fill_var),
+                   point_interval = "mean_qi",
+                   .width = c(0.6, 0.9)) +
       geom_hline(yintercept = 0, linetype = 2) +
       geom_hline(yintercept = c(min_threshold, max_threshold), linetype = 3) +
       geom_label(data = min_df, aes(y = min, label = n_species)) +
