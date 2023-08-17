@@ -355,7 +355,6 @@ extra_spec_df <- species_df_raw %>%
   )
 ```
 
-
 ```{r}
 summary_draw %>%
   bind_rows(extra_spec_df) %>%
