@@ -361,7 +361,7 @@ summary_draw_list <- lapply(names(msci_draw_list), function(name) {
 
   msci_draws %>%
     group_by_at(c(name)) %>%
-    mean_qi() %>%
+    mean_qi(.width = c(0.9)) %>%
     ungroup() %>%
     rename(msci.mean = msci) %>%
     select(-c(n_species.lower, n_species.upper))
@@ -717,7 +717,7 @@ summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered),
 
     msci_draws %>%
       group_by_at(c(trait1, trait2)) %>%
-      mean_qi() %>%
+      mean_qi(.width = c(0.9)) %>%
       ungroup() %>%
       rename(msci.mean = msci) %>%
       select(-c(n_species.lower, n_species.upper))
