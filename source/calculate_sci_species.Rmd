@@ -317,8 +317,48 @@ summary_draw %>%
     guides(colour = guide_legend(override.aes = list(linewidth = 3)))
 ```
 
+For the bar plots we also include the species with zero counts (but with at least 5 occurrences in the other period).
+They are included in the categories 'strong increase/decrease'.
+
+```{r}
+extra_spec_df <- species_df_raw %>%
+  pivot_wider(id_cols = species_nl,
+              names_from = period,
+              values_from = n_grids) %>%
+  filter(p1980_2012 == 0 | p2013_2022 == 0) %>%
+  mutate(effect_coarse2 = ifelse(p1980_2012 == 0,
+                                 "increase",
+                                 "decrease"),
+         effect_loose2 = ifelse(p1980_2012 == 0,
+                                "strong increase",
+                                "strong decrease")) %>%
+  mutate(
+    effect_coarse2 = factor(effect_coarse2,
+      levels = c("increase",
+                 "stable",
+                 "decrease",
+                 "uncertain"),
+      ordered = TRUE),
+    effect_loose2 = factor(effect_loose2,
+      levels = c(
+        "strong increase",
+        "increase",
+        "moderate increase",
+        "stable",
+        "decrease",
+        "moderate decrease",
+        "strong decrease",
+        "potential increase",
+        "potential decrease",
+        "uncertain"),
+      ordered = TRUE)
+  )
+```
+
+
 ```{r}
 summary_draw %>%
+  bind_rows(extra_spec_df) %>%
   ggplot(aes(x = effect_coarse2, fill = effect_coarse2)) +
     geom_bar() +
     geom_text(aes(label = after_stat(count)),
@@ -337,6 +377,7 @@ summary_draw %>%
 
 ```{r}
 summary_draw %>%
+  bind_rows(extra_spec_df) %>%
   ggplot(aes(x = effect_loose2, fill = effect_loose2)) +
     geom_bar() +
     geom_text(aes(label = after_stat(count)),
