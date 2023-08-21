@@ -205,8 +205,6 @@ summary_draw <- summary_draw_pre %>%
         effect_fine == "-" ~ "decrease",
         effect_fine == "-~" ~ "moderate decrease",
         effect_fine == "--" ~ "strong decrease",
-        effect_fine == "?+" ~ "potential increase",
-        effect_fine == "?-" ~ "potential decrease",
         TRUE ~ "uncertain",
     ),
     trend_fine = factor(trend_fine,
@@ -218,8 +216,6 @@ summary_draw <- summary_draw_pre %>%
         "moderate decrease",
         "decrease",
         "strong decrease",
-        "potential increase",
-        "potential decrease",
         "uncertain"),
       ordered = TRUE)
   ) %>%
@@ -270,10 +266,7 @@ summary_draw %>%
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                  linetype = "dotdash") +
-    scale_colour_manual(values =  c(rev(traffic_palette(7)),
-                                    "turquoise",
-                                    "deepskyblue",
-                                    "skyblue"),
+    scale_colour_manual(values =  c(rev(traffic_palette(7)), "skyblue"),
                         drop = FALSE) +
     labs(x = "Species Change Index",
          y = "",
@@ -306,10 +299,7 @@ summary_draw %>%
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                  linetype = "dotdash") +
-    scale_colour_manual(values =  c(rev(traffic_palette(7)),
-                                    "turquoise",
-                                    "deepskyblue",
-                                    "skyblue"),
+    scale_colour_manual(values =  c(rev(traffic_palette(7)), "skyblue"),
                         drop = FALSE) +
     labs(x = "Species Change Index",
          y = "",
@@ -352,8 +342,6 @@ extra_spec_df <- species_df_raw %>%
         "moderate decrease",
         "decrease",
         "strong decrease",
-        "potential increase",
-        "potential decrease",
         "uncertain"),
       ordered = TRUE)
   )
@@ -387,8 +375,7 @@ summary_draw %>%
               stat = "count",
               vjust = -0.5) +
     scale_x_discrete(drop = FALSE) +
-    scale_fill_manual(values =  c(rev(traffic_palette(7)),
-                                  rep("skyblue", 3)),
+    scale_fill_manual(values =  c(rev(traffic_palette(7)), "skyblue"),
                       drop = FALSE) +
     theme(legend.position = "",
           axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
@@ -408,7 +395,7 @@ They have `NA` values for the posterior median and credible intervals.
 organised_summary_df <- summary_draw %>%
   bind_rows(extra_spec_df) %>%
   select(species_nl, sci.median, sci.lower, sci.upper,
-         trend_coarse, trend_fine, certainty, .point, .interval, .width) %>%
+         trend_coarse, trend_fine, .point, .interval, .width) %>%
   mutate(across(starts_with("sci"), ~ round(.x, 4))) %>%
   arrange(species_nl)
 ```

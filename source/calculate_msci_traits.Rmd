@@ -387,8 +387,6 @@ summary_draw_list <- lapply(names(msci_draw_list), function(name) {
           effect_fine == "-" ~ "decrease",
           effect_fine == "-~" ~ "moderate decrease",
           effect_fine == "--" ~ "strong decrease",
-          effect_fine == "?+" ~ "potential increase",
-          effect_fine == "?-" ~ "potential decrease",
           TRUE ~ "uncertain",
       ),
       trend_fine = factor(trend_fine,
@@ -400,8 +398,6 @@ summary_draw_list <- lapply(names(msci_draw_list), function(name) {
           "moderate decrease",
           "decrease",
           "strong decrease",
-          "potential increase",
-          "potential decrease",
           "uncertain"),
         ordered = TRUE)
     ) %>%
@@ -779,8 +775,6 @@ summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered),
             effect_fine == "-" ~ "decrease",
             effect_fine == "-~" ~ "moderate decrease",
             effect_fine == "--" ~ "strong decrease",
-            effect_fine == "?+" ~ "potential increase",
-            effect_fine == "?-" ~ "potential decrease",
             TRUE ~ "uncertain",
         ),
         trend_fine = factor(trend_fine,
@@ -792,8 +786,6 @@ summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered),
             "moderate decrease",
             "decrease",
             "strong decrease",
-            "potential increase",
-            "potential decrease",
             "uncertain"),
           ordered = TRUE)
       ) %>%
@@ -898,7 +890,7 @@ organised_summary_dfs <- lapply(traits_to_export, function(name) {
     rename(trait_value = !!sym(name)) %>%
     mutate(trait = name) %>%
     select(trait, trait_value, n_species, msci.median, msci.lower, msci.upper,
-           trend_coarse, trend_fine, certainty, .point, .interval, .width) %>%
+           trend_coarse, trend_fine, .point, .interval, .width) %>%
     mutate(across(starts_with("msci"), ~ round(.x, 4)))
 })
 
