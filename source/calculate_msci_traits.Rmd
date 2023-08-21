@@ -890,13 +890,34 @@ organised_summary_dfs <- lapply(traits_to_export, function(name) {
     rename(trait_value = !!sym(name)) %>%
     mutate(trait = name) %>%
     select(trait, trait_value, n_species, msci.median, msci.lower, msci.upper,
-           trend_coarse, trend_fine, .point, .interval, .width) %>%
-    mutate(across(starts_with("msci"), ~ round(.x, 4)))
+           trend_coarse, trend_fine, .point, .interval, .width)
 })
 
 binded_summary_dfs <- do.call(rbind.data.frame, organised_summary_dfs)
 ```
 
 ```{r}
-write_csv(binded_summary_dfs, "output/tables/msci_trait_summary.csv")
+write_csv(
+  binded_summary_dfs %>%
+    mutate(across(starts_with("msci"), ~ round(.x, 4))),
+  "output/tables/msci_trait_summary.csv"
+  )
+```
+
+
+```{r}
+draws_list_out <- lapply(traits_to_export, function(name) {
+  msci_draw_list[[name]] %>%
+    rename(trait_value = !!sym(name)) %>%
+    mutate(trait = name) %>%
+    left_join(binded_summary_dfs,
+              by = join_by(trait_value, n_species, trait)) %>%
+    select(trait, trait_value, n_species, msci.draw = msci, msci.median,
+           msci.lower, msci.upper, trend_coarse, trend_fine)
+})
+names(draws_list_out) <- traits_to_export
+```
+
+```{r}
+saveRDS(draws_list_out, "output/r_objects/msci_draw_list.rds")
 ```
