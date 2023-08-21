@@ -423,7 +423,7 @@ summary_draw_list <- lapply(names(msci_draw_list), function(name) {
 names(summary_draw_list) <- names(model_msci_list)
 ```
 
-```{r plot-results}
+```{r plot-results, results="asis"}
 for (i in seq_along(summary_draw_list)) {
   name <- names(summary_draw_list)[i]
   summary_df <- summary_draw_list[[name]]
@@ -432,9 +432,8 @@ for (i in seq_along(summary_draw_list)) {
   # show summary_df table
   summary_df %>%
     select(-c(effect_fine, effect_coarse, certainty)) %>%
-    kable() %>%
+    kable(digits = 4) %>%
     print()
-  cat("\n")
 
   # create dataframe to plot number of species
   mult <- 0.4
@@ -812,7 +811,7 @@ summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered),
 names(summary_draw_combi_list) <- names(model_msci_combi_list)
 ```
 
-```{r plot-results-combi, fig.width=10, fig.height=10}
+```{r plot-results-combi, results = "asis", fig.width=10, fig.height=10}
 for (i in seq_along(summary_draw_combi_list)) {
   name <- names(summary_draw_combi_list)[i]
   summary_df <- summary_draw_combi_list[[name]]
@@ -825,9 +824,8 @@ for (i in seq_along(summary_draw_combi_list)) {
     select(all_of(c(trait1, trait2)), everything()) %>%
     select(-c(effect_fine, effect_coarse, certainty)) %>%
     arrange(trait1, trait2) %>%
-    kable() %>%
+    kable(digits = 4) %>%
     print()
-  cat("\n")
 
   # create dataframe to plot number of species
   mult <- 0.4
@@ -870,7 +868,7 @@ for (i in seq_along(summary_draw_combi_list)) {
         legend.position = "bottom",
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
       ) +
-      facet_wrap(~.data[[trait2]], scales = "free")
+      facet_wrap(~.data[[trait2]], scales = "free", ncol = 2)
   print(p)
 }
 ```
