@@ -387,8 +387,6 @@ summary_draw_list <- lapply(names(msci_draw_list), function(name) {
           effect_fine == "-" ~ "decrease",
           effect_fine == "-~" ~ "moderate decrease",
           effect_fine == "--" ~ "strong decrease",
-          effect_fine == "?+" ~ "potential increase",
-          effect_fine == "?-" ~ "potential decrease",
           TRUE ~ "uncertain",
       ),
       trend_fine = factor(trend_fine,
@@ -397,11 +395,9 @@ summary_draw_list <- lapply(names(msci_draw_list), function(name) {
           "increase",
           "moderate increase",
           "stable",
-          "decrease",
           "moderate decrease",
+          "decrease",
           "strong decrease",
-          "potential increase",
-          "potential decrease",
           "uncertain"),
         ordered = TRUE)
     ) %>%
@@ -779,8 +775,6 @@ summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered),
             effect_fine == "-" ~ "decrease",
             effect_fine == "-~" ~ "moderate decrease",
             effect_fine == "--" ~ "strong decrease",
-            effect_fine == "?+" ~ "potential increase",
-            effect_fine == "?-" ~ "potential decrease",
             TRUE ~ "uncertain",
         ),
         trend_fine = factor(trend_fine,
@@ -789,11 +783,9 @@ summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered),
             "increase",
             "moderate increase",
             "stable",
-            "decrease",
             "moderate decrease",
+            "decrease",
             "strong decrease",
-            "potential increase",
-            "potential decrease",
             "uncertain"),
           ordered = TRUE)
       ) %>%
@@ -881,4 +873,30 @@ for (i in seq_along(summary_draw_combi_list)) {
       facet_wrap(~.data[[trait2]], scales = "free")
   print(p)
 }
+```
+
+
+# Export results
+
+We write out a .csv table with summary statistics for the research paper.
+We round to four decimals.
+
+```{r}
+traits_to_export <- c("Biotope", "LarvalFoodSource", "HostPlantSpecificity",
+                      "OverwinteringStage", "Voltinism", "ForewingLength",
+                      "colourVariability", "Distribution", "Migration")
+organised_summary_dfs <- lapply(traits_to_export, function(name) {
+  summary_draw_list[[name]] %>%
+    rename(trait_value = !!sym(name)) %>%
+    mutate(trait = name) %>%
+    select(trait, trait_value, n_species, msci.median, msci.lower, msci.upper,
+           trend_coarse, trend_fine, .point, .interval, .width) %>%
+    mutate(across(starts_with("msci"), ~ round(.x, 4)))
+})
+
+binded_summary_dfs <- do.call(rbind.data.frame, organised_summary_dfs)
+```
+
+```{r}
+write_csv(binded_summary_dfs, "output/tables/msci_trait_summary.csv")
 ```
