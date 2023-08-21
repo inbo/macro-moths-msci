@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it using these metadata.
+title: Moth trends and traits in Flanders (northern Belgium)
+authors:
+- given-names: Ward
+  family-names: Langeraert
+  affiliation: Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw,
+    Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium
+  orcid: 0000-0002-5900-8109
+- given-names: Dirk
+  family-names: Maes
+  affiliation: Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw,
+    Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium
+  orcid: 0000-0002-7947-3788
+keywords:
+- moths
+- Flanders
+- species change index
+- multi-species index
+- traits
+- pollinators
+- conservation
+- threatened species
+contact:
+- given-names: Ward
+  family-names: Langeraert
+  affiliation: Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw,
+    Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium
+  orcid: 0000-0002-5900-8109
+doi: ~
+license: CC-BY-4.0
+repository-code: https://github.com/inbo/macro-moths-msci/
+type: software
+abstract: Investigation of species traits as a guidance for moth conservation in the
+  highly anthropogenic European region of Flanders based on multi-species change indices.
