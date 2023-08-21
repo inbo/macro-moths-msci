@@ -192,7 +192,7 @@ summary_draw_pre$effect_fine <- classification(
     threshold = c(min_threshold, max_threshold))
 
 summary_draw_pre$effect_coarse <- coarse_classification(
-  summary_draw$effect_fine
+  summary_draw_pre$effect_fine
   )
 
 summary_draw <- summary_draw_pre %>%
