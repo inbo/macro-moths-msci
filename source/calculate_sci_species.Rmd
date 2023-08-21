@@ -215,8 +215,8 @@ summary_draw <- summary_draw_pre %>%
         "increase",
         "moderate increase",
         "stable",
-        "decrease",
         "moderate decrease",
+        "decrease",
         "strong decrease",
         "potential increase",
         "potential decrease",
@@ -349,8 +349,8 @@ extra_spec_df <- species_df_raw %>%
         "increase",
         "moderate increase",
         "stable",
-        "decrease",
         "moderate decrease",
+        "decrease",
         "strong decrease",
         "potential increase",
         "potential decrease",
@@ -401,7 +401,7 @@ summary_draw %>%
 
 We write out a .csv table with summary statistics for the research paper.
 We round to four decimals.
-We also include trends of the `r nrow(extra_spec_df)` who emerged or dissapeared (zero counts).
+We also include trends of the `r nrow(extra_spec_df)` who emerged or disappeared (zero counts).
 They have `NA` values for the posterior median and credible intervals.
 
 ```{r}

@@ -397,8 +397,8 @@ summary_draw_list <- lapply(names(msci_draw_list), function(name) {
           "increase",
           "moderate increase",
           "stable",
-          "decrease",
           "moderate decrease",
+          "decrease",
           "strong decrease",
           "potential increase",
           "potential decrease",
@@ -789,8 +789,8 @@ summary_draw_combi_list <- lapply(names(msci_draw_combi_list_filtered),
             "increase",
             "moderate increase",
             "stable",
-            "decrease",
             "moderate decrease",
+            "decrease",
             "strong decrease",
             "potential increase",
             "potential decrease",
@@ -890,7 +890,10 @@ We write out a .csv table with summary statistics for the research paper.
 We round to four decimals.
 
 ```{r}
-organised_summary_dfs <- lapply(names(summary_draw_list), function(name) {
+traits_to_export <- c("Biotope", "LarvalFoodSource", "HostPlantSpecificity",
+                      "OverwinteringStage", "Voltinism", "ForewingLength",
+                      "colourVariability", "Distribution", "Migration")
+organised_summary_dfs <- lapply(traits_to_export, function(name) {
   summary_draw_list[[name]] %>%
     rename(trait_value = !!sym(name)) %>%
     mutate(trait = name) %>%
