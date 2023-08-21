@@ -36,6 +36,7 @@ conflicted::conflicts_prefer(brms::rstudent_t)
 library(tidyverse)
 library(brms)
 library(tidybayes)
+library(effectclass)
 
 # Source
 source(here("source", "summarise_brms_models.R"))
@@ -174,59 +175,41 @@ sci_df <- as_tibble(
                values_to = "sci")
 
 # get summary statistics
-summary_draw <- sci_df %>%
+min_threshold <- -0.2
+max_threshold <- 0.25
+
+summary_draw_pre <- sci_df %>%
   group_by(species_nl) %>%
   median_qi(.width = 0.9) %>%
   ungroup() %>%
   rename(sci.median = sci,
          sci.lower = .lower,
          sci.upper = .upper)
-```
 
-```{r}
-library(INBOtheme)
-theme_set(theme_inbo(base_size = 12, transparent = TRUE))
-library(effectclass)
+summary_draw_pre$effect_fine <- classification(
+    lcl = summary_draw_pre$sci.lower,
+    ucl = summary_draw_pre$sci.upper,
+    threshold = c(min_threshold, max_threshold))
 
-min_threshold <- -0.2
-max_threshold <- 0.25
-limits <- c(-1.5, 10)
+summary_draw_pre$effect_coarse <- coarse_classification(
+  summary_draw$effect_fine
+  )
 
-summary_draw$effect_loose <- classification(
-  lcl = summary_draw$sci.lower,
-  ucl = summary_draw$sci.upper,
-  threshold = c(min_threshold, max_threshold))
-summary_draw$effect_coarse <- coarse_classification(summary_draw$effect_loose)
-
-summary_draw <- summary_draw %>%
+summary_draw <- summary_draw_pre %>%
   mutate(
-    effect_coarse2 = case_when(
-        effect_coarse == "+" ~ "increase",
-        effect_coarse == "-" ~ "decrease",
-        effect_coarse == "~" ~ "stable",
+    trend_fine = case_when(
+        effect_fine == "++" ~ "strong increase",
+        effect_fine == "+" ~ "increase",
+        effect_fine == "+~" ~ "moderate increase",
+        effect_fine == "~" ~ "stable",
+        effect_fine == "-" ~ "decrease",
+        effect_fine == "-~" ~ "moderate decrease",
+        effect_fine == "--" ~ "strong decrease",
+        effect_fine == "?+" ~ "potential increase",
+        effect_fine == "?-" ~ "potential decrease",
         TRUE ~ "uncertain",
     ),
-    effect_coarse2 = factor(effect_coarse2,
-      levels = c("increase",
-                 "stable",
-                 "decrease",
-                 "uncertain"),
-      ordered = TRUE)
-  ) %>%
-  mutate(
-    effect_loose2 = case_when(
-        effect_loose == "++" ~ "strong increase",
-        effect_loose == "+" ~ "increase",
-        effect_loose == "+~" ~ "moderate increase",
-        effect_loose == "~" ~ "stable",
-        effect_loose == "-" ~ "decrease",
-        effect_loose == "-~" ~ "moderate decrease",
-        effect_loose == "--" ~ "strong decrease",
-        effect_loose == "?+" ~ "potential increase",
-        effect_loose == "?-" ~ "potential decrease",
-        TRUE ~ "uncertain",
-    ),
-    effect_loose2 = factor(effect_loose2,
+    trend_fine = factor(trend_fine,
       levels = c(
         "strong increase",
         "increase",
@@ -240,8 +223,29 @@ summary_draw <- summary_draw %>%
         "uncertain"),
       ordered = TRUE)
   ) %>%
-  mutate(certainty = ifelse(effect_coarse2 == "uncertain", "uncertain trends",
-                            "certain trends"))
+  mutate(
+    trend_coarse = case_when(
+        effect_coarse == "+" ~ "increase",
+        effect_coarse == "-" ~ "decrease",
+        effect_coarse == "~" ~ "stable",
+        TRUE ~ "uncertain",
+    ),
+    trend_coarse = factor(trend_coarse,
+      levels = c("increase",
+                 "stable",
+                 "decrease",
+                 "uncertain"),
+      ordered = TRUE)
+  ) %>%
+  mutate(certainty = ifelse(trend_coarse == "uncertain", "uncertain trend",
+                            "certain trend"))
+```
+
+```{r}
+library(INBOtheme)
+theme_set(theme_inbo(base_size = 12, transparent = TRUE))
+
+limits <- c(-1.5, 10)
 ```
 
 We show the posterior median and 90 % credible intervals for each species.
@@ -261,7 +265,7 @@ summary_draw %>%
                      xend = ifelse(sci.upper > limits[2],
                                    limits[2], sci.upper),
                      yend = species_nl,
-                     colour = effect_loose2)) +
+                     colour = trend_fine)) +
     geom_point(aes(x = sci.median), size = 0.1, colour = "black") +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
@@ -286,7 +290,7 @@ Ordered according to effect:
 
 ```{r fig.height=10}
 summary_draw %>%
-  arrange(effect_loose2, desc(sci.median)) %>%
+  arrange(trend_fine, desc(sci.median)) %>%
   rownames_to_column(var = "id") %>%
   mutate(
     id = as.numeric(id),
@@ -297,7 +301,7 @@ summary_draw %>%
                      xend = ifelse(sci.upper > limits[2],
                                    limits[2], sci.upper),
                      yend = species_nl,
-                     colour = effect_loose2)) +
+                     colour = trend_fine)) +
     geom_point(aes(x = sci.median), size = 0.1, colour = "black") +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
@@ -326,20 +330,20 @@ extra_spec_df <- species_df_raw %>%
               names_from = period,
               values_from = n_grids) %>%
   filter(p1980_2012 == 0 | p2013_2022 == 0) %>%
-  mutate(effect_coarse2 = ifelse(p1980_2012 == 0,
+  mutate(trend_coarse = ifelse(p1980_2012 == 0,
                                  "increase",
                                  "decrease"),
-         effect_loose2 = ifelse(p1980_2012 == 0,
+         trend_fine = ifelse(p1980_2012 == 0,
                                 "strong increase",
                                 "strong decrease")) %>%
   mutate(
-    effect_coarse2 = factor(effect_coarse2,
+    trend_coarse = factor(trend_coarse,
       levels = c("increase",
                  "stable",
                  "decrease",
                  "uncertain"),
       ordered = TRUE),
-    effect_loose2 = factor(effect_loose2,
+    trend_fine = factor(trend_fine,
       levels = c(
         "strong increase",
         "increase",
@@ -358,7 +362,7 @@ extra_spec_df <- species_df_raw %>%
 ```{r}
 summary_draw %>%
   bind_rows(extra_spec_df) %>%
-  ggplot(aes(x = effect_coarse2, fill = effect_coarse2)) +
+  ggplot(aes(x = trend_coarse, fill = trend_coarse)) +
     geom_bar() +
     geom_text(aes(label = after_stat(count)),
               stat = "count",
@@ -377,7 +381,7 @@ summary_draw %>%
 ```{r}
 summary_draw %>%
   bind_rows(extra_spec_df) %>%
-  ggplot(aes(x = effect_loose2, fill = effect_loose2)) +
+  ggplot(aes(x = trend_fine, fill = trend_fine)) +
     geom_bar() +
     geom_text(aes(label = after_stat(count)),
               stat = "count",
@@ -390,4 +394,21 @@ summary_draw %>%
           axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     labs(y = "Number of species",
          x = "")
+```
+
+
+# Export results
+
+We write out a .csv table with summary statistics for the research paper.
+We round to four decimals.
+
+```{r}
+organised_summary_df <- summary_draw %>%
+  select(species_nl, sci.median, sci.lower, sci.upper,
+         trend_coarse, trend_fine, certainty, .point, .interval, .width) %>%
+  mutate(across(starts_with("sci"), ~ round(.x, 4)))
+```
+
+```{r}
+write_csv(organised_summary_df, "output/tables/sci_species_summary.csv")
 ```

@@ -882,3 +882,26 @@ for (i in seq_along(summary_draw_combi_list)) {
   print(p)
 }
 ```
+
+
+# Export results
+
+We write out a .csv table with summary statistics for the research paper.
+We round to four decimals.
+
+```{r}
+organised_summary_dfs <- lapply(names(summary_draw_list), function(name) {
+  summary_draw_list[[name]] %>%
+    rename(trait_value = !!sym(name)) %>%
+    mutate(trait = name) %>%
+    select(trait, trait_value, n_species, msci.median, msci.lower, msci.upper,
+           trend_coarse, trend_fine, certainty, .point, .interval, .width) %>%
+    mutate(across(starts_with("msci"), ~ round(.x, 4)))
+})
+
+binded_summary_dfs <- do.call(rbind.data.frame, organised_summary_dfs)
+```
+
+```{r}
+write_csv(binded_summary_dfs, "output/tables/msci_trait_summary.csv")
+```
