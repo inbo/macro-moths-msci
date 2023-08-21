@@ -42,13 +42,14 @@ Investigation of species traits as a guidance for moth conservation in the highl
 ├── media                          ├ folder to store media
 ├── output                         ├ folder to store outputs
 ├── source
-│   ├── brms_cache                 ├ store brms models 
-│   │   └── ...                    │
 │   ├── ...                        ├ markdown and R files
-│   └── references.json            ├ references markdown files
+│   └── brms_cache                 ├ store brms models 
+│   │   └── ...                    │
 ├── checklist.yml                  ├ options checklist package (https://github.com/inbo/checklist)
-├── LICENSE.md                     ├ licence
 ├── macro-moths-msci.Rproj         ├ R project
 ├── README.md                      ├ project description
+├── LICENSE.md                     ├ licence
+├── CITATION.cff                   ├ citation info
+├── .zenodo.json                   ├ zenodo metadata
 └── .gitignore                     ├ files to ignore
 ```
