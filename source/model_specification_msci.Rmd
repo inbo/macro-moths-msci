@@ -1069,6 +1069,14 @@ index_breaks <- function(x) {
   c(z, 0, -z)
 }
 
+minor_breaks <- function(x) {
+  breaks <- unique(abs(index_breaks(x)))
+  out <- vector(length = length(breaks) - 1)
+  while() {
+    
+  }
+}
+
 index_breaks_rev <- function(x) {
   exp(index_breaks(x))
 }
@@ -1101,11 +1109,6 @@ msci_draws_figtest2 %>%
                                   "firebrick1",
                                   "skyblue"),
                       drop = FALSE) +
-    scale_x_continuous(breaks = index_breaks, labels = index_labels,
-                       sec.axis = sec_axis(~ exp(.),
-                        breaks = index_breaks_rev(msci_draws_figtest2$msci),
-                        labels = index_labels_rev(msci_draws_figtest2$msci),
-                        name = "Proportional change")) +
     labs(y = "",
          x = "Multi-Species Change Index",
          fill = "") +
@@ -1125,5 +1128,11 @@ msci_draws_figtest2 %>%
     annotate("segment",
              x = c(0 - 0.02, min_threshold - 0.02), y = c(0.55, 0.55),
              xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.55, 0.55),
-             arrow = arrow(type = "closed", length = unit(0.01, "npc")))
+             arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+    scale_x_continuous(breaks = index_breaks, labels = index_labels,
+                       minor_breaks = minor_breaks,
+                       sec.axis = sec_axis(~ exp(.),
+                        breaks = index_breaks_rev(msci_draws_figtest2$msci),
+                        labels = index_labels_rev(msci_draws_figtest2$msci),
+                        name = "Proportional change"))
 ```
