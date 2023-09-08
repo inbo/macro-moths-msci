@@ -1134,6 +1134,7 @@ msci_draws_figtest2 %>%
              arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
+                       limits = c(-log(2), log(2)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(msci_draws_figtest2$msci),
                         labels = index_labels_rev(msci_draws_figtest2$msci),
