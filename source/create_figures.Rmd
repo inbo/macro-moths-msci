@@ -48,7 +48,8 @@ msci_draw_list_log_raw <- readRDS(file.path(data_path,
 ```{r}
 msci_draw_list_log <- lapply(msci_draw_list_log_raw, function(df) {
   df %>%
-    mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"))
+    mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
+           label = reorder(label, msci.median,  decreasing = FALSE))
   })
 ```
 
@@ -63,10 +64,9 @@ index_labels <- function(x) {
 
 index_breaks <- function(x) {
   z <- 1 - c(
-    9 / 10, 4 / 5, 3 / 4, 2 / 3, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 10, 0
+    4 / 5, 3 / 4, 2 / 3, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 0
   )
   z <- log(sort(z))
-  z <- z[which(z >= min(-abs(x)))[1] + -1:3]
   c(z, 0, -z)
 }
 
@@ -137,7 +137,7 @@ p_biotope <- msci_draw_list_log$Biotope %>%
     ) +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
-                       limits = c(-log(3), log(3)),
+                       limits = c(-log(2.5), log(2.5)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(
                           msci_draw_list_log$Biotope$msci.draw
@@ -148,7 +148,7 @@ p_biotope <- msci_draw_list_log$Biotope %>%
                         name = "Proportional change"))
 
 ggsave(file.path("media", "msci_biotope.jpg"),
-       p_biotope, 
+       p_biotope,
        width = 10,
        height = 10)
 ```
@@ -192,7 +192,7 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
     ) +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
-                       limits = c(-log(3), log(3)),
+                       limits = c(-log(2.5), log(2.5)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(
                           msci_draw_list_log$HostPlantSpecificity$msci.draw
@@ -203,7 +203,7 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
                         name = "Proportional change"))
 
 ggsave(file.path("media", "msci_hostplantspecificity.jpg"),
-       p_hostplantspecificity, 
+       p_hostplantspecificity,
        width = 10,
        height = 5)
 ```
