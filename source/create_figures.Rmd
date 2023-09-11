@@ -29,7 +29,7 @@ conflicted::conflicts_prefer(dplyr::select)
 # Packages
 library(tidyverse)
 library(INBOtheme)
-theme_set(theme_inbo(base_size = 12, transparent = TRUE))
+theme_set(theme_inbo(base_size = 10, transparent = TRUE))
 ```
 
 # Goal
@@ -98,7 +98,7 @@ max_threshold <- log(1.25)
 ```
 
 
-## test
+## Biotope
 
 ```{r}
 p_biotope <- msci_draw_list_log$Biotope %>%
@@ -148,12 +148,18 @@ p_biotope <- msci_draw_list_log$Biotope %>%
                           msci_draw_list_log$Biotope$msci.draw
                           ),
                         name = "Proportional change"))
+p_biotope
+```
 
+
+```{r}
 ggsave(file.path("media", "msci_biotope.jpg"),
        p_biotope,
        width = 10,
        height = 10)
 ```
+
+## Host plant specificity
 
 ```{r}
 p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
@@ -203,7 +209,11 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
                           msci_draw_list_log$HostPlantSpecificity$msci.draw
                           ),
                         name = "Proportional change"))
+p_hostplantspecificity
+```
 
+
+```{r}
 ggsave(file.path("media", "msci_hostplantspecificity.jpg"),
        p_hostplantspecificity,
        width = 10,
