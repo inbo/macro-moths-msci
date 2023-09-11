@@ -28,6 +28,8 @@ conflicted::conflicts_prefer(dplyr::select)
 
 # Packages
 library(tidyverse)
+library(INBOtheme)
+theme_set(theme_inbo(base_size = 12, transparent = TRUE))
 ```
 
 # Goal
