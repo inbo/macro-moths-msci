@@ -39,13 +39,26 @@ Create nice figures for the research paper.
 # Load data
 
 ```{r load-data}
-data_path <- file.path("output", "r_objects")
+data_path1 <- file.path("output", "tables")
+data_path2 <- file.path("output", "r_objects")
 
-msci_draw_list_log_raw <- readRDS(file.path(data_path,
+# SCI
+sci_species_summary <- read_csv(file.path(data_path1,
+                                          "sci_species_summary.csv"))
+
+# MSCI
+msci_draw_list_log_raw <- readRDS(file.path(data_path2,
                                             "msci_draw_list_log.rds"))
 ```
 
-# Prepare data
+
+# SCI figures
+
+...
+
+
+# MSCI figures
+## Prepare data
 
 ```{r}
 msci_draw_list_log <- lapply(msci_draw_list_log_raw, function(df) {
@@ -55,8 +68,7 @@ msci_draw_list_log <- lapply(msci_draw_list_log_raw, function(df) {
   })
 ```
 
-# MSCI figures
-## Set general themes and functions
+## Set general functions and thresholds
 
 ```{r}
 index_labels <- function(x) {
