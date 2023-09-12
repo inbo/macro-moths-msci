@@ -130,7 +130,13 @@ p_biotope <- msci_draw_list_log$Biotope %>%
                         labels = index_labels_rev(
                           msci_draw_list_log$Biotope$msci.draw
                           ),
-                        name = "Proportional change"))
+                        name = "Proportional change")) +
+  theme(
+    legend.position = c(1, 0),
+    legend.justification = c(1, 0),
+    legend.background = element_rect(fill = "white", color = "darkgrey"),
+    legend.margin = margin(6, 6, 6, 6)
+  )
 
 p_biotope1 <- p_biotope +
   annotate("text", label = c("increase", "strong increase"),
@@ -148,18 +154,16 @@ p_biotope1 <- p_biotope +
            xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.6, 0.6),
            arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
   theme(
-    legend.position = c(1, 0),
-    legend.justification = c(1, 0),
-    legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6),
-    axis.text.x = element_text(size = 10),
-    axis.text.y = element_text(size = 12)
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 14),
+    axis.title = element_text(size = 16)
   ) +
-  theme(legend.key.size = unit(0.5, "cm"), #change legend key size
-        legend.key.height = unit(0.5, "cm"), #change legend key height
-        legend.key.width = unit(0.5, "cm"), #change legend key width
-        legend.title = element_text(size = 10), #change legend title font size
-        legend.text = element_text(size = 8) #change legend text font size
+  theme(
+    legend.key.size = unit(0.7, "cm"), #change legend key size
+    legend.key.height = unit(0.7, "cm"), #change legend key height
+    legend.key.width = unit(0.7, "cm"), #change legend key width
+    legend.title = element_text(size = 12), #change legend title font size
+    legend.text = element_text(size = 10) #change legend text font size
   )
 
 p_biotope1
@@ -206,7 +210,13 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
                         labels = index_labels_rev(
                           msci_draw_list_log$HostPlantSpecificity$msci.draw
                           ),
-                        name = "Proportional change"))
+                        name = "Proportional change")) +
+  theme(
+    legend.position = c(1, 0),
+    legend.justification = c(1, 0),
+    legend.background = element_rect(fill = "white", color = "darkgrey"),
+    legend.margin = margin(6, 6, 6, 6)
+  )
 
 p_hostplantspecificity1 <- p_hostplantspecificity +
   annotate("text", label = c("increase", "strong increase"),
@@ -224,18 +234,16 @@ p_hostplantspecificity1 <- p_hostplantspecificity +
            xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.55, 0.55),
            arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
   theme(
-    legend.position = c(1, 0),
-    legend.justification = c(1, 0),
-    legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6),
     axis.text.x = element_text(size = 10),
-    axis.text.y = element_text(size = 12)
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
   ) +
-  theme(legend.key.size = unit(0.5, "cm"), #change legend key size
-        legend.key.height = unit(0.5, "cm"), #change legend key height
-        legend.key.width = unit(0.5, "cm"), #change legend key width
-        legend.title = element_text(size = 10), #change legend title font size
-        legend.text = element_text(size = 8) #change legend text font size
+  theme(
+    legend.key.size = unit(0.5, "cm"), #change legend key size
+    legend.key.height = unit(0.5, "cm"), #change legend key height
+    legend.key.width = unit(0.5, "cm"), #change legend key width
+    legend.title = element_text(size = 10), #change legend title font size
+    legend.text = element_text(size = 8) #change legend text font size
   )
 
 p_hostplantspecificity1
