@@ -131,28 +131,29 @@ p_biotope <- msci_draw_list_log$Biotope %>%
                           msci_draw_list_log$Biotope$msci.draw
                           ),
                         name = "Proportional change")) +
-  theme(
-    legend.position = c(1, 0),
-    legend.justification = c(1, 0),
-    legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6)
-  )
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+    )
 
 p_biotope1 <- p_biotope +
   annotate("text", label = c("increase", "strong increase"),
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.5, 0.5),
-           size = 2, hjust = "left") +
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.3, 0.3),
+           size = 2.6, hjust = "left") +
   annotate("segment",
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.6, 0.6),
-           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.6, 0.6),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.4, 0.4),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.4, 0.4),
            arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
   annotate("text", label = c("decrease", "strong decrease"),
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.5, 0.5),
-           size = 2, hjust = "right") +
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.3, 0.3),
+           size = 2.6, hjust = "right") +
   annotate("segment",
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.6, 0.6),
-           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.6, 0.6),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.4, 0.4),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.4, 0.4),
            arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
   theme(
     axis.text.x = element_text(size = 12),
     axis.text.y = element_text(size = 14),
@@ -177,6 +178,174 @@ ggsave(file.path("media", "msci_biotope_conference.jpg"),
        width = 8,
        height = 8)
 ```
+
+
+## Larval food source
+
+We do not include trait value 'Diverse'.
+
+```{r}
+p_larvalfoodsource <- msci_draw_list_log$LarvalFoodSource %>%
+  filter(trait_value != "Diverse") %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(breaks = index_breaks, labels = index_labels,
+                       minor_breaks = minor_breaks,
+                       limits = c(-log(2.4), log(2.4)),
+                       sec.axis = sec_axis(~ exp(.),
+                        breaks = index_breaks_rev(
+                          msci_draw_list_log$LarvalFoodSource$msci.draw
+                          ),
+                        labels = index_labels_rev(
+                          msci_draw_list_log$LarvalFoodSource$msci.draw
+                          ),
+                        name = "Proportional change")) +
+  theme(
+    legend.position = c(1, 0),
+    legend.justification = c(1, 0),
+    legend.background = element_rect(fill = "white", color = "darkgrey"),
+    legend.margin = margin(6, 6, 6, 6)
+  )
+
+p_larvalfoodsource1 <- p_larvalfoodsource +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+  ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), #change legend key size
+    legend.key.height = unit(0.5, "cm"), #change legend key height
+    legend.key.width = unit(0.5, "cm"), #change legend key width
+    legend.title = element_text(size = 10), #change legend title font size
+    legend.text = element_text(size = 8) #change legend text font size
+  )
+
+p_larvalfoodsource1
+```
+
+
+```{r}
+ggsave(file.path("media", "msci_larvalfoodsource_conference.jpg"),
+       p_larvalfoodsource1,
+       dpi = 300,
+       width = 8,
+       height = 4)
+```
+
+
+## Larval food source
+
+```{r}
+p_overwinteringstage <- msci_draw_list_log$OverwinteringStage %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(breaks = index_breaks, labels = index_labels,
+                       minor_breaks = minor_breaks,
+                       limits = c(-log(2.4), log(2.4)),
+                       sec.axis = sec_axis(~ exp(.),
+                        breaks = index_breaks_rev(
+                          msci_draw_list_log$OverwinteringStage$msci.draw
+                          ),
+                        labels = index_labels_rev(
+                          msci_draw_list_log$OverwinteringStage$msci.draw
+                          ),
+                        name = "Proportional change")) +
+  theme(
+    legend.position = c(1, 0),
+    legend.justification = c(1, 0),
+    legend.background = element_rect(fill = "white", color = "darkgrey"),
+    legend.margin = margin(6, 6, 6, 6)
+  )
+
+p_overwinteringstage1 <- p_overwinteringstage +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+  ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), #change legend key size
+    legend.key.height = unit(0.5, "cm"), #change legend key height
+    legend.key.width = unit(0.5, "cm"), #change legend key width
+    legend.title = element_text(size = 10), #change legend title font size
+    legend.text = element_text(size = 8) #change legend text font size
+  )
+
+p_overwinteringstage1
+```
+
+
+```{r}
+ggsave(file.path("media", "msci_overwinteringstage_conference.jpg"),
+       p_overwinteringstage1,
+       dpi = 300,
+       width = 8,
+       height = 4)
+```
+
 
 ## Host plant specificity
 
@@ -220,19 +389,20 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
 
 p_hostplantspecificity1 <- p_hostplantspecificity +
   annotate("text", label = c("increase", "strong increase"),
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.5, 0.5),
-           size = 2, hjust = "left") +
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
   annotate("segment",
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.55, 0.55),
-           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.55, 0.55),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
            arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
   annotate("text", label = c("decrease", "strong decrease"),
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.5, 0.5),
-           size = 2, hjust = "right") +
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
   annotate("segment",
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.55, 0.55),
-           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.55, 0.55),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
            arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
   theme(
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 12),
