@@ -346,7 +346,7 @@ ggsave(file.path("media", "msci_overwinteringstage_conference.jpg"),
        height = 4)
 ```
 
-## Overwintering stage
+## Forewing length
 
 ```{r}
 p_forewinglength <- msci_draw_list_log$ForewingLength %>%
@@ -422,6 +422,88 @@ p_forewinglength1
 ```{r}
 ggsave(file.path("media", "msci_forewinglength_conference.jpg"),
        p_forewinglength1,
+       dpi = 300,
+       width = 8,
+       height = 4)
+```
+
+
+## Distribution
+
+```{r}
+p_distribution <- msci_draw_list_log$Distribution %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(breaks = index_breaks, labels = index_labels,
+                       minor_breaks = minor_breaks,
+                       limits = c(-log(2.4), log(2.4)),
+                       sec.axis = sec_axis(~ exp(.),
+                        breaks = index_breaks_rev(
+                          msci_draw_list_log$Distribution$msci.draw
+                          ),
+                        labels = index_labels_rev(
+                          msci_draw_list_log$Distribution$msci.draw
+                          ),
+                        name = "Proportional change")) +
+  theme(
+    legend.position = c(1, 0),
+    legend.justification = c(1, 0),
+    legend.background = element_rect(fill = "white", color = "darkgrey"),
+    legend.margin = margin(6, 6, 6, 6)
+  )
+
+p_distribution1 <- p_distribution +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+  ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
+  )
+
+p_distribution1
+```
+
+
+```{r}
+ggsave(file.path("media", "msci_distribution_conference.jpg"),
+       p_distribution1,
        dpi = 300,
        width = 8,
        height = 4)
