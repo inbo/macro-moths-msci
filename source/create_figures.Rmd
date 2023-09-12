@@ -29,7 +29,7 @@ conflicted::conflicts_prefer(dplyr::select)
 # Packages
 library(tidyverse)
 library(INBOtheme)
-theme_set(theme_inbo(base_size = 10, transparent = TRUE))
+theme_set(theme_inbo(transparent = TRUE))
 ```
 
 # Goal
@@ -66,7 +66,7 @@ index_labels <- function(x) {
 
 index_breaks <- function(x) {
   z <- 1 - c(
-    4 / 5, 3 / 4, 2 / 3, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 0
+    4 / 5, 3 / 4, 2 / 3, 1 / 2, 1 / 3, 1 / 5
   )
   z <- log(sort(z))
   c(z, 0, -z)
@@ -132,26 +132,34 @@ p_biotope <- msci_draw_list_log$Biotope %>%
                           ),
                         name = "Proportional change"))
 
-p_biotope1 <- p_biotope + 
+p_biotope1 <- p_biotope +
   annotate("text", label = c("increase", "strong increase"),
            x = c(0 + 0.02, max_threshold + 0.02), y = c(0.5, 0.5),
            size = 2, hjust = "left") +
   annotate("segment",
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.55, 0.55),
-           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.55, 0.55),
-           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.6, 0.6),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.6, 0.6),
+           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
   annotate("text", label = c("decrease", "strong decrease"),
            x = c(0 - 0.02, min_threshold - 0.02), y = c(0.5, 0.5),
            size = 2, hjust = "right") +
   annotate("segment",
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.55, 0.55),
-           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.55, 0.55),
-           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.6, 0.6),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.6, 0.6),
+           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
   theme(
     legend.position = c(1, 0),
     legend.justification = c(1, 0),
     legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6)
+    legend.margin = margin(6, 6, 6, 6),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12)
+  ) +
+  theme(legend.key.size = unit(0.5, "cm"), #change legend key size
+        legend.key.height = unit(0.5, "cm"), #change legend key height
+        legend.key.width = unit(0.5, "cm"), #change legend key width
+        legend.title = element_text(size = 10), #change legend title font size
+        legend.text = element_text(size = 8) #change legend text font size
   )
 
 p_biotope1
@@ -163,7 +171,7 @@ ggsave(file.path("media", "msci_biotope_conference.jpg"),
        p_biotope1,
        dpi = 300,
        width = 8,
-       height = 4)
+       height = 8)
 ```
 
 ## Host plant specificity
@@ -219,7 +227,15 @@ p_hostplantspecificity1 <- p_hostplantspecificity +
     legend.position = c(1, 0),
     legend.justification = c(1, 0),
     legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6)
+    legend.margin = margin(6, 6, 6, 6),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12)
+  ) +
+  theme(legend.key.size = unit(0.5, "cm"), #change legend key size
+        legend.key.height = unit(0.5, "cm"), #change legend key height
+        legend.key.width = unit(0.5, "cm"), #change legend key width
+        legend.title = element_text(size = 10), #change legend title font size
+        legend.text = element_text(size = 8) #change legend text font size
   )
 
 p_hostplantspecificity1
