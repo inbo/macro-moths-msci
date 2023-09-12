@@ -100,10 +100,54 @@ ggsave(file.path("media", "sci_barplot_conference.jpg"),
 ## Prepare data
 
 ```{r}
-msci_draw_list_log <- lapply(msci_draw_list_log_raw, function(df) {
-  df %>%
-    mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
-           label = reorder(label, msci.median,  decreasing = FALSE))
+msci_draw_list_log <- lapply(msci_draw_list_log_raw,
+  function(df) {
+  
+    if ("ForewingLength" %in% unique(df$trait)) {
+      out <- df %>%
+        mutate(ForewingLength = factor(.data$ForewingLength,
+                             levels = c(
+                               "VerySmall",
+                               "Small",
+                               "Intermediate",
+                               "Large",
+                               "VeryLarge"
+                             ), ordered = TRUE)
+        )
+    } else if ("Voltinism" %in% unique(df$trait)) {
+      out <- df %>%
+        mutate(Voltinism = factor(.data$Voltinism,
+                                     levels = c(
+                                       "1",
+                                       "2"
+                                     ), ordered = TRUE)
+        )
+    } else if ("OverwinteringStage" %in% unique(df$trait)) {
+      out <- df %>%
+        mutate(OverwinteringStage = factor(.data$OverwinteringStage,
+                                           levels = c(
+                                             "Egg",
+                                             "Caterpillar",
+                                             "Pupa",
+                                             "Adult"
+                                           ), ordered = TRUE)
+        )
+    } else if ("HostPlantSpecificity" %in% unique(df$trait)) {
+      out <- df %>%
+        mutate(HostPlantSpecificity = factor(.data$HostPlantSpecificity,
+                              levels = c(
+                                "Monophagous",
+                                "Oligophagous",
+                                "Polyphagous"
+                              ), ordered = TRUE)
+        )
+    } else {
+      out <- df %>%
+        mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
+               label = reorder(label, msci.median,  decreasing = FALSE))
+    }
+    
+    retu
   })
 ```
 
@@ -152,6 +196,19 @@ max_threshold <- log(1.25)
 
 ```{r}
 p_biotope <- msci_draw_list_log$Biotope %>%
+  mutate(trait_value_new = case_when(
+    trait_value == "WoodlandDeciduous" ~ "Woodland (deciduous)",
+    trait_value == "WoodlandConiferous" ~ "Woodland (coniferous)",
+    trait_value == "HeathlandWet" ~ "Heathland (wet)",
+    trait_value == "HeathlandWet" ~ "Heathland (dry)",
+    trait_value == "GrasslandNutrientPoor" ~ "Grassland (nutrientpoor)",
+    trait_value == "GrasslandNutrientRich" ~ "Grassland (nutrientrich)",
+    trait_value == "Hedges & orchards" ~ "Hedges and orchards",
+    TRUE ~ trait_value
+    )
+  ) %>%
+  mutate(label = paste0(trait_value_new, "\n", "(n = ", n_species, ")"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
@@ -190,23 +247,23 @@ p_biotope <- msci_draw_list_log$Biotope %>%
 p_biotope1 <- p_biotope +
   annotate("text", label = c("increase", "strong increase"),
            x = c(0 + 0.02, max_threshold + 0.02), y = c(0.3, 0.3),
-           size = 2.6, hjust = "left") +
+           size = 2.5, hjust = "left") +
   annotate("segment",
            x = c(0 + 0.02, max_threshold + 0.02), y = c(0.4, 0.4),
            xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.4, 0.4),
            arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
   annotate("text", label = c("decrease", "strong decrease"),
            x = c(0 - 0.02, min_threshold - 0.02), y = c(0.3, 0.3),
-           size = 2.6, hjust = "right") +
+           size = 2.5, hjust = "right") +
   annotate("segment",
            x = c(0 - 0.02, min_threshold - 0.02), y = c(0.4, 0.4),
            xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.4, 0.4),
            arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
   expand_limits(y = c(0.001, 0)) +
   theme(
-    axis.text.x = element_text(size = 12),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16)
+    axis.text.x = element_text(size = 11),
+    axis.text.y = element_text(size = 13),
+    axis.title = element_text(size = 15)
     ) +
   theme(
     legend.key.size = unit(0.7, "cm"), # Change legend key size
@@ -236,6 +293,14 @@ We do not include trait value 'Diverse'.
 ```{r}
 p_larvalfoodsource <- msci_draw_list_log$LarvalFoodSource %>%
   filter(trait_value != "Diverse") %>%
+  mutate(trait_value_new = case_when(
+    trait_value == "Shrubs_Trees" ~ "Shrubs and trees",
+    trait_value == "Lichens_Mosses" ~ "Lichens and mosses",
+    TRUE ~ trait_value
+    )
+  ) %>%
+  mutate(label = paste0(trait_value_new, "\n", "(n = ", n_species, ")"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
@@ -317,6 +382,11 @@ ggsave(file.path("media", "msci_larvalfoodsource_conference.jpg"),
 
 ```{r}
 p_overwinteringstage <- msci_draw_list_log$OverwinteringStage %>%
+  arrange(trait_value) %>%
+  rownames_to_column("order") %>%
+  mutate(order = as.numeric(order)) %>%
+  mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
+         label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
