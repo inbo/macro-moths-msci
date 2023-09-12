@@ -173,7 +173,7 @@ p_biotope <- msci_draw_list_log$Biotope %>%
          fill = "Trend") +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
-                       limits = c(-log(3.1), log(3.1)),
+                       limits = c(-log(3.3), log(3.3)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(
                           msci_draw_list_log$Biotope$msci.draw
@@ -258,7 +258,7 @@ p_larvalfoodsource <- msci_draw_list_log$LarvalFoodSource %>%
          fill = "Trend") +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
-                       limits = c(-log(3.1), log(3.1)),
+                       limits = c(-log(3.3), log(3.3)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(
                           msci_draw_list_log$LarvalFoodSource$msci.draw
@@ -340,7 +340,7 @@ p_overwinteringstage <- msci_draw_list_log$OverwinteringStage %>%
          fill = "Trend") +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
-                       limits = c(-log(3.1), log(3.1)),
+                       limits = c(-log(3.3), log(3.3)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(
                           msci_draw_list_log$OverwinteringStage$msci.draw
@@ -421,7 +421,7 @@ p_forewinglength <- msci_draw_list_log$ForewingLength %>%
          fill = "Trend") +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
-                       limits = c(-log(3.1), log(3.1)),
+                       limits = c(-log(3.3), log(3.3)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(
                           msci_draw_list_log$ForewingLength$msci.draw
@@ -503,7 +503,7 @@ p_distribution <- msci_draw_list_log$Distribution %>%
          fill = "Trend") +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
-                       limits = c(-log(3.1), log(3.1)),
+                       limits = c(-log(3.3), log(3.3)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(
                           msci_draw_list_log$Distribution$msci.draw
@@ -585,7 +585,7 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
          fill = "Trend") +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
-                       limits = c(-log(3.1), log(3.1)),
+                       limits = c(-log(3.3), log(3.3)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(
                           msci_draw_list_log$HostPlantSpecificity$msci.draw
@@ -667,7 +667,7 @@ p_voltinism <- msci_draw_list_log$Voltinism %>%
          fill = "Trend") +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
-                       limits = c(-log(3.1), log(3.1)),
+                       limits = c(-log(3.3), log(3.3)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(
                           msci_draw_list_log$Voltinism$msci.draw
@@ -749,7 +749,7 @@ p_migration <- msci_draw_list_log$Migration %>%
          fill = "Trend") +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
-                       limits = c(-log(3.1), log(3.1)),
+                       limits = c(-log(3.3), log(3.3)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(
                           msci_draw_list_log$Migration$msci.draw
