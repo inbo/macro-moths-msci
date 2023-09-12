@@ -56,6 +56,14 @@ msci_draw_list_log_raw <- readRDS(file.path(data_path2,
 
 ```{r}
 sci_barplot <- sci_species_summary %>%
+  mutate(
+    trend_coarse = factor(trend_coarse,
+                          levels = c("increase",
+                                     "stable",
+                                     "decrease",
+                                     "uncertain"),
+                          ordered = TRUE)
+  ) %>%
   ggplot(aes(x = trend_coarse, fill = trend_coarse)) +
     geom_bar() +
     geom_text(aes(label = after_stat(count)),
@@ -70,7 +78,7 @@ sci_barplot <- sci_species_summary %>%
                       drop = FALSE) +
     theme(legend.position = "") +
     labs(y = "Number of species",
-         x = "Trend") + 
+         x = "Trend") +
     theme(
       axis.text.x = element_text(size = 12),
       axis.text.y = element_text(size = 12),
