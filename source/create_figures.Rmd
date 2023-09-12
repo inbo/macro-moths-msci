@@ -101,7 +101,7 @@ max_threshold <- log(1.25)
 ## Biotope
 
 ```{r}
-p_biotope1 <- msci_draw_list_log$Biotope %>%
+p_biotope <- msci_draw_list_log$Biotope %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
@@ -117,20 +117,6 @@ p_biotope1 <- msci_draw_list_log$Biotope %>%
                                   "firebrick1",
                                   "skyblue"),
                       drop = FALSE) +
-    annotate("text", label = c("increase", "strong increase"),
-             x = c(0 + 0.02, max_threshold + 0.02), y = c(0.5, 0.5),
-             size = 2, hjust = "left") +
-    annotate("segment",
-             x = c(0 + 0.02, max_threshold + 0.02), y = c(0.55, 0.55),
-             xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.55, 0.55),
-             arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
-    annotate("text", label = c("decrease", "strong decrease"),
-             x = c(0 - 0.02, min_threshold - 0.02), y = c(0.5, 0.5),
-             size = 2, hjust = "right") +
-    annotate("segment",
-             x = c(0 - 0.02, min_threshold - 0.02), y = c(0.55, 0.55),
-             xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.55, 0.55),
-             arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
     labs(y = "",
          x = "Multi-Species Change Index",
          fill = "Trend") +
@@ -144,13 +130,30 @@ p_biotope1 <- msci_draw_list_log$Biotope %>%
                         labels = index_labels_rev(
                           msci_draw_list_log$Biotope$msci.draw
                           ),
-                        name = "Proportional change")) +
-    theme(
-      legend.position = c(1, 0),
-      legend.justification = c(1, 0),
-      legend.background = element_rect(fill = "white", color = "darkgrey"),
-      legend.margin = margin(6, 6, 6, 6)
-    )
+                        name = "Proportional change"))
+
+p_biotope1 <- p_biotope + 
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.5, 0.5),
+           size = 2, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.55, 0.55),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.55, 0.55),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.5, 0.5),
+           size = 2, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.55, 0.55),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.55, 0.55),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  theme(
+    legend.position = c(1, 0),
+    legend.justification = c(1, 0),
+    legend.background = element_rect(fill = "white", color = "darkgrey"),
+    legend.margin = margin(6, 6, 6, 6)
+  )
+
 p_biotope1
 ```
 
@@ -166,7 +169,7 @@ ggsave(file.path("media", "msci_biotope_conference.jpg"),
 ## Host plant specificity
 
 ```{r}
-p_hostplantspecificity1 <- msci_draw_list_log$HostPlantSpecificity %>%
+p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
@@ -182,20 +185,6 @@ p_hostplantspecificity1 <- msci_draw_list_log$HostPlantSpecificity %>%
                                   "firebrick1",
                                   "skyblue"),
                       drop = FALSE) +
-    annotate("text", label = c("increase", "strong increase"),
-             x = c(0 + 0.02, max_threshold + 0.02), y = c(0.5, 0.5),
-             size = 2, hjust = "left") +
-    annotate("segment",
-             x = c(0 + 0.02, max_threshold + 0.02), y = c(0.55, 0.55),
-             xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.55, 0.55),
-             arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
-    annotate("text", label = c("decrease", "strong decrease"),
-             x = c(0 - 0.02, min_threshold - 0.02), y = c(0.5, 0.5),
-             size = 2, hjust = "right") +
-    annotate("segment",
-             x = c(0 - 0.02, min_threshold - 0.02), y = c(0.55, 0.55),
-             xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.55, 0.55),
-             arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
     labs(y = "",
          x = "Multi-Species Change Index",
          fill = "Trend") +
@@ -209,13 +198,30 @@ p_hostplantspecificity1 <- msci_draw_list_log$HostPlantSpecificity %>%
                         labels = index_labels_rev(
                           msci_draw_list_log$HostPlantSpecificity$msci.draw
                           ),
-                        name = "Proportional change")) +
-    theme(
-      legend.position = c(1, 0),
-      legend.justification = c(1, 0),
-      legend.background = element_rect(fill = "white", color = "darkgrey"),
-      legend.margin = margin(6, 6, 6, 6)
-    )
+                        name = "Proportional change"))
+
+p_hostplantspecificity1 <- p_hostplantspecificity +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.5, 0.5),
+           size = 2, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.55, 0.55),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.55, 0.55),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.5, 0.5),
+           size = 2, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.55, 0.55),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.55, 0.55),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  theme(
+    legend.position = c(1, 0),
+    legend.justification = c(1, 0),
+    legend.background = element_rect(fill = "white", color = "darkgrey"),
+    legend.margin = margin(6, 6, 6, 6)
+  )
+
 p_hostplantspecificity1
 ```
 
