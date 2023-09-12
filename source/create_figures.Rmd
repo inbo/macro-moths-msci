@@ -160,11 +160,11 @@ p_biotope1 <- p_biotope +
     axis.title = element_text(size = 16)
   ) +
   theme(
-    legend.key.size = unit(0.7, "cm"), #change legend key size
-    legend.key.height = unit(0.7, "cm"), #change legend key height
-    legend.key.width = unit(0.7, "cm"), #change legend key width
-    legend.title = element_text(size = 12), #change legend title font size
-    legend.text = element_text(size = 10) #change legend text font size
+    legend.key.size = unit(0.7, "cm"), # Change legend key size
+    legend.key.height = unit(0.7, "cm"), # Change legend key height
+    legend.key.width = unit(0.7, "cm"), # Change legend key width
+    legend.title = element_text(size = 12), # Change legend title font size
+    legend.text = element_text(size = 10) # Change legend text font size
   )
 
 p_biotope1
@@ -245,11 +245,11 @@ p_larvalfoodsource1 <- p_larvalfoodsource +
     axis.title = element_text(size = 14)
   ) +
   theme(
-    legend.key.size = unit(0.5, "cm"), #change legend key size
-    legend.key.height = unit(0.5, "cm"), #change legend key height
-    legend.key.width = unit(0.5, "cm"), #change legend key width
-    legend.title = element_text(size = 10), #change legend title font size
-    legend.text = element_text(size = 8) #change legend text font size
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
   )
 
 p_larvalfoodsource1
@@ -327,11 +327,11 @@ p_overwinteringstage1 <- p_overwinteringstage +
     axis.title = element_text(size = 14)
   ) +
   theme(
-    legend.key.size = unit(0.5, "cm"), #change legend key size
-    legend.key.height = unit(0.5, "cm"), #change legend key height
-    legend.key.width = unit(0.5, "cm"), #change legend key width
-    legend.title = element_text(size = 10), #change legend title font size
-    legend.text = element_text(size = 8) #change legend text font size
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
   )
 
 p_overwinteringstage1
@@ -409,11 +409,11 @@ p_hostplantspecificity1 <- p_hostplantspecificity +
     axis.title = element_text(size = 14)
   ) +
   theme(
-    legend.key.size = unit(0.5, "cm"), #change legend key size
-    legend.key.height = unit(0.5, "cm"), #change legend key height
-    legend.key.width = unit(0.5, "cm"), #change legend key width
-    legend.title = element_text(size = 10), #change legend title font size
-    legend.text = element_text(size = 8) #change legend text font size
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
   )
 
 p_hostplantspecificity1
