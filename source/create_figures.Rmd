@@ -114,8 +114,7 @@ index_labels <- function(x) {
   sprintf("%+.0f%%", 100 * (exp(x) - 1))
 }
 
-
-index_breaks <- function(x) {
+index_breaks <- function() {
   z <- 1 - c(
     4 / 5, 3 / 4, 2 / 3, 1 / 2, 1 / 3, 1 / 5
   )
@@ -123,8 +122,8 @@ index_breaks <- function(x) {
   c(z, 0, -z)
 }
 
-minor_breaks <- function(x) {
-  breaks <- unique(abs(index_breaks(x)))
+minor_breaks <- function() {
+  breaks <- unique(abs(index_breaks()))
   out <- vector(length = length(breaks) - 1)
   i <- 1
   while (i < length(breaks)) {
@@ -134,12 +133,12 @@ minor_breaks <- function(x) {
   return(c(-out, out))
 }
 
-index_breaks_rev <- function(x) {
-  exp(index_breaks(x))
+index_breaks_rev <- function() {
+  exp(index_breaks())
 }
 
-index_labels_rev <- function(x, digits = 2) {
-  format(round(exp(index_breaks(x)), digits), nsmall = digits)
+index_labels_rev <- function(digits = 2) {
+  format(round(exp(index_breaks()), digits), nsmall = digits)
 }
 ```
 
@@ -171,23 +170,22 @@ p_biotope <- msci_draw_list_log$Biotope %>%
     labs(y = "",
          x = "Multi-Species Change Index",
          fill = "Trend") +
-    scale_x_continuous(breaks = index_breaks, labels = index_labels,
-                       minor_breaks = minor_breaks,
-                       limits = c(-log(3.3), log(3.3)),
-                       sec.axis = sec_axis(~ exp(.),
-                        breaks = index_breaks_rev(
-                          msci_draw_list_log$Biotope$msci.draw
-                          ),
-                        labels = index_labels_rev(
-                          msci_draw_list_log$Biotope$msci.draw
-                          ),
-                        name = "Proportional change")) +
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
     theme(
       legend.position = c(1, 0),
       legend.justification = c(1, 0),
       legend.background = element_rect(fill = "white", color = "darkgrey"),
       legend.margin = margin(6, 6, 6, 6)
-    )
+      )
 
 p_biotope1 <- p_biotope +
   annotate("text", label = c("increase", "strong increase"),
@@ -209,14 +207,14 @@ p_biotope1 <- p_biotope +
     axis.text.x = element_text(size = 12),
     axis.text.y = element_text(size = 14),
     axis.title = element_text(size = 16)
-  ) +
+    ) +
   theme(
     legend.key.size = unit(0.7, "cm"), # Change legend key size
     legend.key.height = unit(0.7, "cm"), # Change legend key height
     legend.key.width = unit(0.7, "cm"), # Change legend key width
     legend.title = element_text(size = 12), # Change legend title font size
     legend.text = element_text(size = 10) # Change legend text font size
-  )
+    )
 
 p_biotope1
 ```
@@ -256,23 +254,22 @@ p_larvalfoodsource <- msci_draw_list_log$LarvalFoodSource %>%
     labs(y = "",
          x = "Multi-Species Change Index",
          fill = "Trend") +
-    scale_x_continuous(breaks = index_breaks, labels = index_labels,
-                       minor_breaks = minor_breaks,
-                       limits = c(-log(3.3), log(3.3)),
-                       sec.axis = sec_axis(~ exp(.),
-                        breaks = index_breaks_rev(
-                          msci_draw_list_log$LarvalFoodSource$msci.draw
-                          ),
-                        labels = index_labels_rev(
-                          msci_draw_list_log$LarvalFoodSource$msci.draw
-                          ),
-                        name = "Proportional change")) +
-  theme(
-    legend.position = c(1, 0),
-    legend.justification = c(1, 0),
-    legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6)
-  )
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
 
 p_larvalfoodsource1 <- p_larvalfoodsource +
   annotate("text", label = c("increase", "strong increase"),
@@ -294,14 +291,14 @@ p_larvalfoodsource1 <- p_larvalfoodsource +
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 12),
     axis.title = element_text(size = 14)
-  ) +
+    ) +
   theme(
     legend.key.size = unit(0.5, "cm"), # Change legend key size
     legend.key.height = unit(0.5, "cm"), # Change legend key height
     legend.key.width = unit(0.5, "cm"), # Change legend key width
     legend.title = element_text(size = 10), # Change legend title font size
     legend.text = element_text(size = 8) # Change legend text font size
-  )
+    )
 
 p_larvalfoodsource1
 ```
@@ -338,23 +335,22 @@ p_overwinteringstage <- msci_draw_list_log$OverwinteringStage %>%
     labs(y = "",
          x = "Multi-Species Change Index",
          fill = "Trend") +
-    scale_x_continuous(breaks = index_breaks, labels = index_labels,
-                       minor_breaks = minor_breaks,
-                       limits = c(-log(3.3), log(3.3)),
-                       sec.axis = sec_axis(~ exp(.),
-                        breaks = index_breaks_rev(
-                          msci_draw_list_log$OverwinteringStage$msci.draw
-                          ),
-                        labels = index_labels_rev(
-                          msci_draw_list_log$OverwinteringStage$msci.draw
-                          ),
-                        name = "Proportional change")) +
-  theme(
-    legend.position = c(1, 0),
-    legend.justification = c(1, 0),
-    legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6)
-  )
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
 
 p_overwinteringstage1 <- p_overwinteringstage +
   annotate("text", label = c("increase", "strong increase"),
@@ -376,14 +372,14 @@ p_overwinteringstage1 <- p_overwinteringstage +
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 12),
     axis.title = element_text(size = 14)
-  ) +
+    ) +
   theme(
     legend.key.size = unit(0.5, "cm"), # Change legend key size
     legend.key.height = unit(0.5, "cm"), # Change legend key height
     legend.key.width = unit(0.5, "cm"), # Change legend key width
     legend.title = element_text(size = 10), # Change legend title font size
     legend.text = element_text(size = 8) # Change legend text font size
-  )
+    )
 
 p_overwinteringstage1
 ```
@@ -419,23 +415,22 @@ p_forewinglength <- msci_draw_list_log$ForewingLength %>%
     labs(y = "",
          x = "Multi-Species Change Index",
          fill = "Trend") +
-    scale_x_continuous(breaks = index_breaks, labels = index_labels,
-                       minor_breaks = minor_breaks,
-                       limits = c(-log(3.3), log(3.3)),
-                       sec.axis = sec_axis(~ exp(.),
-                        breaks = index_breaks_rev(
-                          msci_draw_list_log$ForewingLength$msci.draw
-                          ),
-                        labels = index_labels_rev(
-                          msci_draw_list_log$ForewingLength$msci.draw
-                          ),
-                        name = "Proportional change")) +
-  theme(
-    legend.position = c(1, 0),
-    legend.justification = c(1, 0),
-    legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6)
-  )
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
 
 p_forewinglength1 <- p_forewinglength +
   annotate("text", label = c("increase", "strong increase"),
@@ -457,14 +452,14 @@ p_forewinglength1 <- p_forewinglength +
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 12),
     axis.title = element_text(size = 14)
-  ) +
+    ) +
   theme(
     legend.key.size = unit(0.5, "cm"), # Change legend key size
     legend.key.height = unit(0.5, "cm"), # Change legend key height
     legend.key.width = unit(0.5, "cm"), # Change legend key width
     legend.title = element_text(size = 10), # Change legend title font size
     legend.text = element_text(size = 8) # Change legend text font size
-  )
+    )
 
 p_forewinglength1
 ```
@@ -501,23 +496,22 @@ p_distribution <- msci_draw_list_log$Distribution %>%
     labs(y = "",
          x = "Multi-Species Change Index",
          fill = "Trend") +
-    scale_x_continuous(breaks = index_breaks, labels = index_labels,
-                       minor_breaks = minor_breaks,
-                       limits = c(-log(3.3), log(3.3)),
-                       sec.axis = sec_axis(~ exp(.),
-                        breaks = index_breaks_rev(
-                          msci_draw_list_log$Distribution$msci.draw
-                          ),
-                        labels = index_labels_rev(
-                          msci_draw_list_log$Distribution$msci.draw
-                          ),
-                        name = "Proportional change")) +
-  theme(
-    legend.position = c(1, 0),
-    legend.justification = c(1, 0),
-    legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6)
-  )
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
 
 p_distribution1 <- p_distribution +
   annotate("text", label = c("increase", "strong increase"),
@@ -539,14 +533,14 @@ p_distribution1 <- p_distribution +
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 12),
     axis.title = element_text(size = 14)
-  ) +
+    ) +
   theme(
     legend.key.size = unit(0.5, "cm"), # Change legend key size
     legend.key.height = unit(0.5, "cm"), # Change legend key height
     legend.key.width = unit(0.5, "cm"), # Change legend key width
     legend.title = element_text(size = 10), # Change legend title font size
     legend.text = element_text(size = 8) # Change legend text font size
-  )
+    )
 
 p_distribution1
 ```
@@ -583,23 +577,21 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
     labs(y = "",
          x = "Multi-Species Change Index",
          fill = "Trend") +
-    scale_x_continuous(breaks = index_breaks, labels = index_labels,
-                       minor_breaks = minor_breaks,
-                       limits = c(-log(3.3), log(3.3)),
-                       sec.axis = sec_axis(~ exp(.),
-                        breaks = index_breaks_rev(
-                          msci_draw_list_log$HostPlantSpecificity$msci.draw
-                          ),
-                        labels = index_labels_rev(
-                          msci_draw_list_log$HostPlantSpecificity$msci.draw
-                          ),
-                        name = "Proportional change")) +
-  theme(
-    legend.position = c(1, 0),
-    legend.justification = c(1, 0),
-    legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6)
-  )
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
 
 p_hostplantspecificity1 <- p_hostplantspecificity +
   annotate("text", label = c("increase", "strong increase"),
@@ -621,14 +613,14 @@ p_hostplantspecificity1 <- p_hostplantspecificity +
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 12),
     axis.title = element_text(size = 14)
-  ) +
+    ) +
   theme(
     legend.key.size = unit(0.5, "cm"), # Change legend key size
     legend.key.height = unit(0.5, "cm"), # Change legend key height
     legend.key.width = unit(0.5, "cm"), # Change legend key width
     legend.title = element_text(size = 10), # Change legend title font size
     legend.text = element_text(size = 8) # Change legend text font size
-  )
+    )
 
 p_hostplantspecificity1
 ```
@@ -665,23 +657,22 @@ p_voltinism <- msci_draw_list_log$Voltinism %>%
     labs(y = "",
          x = "Multi-Species Change Index",
          fill = "Trend") +
-    scale_x_continuous(breaks = index_breaks, labels = index_labels,
-                       minor_breaks = minor_breaks,
-                       limits = c(-log(3.3), log(3.3)),
-                       sec.axis = sec_axis(~ exp(.),
-                        breaks = index_breaks_rev(
-                          msci_draw_list_log$Voltinism$msci.draw
-                          ),
-                        labels = index_labels_rev(
-                          msci_draw_list_log$Voltinism$msci.draw
-                          ),
-                        name = "Proportional change")) +
-  theme(
-    legend.position = c(1, 0),
-    legend.justification = c(1, 0),
-    legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6)
-  )
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
 
 p_voltinism1 <- p_voltinism +
   annotate("text", label = c("increase", "strong increase"),
@@ -747,23 +738,22 @@ p_migration <- msci_draw_list_log$Migration %>%
     labs(y = "",
          x = "Multi-Species Change Index",
          fill = "Trend") +
-    scale_x_continuous(breaks = index_breaks, labels = index_labels,
-                       minor_breaks = minor_breaks,
-                       limits = c(-log(3.3), log(3.3)),
-                       sec.axis = sec_axis(~ exp(.),
-                        breaks = index_breaks_rev(
-                          msci_draw_list_log$Migration$msci.draw
-                          ),
-                        labels = index_labels_rev(
-                          msci_draw_list_log$Migration$msci.draw
-                          ),
-                        name = "Proportional change")) +
-  theme(
-    legend.position = c(1, 0),
-    legend.justification = c(1, 0),
-    legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6)
-  )
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
 
 p_migration1 <- p_migration +
   annotate("text", label = c("increase", "strong increase"),
@@ -785,14 +775,14 @@ p_migration1 <- p_migration +
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 12),
     axis.title = element_text(size = 14)
-  ) +
+    ) +
   theme(
     legend.key.size = unit(0.5, "cm"), # Change legend key size
     legend.key.height = unit(0.5, "cm"), # Change legend key height
     legend.key.width = unit(0.5, "cm"), # Change legend key width
     legend.title = element_text(size = 10), # Change legend title font size
     legend.text = element_text(size = 8) # Change legend text font size
-  )
+    )
 
 p_migration1
 ```
@@ -829,23 +819,21 @@ p_colourvariability <- msci_draw_list_log$colourVariability %>%
     labs(y = "",
          x = "Multi-Species Change Index",
          fill = "Trend") +
-    scale_x_continuous(breaks = index_breaks, labels = index_labels,
-                       minor_breaks = minor_breaks,
-                       limits = c(-log(3.3), log(3.3)),
-                       sec.axis = sec_axis(~ exp(.),
-                        breaks = index_breaks_rev(
-                          msci_draw_list_log$colourVariability$msci.draw
-                          ),
-                        labels = index_labels_rev(
-                          msci_draw_list_log$colourVariability$msci.draw
-                          ),
-                        name = "Proportional change")) +
-  theme(
-    legend.position = c(1, 0),
-    legend.justification = c(1, 0),
-    legend.background = element_rect(fill = "white", color = "darkgrey"),
-    legend.margin = margin(6, 6, 6, 6)
-  )
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
 
 p_colourvariability1 <- p_colourvariability +
   annotate("text", label = c("increase", "strong increase"),
@@ -867,14 +855,14 @@ p_colourvariability1 <- p_colourvariability +
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 12),
     axis.title = element_text(size = 14)
-  ) +
+    ) +
   theme(
     legend.key.size = unit(0.5, "cm"), # Change legend key size
     legend.key.height = unit(0.5, "cm"), # Change legend key height
     legend.key.width = unit(0.5, "cm"), # Change legend key width
     legend.title = element_text(size = 10), # Change legend title font size
     legend.text = element_text(size = 8) # Change legend text font size
-  )
+    )
 
 p_colourvariability1
 ```
