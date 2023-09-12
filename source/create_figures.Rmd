@@ -101,7 +101,7 @@ max_threshold <- log(1.25)
 ## Biotope
 
 ```{r}
-p_biotope <- msci_draw_list_log$Biotope %>%
+p_biotope1 <- msci_draw_list_log$Biotope %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
@@ -133,13 +133,10 @@ p_biotope <- msci_draw_list_log$Biotope %>%
              arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
     labs(y = "",
          x = "Multi-Species Change Index",
-         fill = "Trend:") +
-    theme(
-      legend.position = "bottom"
-    ) +
+         fill = "Trend") +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
-                       limits = c(-log(2.5), log(2.5)),
+                       limits = c(-log(2.4), log(2.4)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(
                           msci_draw_list_log$Biotope$msci.draw
@@ -147,22 +144,29 @@ p_biotope <- msci_draw_list_log$Biotope %>%
                         labels = index_labels_rev(
                           msci_draw_list_log$Biotope$msci.draw
                           ),
-                        name = "Proportional change"))
-p_biotope
+                        name = "Proportional change")) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+    )
+p_biotope1
 ```
 
 
 ```{r}
-ggsave(file.path("media", "msci_biotope.jpg"),
-       p_biotope,
-       width = 10,
-       height = 10)
+ggsave(file.path("media", "msci_biotope_conference.jpg"),
+       p_biotope1,
+       dpi = 300,
+       width = 8,
+       height = 4)
 ```
 
 ## Host plant specificity
 
 ```{r}
-p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
+p_hostplantspecificity1 <- msci_draw_list_log$HostPlantSpecificity %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
@@ -194,13 +198,10 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
              arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
     labs(y = "",
          x = "Multi-Species Change Index",
-         fill = "Trend:") +
-    theme(
-      legend.position = "bottom"
-    ) +
+         fill = "Trend") +
     scale_x_continuous(breaks = index_breaks, labels = index_labels,
                        minor_breaks = minor_breaks,
-                       limits = c(-log(2.5), log(2.5)),
+                       limits = c(-log(2.4), log(2.4)),
                        sec.axis = sec_axis(~ exp(.),
                         breaks = index_breaks_rev(
                           msci_draw_list_log$HostPlantSpecificity$msci.draw
@@ -208,14 +209,21 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
                         labels = index_labels_rev(
                           msci_draw_list_log$HostPlantSpecificity$msci.draw
                           ),
-                        name = "Proportional change"))
-p_hostplantspecificity
+                        name = "Proportional change")) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+    )
+p_hostplantspecificity1
 ```
 
 
 ```{r}
-ggsave(file.path("media", "msci_hostplantspecificity.jpg"),
-       p_hostplantspecificity,
-       width = 10,
-       height = 5)
+ggsave(file.path("media", "msci_hostplantspecificity_conference.jpg"),
+       p_hostplantspecificity1,
+       dpi = 300,
+       width = 8,
+       height = 4)
 ```
