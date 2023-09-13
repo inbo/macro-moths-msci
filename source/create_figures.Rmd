@@ -571,6 +571,8 @@ ggsave(file.path("media", "msci_forewinglength_conference.jpg"),
 
 ```{r}
 p_distribution <- msci_draw_list_log$Distribution %>%
+  mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
@@ -652,6 +654,11 @@ ggsave(file.path("media", "msci_distribution_conference.jpg"),
 
 ```{r}
 p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
+  arrange(trait_value) %>%
+  rownames_to_column("order") %>%
+  mutate(order = as.numeric(order)) %>%
+  mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
+         label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
