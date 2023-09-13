@@ -57,6 +57,8 @@ msci_draw_list_log <- readRDS(file.path(data_path2,
 
 # SCI figures
 
+We create a bar plot for the SCI results on coarse scale.
+
 ```{r}
 sci_barplot <- sci_species_summary %>%
   mutate(
