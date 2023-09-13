@@ -147,8 +147,8 @@ p_biotope <- msci_draw_list_log$Biotope %>%
     trait_value == "WoodlandConiferous" ~ "Woodland (coniferous)",
     trait_value == "HeathlandWet" ~ "Heathland (wet)",
     trait_value == "HeathlandDry" ~ "Heathland (dry)",
-    trait_value == "GrasslandNutrientPoor" ~ "Grassland (nutrientpoor)",
-    trait_value == "GrasslandNutrientRich" ~ "Grassland (nutrientrich)",
+    trait_value == "GrasslandNutrientPoor" ~ "Grassland (nutrient poor)",
+    trait_value == "GrasslandNutrientRich" ~ "Grassland (nutrient rich)",
     trait_value == "Hedges & orchards" ~ "Hedges and orchards",
     TRUE ~ trait_value
     )
