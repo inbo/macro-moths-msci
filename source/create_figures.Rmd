@@ -485,6 +485,11 @@ trait_value_wing_new <- sapply(trait_value_split, function(vec) {
 ```{r}
 p_forewinglength <- msci_draw_list_log$ForewingLength %>%
   mutate(trait_value_new = trait_value_wing_new) %>%
+  arrange(trait_value) %>%
+  rownames_to_column("order") %>%
+  mutate(order = as.numeric(order)) %>%
+  mutate(label = paste0(trait_value_new, "\n", "(n = ", n_species, ")"),
+         label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
