@@ -47,8 +47,8 @@ sci_species_summary <- read_csv(file.path(data_path1,
                                           "sci_species_summary.csv"))
 
 # MSCI
-msci_draw_list_log_raw <- readRDS(file.path(data_path2,
-                                            "msci_draw_list_log.rds"))
+msci_draw_list_log <- readRDS(file.path(data_path2,
+                                        "msci_draw_list_log.rds"))
 ```
 
 
@@ -99,7 +99,7 @@ ggsave(file.path("media", "sci_barplot_conference.jpg"),
 # MSCI figures
 ## Prepare data
 
-```{r}
+```
 msci_draw_list_log <- lapply(msci_draw_list_log_raw,
   function(df) {
   
@@ -466,7 +466,25 @@ ggsave(file.path("media", "msci_overwinteringstage_conference.jpg"),
 ## Forewing length
 
 ```{r}
+trait_value_wing <- as.character(msci_draw_list_log$ForewingLength$trait_value)
+trait_value_split <- strsplit(trait_value_wing, "(?<=[a-z])(?=[A-Z])",
+                              perl = TRUE)
+trait_value_wing_new <- sapply(trait_value_split, function(vec) {
+  if (length(vec) == 2) {
+    out <- paste(vec[1], tolower(vec[2]))
+  } else {
+    out <- vec
+  }
+  
+  return(out)
+  }
+)
+```
+
+
+```{r}
 p_forewinglength <- msci_draw_list_log$ForewingLength %>%
+  mutate(trait_value_new = trait_value_wing_new) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
