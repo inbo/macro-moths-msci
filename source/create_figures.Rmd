@@ -146,14 +146,14 @@ p_biotope <- msci_draw_list_log$Biotope %>%
     trait_value == "WoodlandDeciduous" ~ "Woodland (deciduous)",
     trait_value == "WoodlandConiferous" ~ "Woodland (coniferous)",
     trait_value == "HeathlandWet" ~ "Heathland (wet)",
-    trait_value == "HeathlandWet" ~ "Heathland (dry)",
+    trait_value == "HeathlandDry" ~ "Heathland (dry)",
     trait_value == "GrasslandNutrientPoor" ~ "Grassland (nutrientpoor)",
     trait_value == "GrasslandNutrientRich" ~ "Grassland (nutrientrich)",
     trait_value == "Hedges & orchards" ~ "Hedges and orchards",
     TRUE ~ trait_value
     )
   ) %>%
-  mutate(label = paste0(trait_value_new, "\n", "(n = ", n_species, ")"),
+  mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
@@ -245,7 +245,7 @@ p_larvalfoodsource <- msci_draw_list_log$LarvalFoodSource %>%
     TRUE ~ trait_value
     )
   ) %>%
-  mutate(label = paste0(trait_value_new, "\n", "(n = ", n_species, ")"),
+  mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
@@ -331,7 +331,7 @@ p_overwinteringstage <- msci_draw_list_log$OverwinteringStage %>%
   arrange(trait_value) %>%
   rownames_to_column("order") %>%
   mutate(order = as.numeric(order)) %>%
-  mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
+  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
          label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
@@ -434,7 +434,7 @@ p_forewinglength <- msci_draw_list_log$ForewingLength %>%
   arrange(trait_value) %>%
   rownames_to_column("order") %>%
   mutate(order = as.numeric(order)) %>%
-  mutate(label = paste0(trait_value_new, "\n", "(n = ", n_species, ")"),
+  mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
          label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
@@ -517,7 +517,7 @@ ggsave(file.path("media", "msci_forewinglength_conference.jpg"),
 
 ```{r}
 p_distribution <- msci_draw_list_log$Distribution %>%
-  mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
+  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
@@ -603,7 +603,7 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
   arrange(trait_value) %>%
   rownames_to_column("order") %>%
   mutate(order = as.numeric(order)) %>%
-  mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
+  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
          label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
@@ -691,10 +691,10 @@ p_voltinism <- msci_draw_list_log$Voltinism %>%
   mutate(label = ifelse(trait_value == "1",
                         paste0(trait_value,
                                " generation", "\n",
-                               "(n = ", n_species, ")"),
+                               "[n = ", n_species, "]"),
                         paste0(trait_value,
                                " generations", "\n",
-                               "(n = ", n_species, ")")),
+                               "[n = ", n_species, "]")),
          label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
@@ -777,7 +777,7 @@ ggsave(file.path("media", "msci_voltinism_conference.jpg"),
 
 ```{r}
 p_migration <- msci_draw_list_log$Migration %>%
-  mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
+  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
@@ -860,7 +860,7 @@ ggsave(file.path("media", "msci_migration_conference.jpg"),
 
 ```{r}
 p_colourvariability <- msci_draw_list_log$colourVariability %>%
-  mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
+  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
