@@ -34,9 +34,12 @@ theme_set(theme_inbo(transparent = TRUE))
 
 # Goal
 
-Create nice figures for the research paper.
+Create nice figures for the conference and research paper.
+
 
 # Load data
+
+We load the data of the SCI and MSCI results.
 
 ```{r load-data}
 data_path1 <- file.path("output", "tables")
