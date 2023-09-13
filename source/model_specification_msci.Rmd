@@ -861,18 +861,20 @@ p_final
 p_finalfinal <- p_final +
   scale_x_continuous(limits = c(-1, 1),
                      breaks = c(seq(-1, 1, 0.25)[-4], -0.2)) +
-  annotate("text", y = c(0.5, 0.5), x = c(0 + 0.02, max_threshold + 0.02),
-           label = c("increase", "strong increase"), size = 2,
-           hjust = "left") +
-  annotate("segment", y = c(0.6, 0.6), x = c(0 + 0.03, max_threshold + 0.03),
-           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.6, 0.6),
-           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
-  annotate("text", y = c(0.5, 0.5), x = c(0 - 0.02, min_threshold - 0.02),
-           label = c("decrease", "strong decrease"), size = 2,
-           hjust = "right") +
-  annotate("segment", y = c(0.6, 0.6), x = c(0 - 0.03, min_threshold - 0.03),
-           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.6, 0.6),
-           arrow = arrow(type = "closed", length = unit(0.01, "npc")))
+    annotate("text", label = c("increase", "strong increase"),
+             x = c(0 + 0.02, max_threshold + 0.02), y = c(0.5, 0.5),
+             size = 2, hjust = "left") +
+    annotate("segment",
+             x = c(0 + 0.02, max_threshold + 0.02), y = c(0.55, 0.55),
+             xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.55, 0.55),
+             arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+    annotate("text", label = c("decrease", "strong decrease"),
+             x = c(0 - 0.02, min_threshold - 0.02), y = c(0.5, 0.5),
+             size = 2, hjust = "right") +
+    annotate("segment",
+             x = c(0 - 0.02, min_threshold - 0.02), y = c(0.55, 0.55),
+             xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.55, 0.55),
+             arrow = arrow(type = "closed", length = unit(0.01, "npc")))
 p_finalfinal
 ```
 
@@ -990,3 +992,151 @@ We choose this layout as final:
 p_finalfinal
 ```
 
+## Log-scale
+
+Can we make the figures symmetrical in the log-scale?
+
+```{r}
+draw_matrix <- fit2 %>%
+  spread_draws(`b_periodp2013_2022.*`, regex = TRUE) %>%
+  select(starts_with("b_periodp2013_2022")) %>%
+  as.matrix()
+
+contrast_mat <- create_contrast_matrix(fit2)
+
+msci_draws_log <- as_tibble(t(contrast_mat %*% t(draw_matrix))) %>%
+  `colnames<-`(get_traits(fit2)) %>%
+  pivot_longer(cols = everything(), names_to = "trait", values_to = "msci")
+
+summary_figtest2 <- msci_draws_log %>%
+  group_by(trait) %>%
+  median_qi(.width = 0.9) %>%
+  rename(msci.median = msci,
+         msci.lower = .lower,
+         msci.upper = .upper,
+         Activity = trait) %>%
+  full_join(n_species_df2, by = join_by(Activity))
+
+msci_draws_figtest2 <- msci_draws_log %>%
+  rename(Activity = trait) %>%
+  full_join(summary_figtest2, by = join_by(Activity))
+```
+
+```{r}
+# create dataframe to plot number of species
+min_threshold <- log(0.8)
+max_threshold <- log(1.25)
+mult <- 0.4
+min_df2 <- msci_draws_figtest2 %>%
+  mutate(min = ifelse(min(msci) <= min_threshold, min(msci),
+                      min_threshold),
+         min = min + min * mult) %>%
+  select(all_of("Activity"), n_species, min) %>%
+  distinct()
+
+msci_draws_figtest2 <- msci_draws_figtest2 %>%
+  mutate(
+    effects = case_when(
+        msci.lower > 0 ~ "increase",
+        msci.upper < 0 ~ "decrease",
+        msci.lower < 0 & msci.lower > min_threshold &
+          msci.upper > 0 & msci.upper < max_threshold ~ "stable",
+        TRUE ~ "uncertain",
+    ),
+    fill_var = factor(effects,
+      levels = c("increase",
+                 "stable",
+                 "decrease",
+                 "uncertain"),
+      ordered = TRUE)
+  )
+```
+
+https://github.com/inbo/abvanalysis/blob/1540393796b92f96833f596e331d44de1363af79/inst/website/_soort.Rmd
+
+```{r}
+index_labels <- function(x) {
+  sprintf("%+.0f%%", 100 * (exp(x) - 1))
+}
+
+
+index_breaks <- function(x) {
+  z <- 1 - c(
+    9 / 10, 4 / 5, 3 / 4, 2 / 3, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 10, 0
+  )
+  z <- log(sort(z))
+  z <- z[which(z >= min(-abs(x)))[1] + -1:3]
+  c(z, 0, -z)
+}
+
+minor_breaks <- function(x) {
+  breaks <- unique(abs(index_breaks(x)))
+  out <- vector(length = length(breaks) - 1)
+  i <- 1
+  while (i < length(breaks)) {
+    out[i] <- mean(c(breaks[i], breaks[i + 1]))
+    i <- i + 1
+  }
+  return(c(-out, out))
+}
+
+index_breaks_rev <- function(x) {
+  exp(index_breaks(x))
+}
+
+index_labels_rev <- function(x, digits = 2) {
+  format(round(exp(index_breaks(x)), digits), nsmall = digits)
+}
+```
+
+```{r}
+msci_draws_figtest2 %>%
+  mutate(Activity = paste0(Activity, "\n", "(n = ", n_species, ")")) %>%
+  ggplot(aes(y = Activity)) +
+    geom_violin(aes(x = msci, fill = fill_var), colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(data = summary_figtest2 %>%
+                    mutate(Activity = paste0(Activity,
+                             "\n", "(n = ", n_species, ")")),
+                  linewidth = 1, colour = "black",
+                  aes(xmin = msci.lower, xmax = msci.upper), width = 0.1) +
+    geom_point(data = summary_figtest2 %>%
+                    mutate(Activity = paste0(Activity,
+                             "\n", "(n = ", n_species, ")")),
+               size = 2.2, colour = "black",
+               aes(x = msci.median)) +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend:") +
+    theme(
+      legend.position = "bottom"
+    ) +
+    annotate("text", label = c("increase", "strong increase"),
+             x = c(0 + 0.02, max_threshold + 0.02), y = c(0.5, 0.5),
+             size = 2, hjust = "left") +
+    annotate("segment",
+             x = c(0 + 0.02, max_threshold + 0.02), y = c(0.55, 0.55),
+             xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.55, 0.55),
+             arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+    annotate("text", label = c("decrease", "strong decrease"),
+             x = c(0 - 0.02, min_threshold - 0.02), y = c(0.5, 0.5),
+             size = 2, hjust = "right") +
+    annotate("segment",
+             x = c(0 - 0.02, min_threshold - 0.02), y = c(0.55, 0.55),
+             xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.55, 0.55),
+             arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+    scale_x_continuous(breaks = index_breaks, labels = index_labels,
+                       minor_breaks = minor_breaks,
+                       limits = c(-log(2), log(2)),
+                       sec.axis = sec_axis(~ exp(.),
+                        breaks = index_breaks_rev(msci_draws_figtest2$msci),
+                        labels = index_labels_rev(msci_draws_figtest2$msci),
+                        name = "Proportional change"))
+```

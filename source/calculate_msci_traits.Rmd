@@ -423,6 +423,106 @@ summary_draw_list <- lapply(names(msci_draw_list), function(name) {
 names(summary_draw_list) <- names(model_msci_list)
 ```
 
+```{r}
+## log-scale
+# calculate msci
+msci_draw_list_log <- lapply(names(model_msci_list), function(name) {
+  # get draws and contrasts
+  draw_matrix <- draws_mat_list[[name]]
+  contrast_matrix <- contrast_mat_list[[name]]
+  trait_values <- sort(unique(trait_df_list[[name]][[name]]))
+
+  # calculate msci
+  msci_df_log <- as_tibble(
+    t(contrast_matrix %*% t(draw_matrix))
+    ) %>%
+    `colnames<-`(trait_values) %>%
+    pivot_longer(cols = everything(), names_to = name,
+                 values_to = "msci")
+
+  # get number of species per group
+  msci_df_log2 <- msci_df_log %>%
+    left_join(trait_df_list[[name]] %>%
+                select(all_of(name), n_species) %>%
+                distinct())
+
+  # order factors
+  out <- order_traits(msci_df_log2)
+
+  return(out)
+})
+names(msci_draw_list_log) <- names(model_msci_list)
+
+# get summary statistics
+min_threshold_log <- log(0.8)
+max_threshold_log <- log(1.25)
+
+summary_draw_list_log <- lapply(names(msci_draw_list_log), function(name) {
+  msci_draws <- msci_draw_list_log[[name]]
+
+  summary_draw_log <- msci_draws %>%
+    group_by_at(c(name)) %>%
+    median_qi(.width = c(0.9)) %>%
+    ungroup() %>%
+    rename(msci.median = msci) %>%
+    select(-c(n_species.lower, n_species.upper))
+
+  summary_draw_log$effect_fine <- classification(
+    lcl = summary_draw_log$msci.lower,
+    ucl = summary_draw_log$msci.upper,
+    threshold = c(min_threshold_log, max_threshold_log))
+
+  summary_draw_log$effect_coarse <- coarse_classification(
+    summary_draw_log$effect_fine
+    )
+
+  out <- summary_draw_log %>%
+    mutate(
+      trend_fine = case_when(
+          effect_fine == "++" ~ "strong increase",
+          effect_fine == "+" ~ "increase",
+          effect_fine == "+~" ~ "moderate increase",
+          effect_fine == "~" ~ "stable",
+          effect_fine == "-" ~ "decrease",
+          effect_fine == "-~" ~ "moderate decrease",
+          effect_fine == "--" ~ "strong decrease",
+          TRUE ~ "uncertain",
+      ),
+      trend_fine = factor(trend_fine,
+        levels = c(
+          "strong increase",
+          "increase",
+          "moderate increase",
+          "stable",
+          "moderate decrease",
+          "decrease",
+          "strong decrease",
+          "uncertain"),
+        ordered = TRUE)
+    ) %>%
+    mutate(
+      trend_coarse = case_when(
+          effect_coarse == "+" ~ "increase",
+          effect_coarse == "-" ~ "decrease",
+          effect_coarse == "~" ~ "stable",
+          TRUE ~ "uncertain",
+      ),
+      trend_coarse = factor(trend_coarse,
+        levels = c("increase",
+                   "stable",
+                   "decrease",
+                   "uncertain"),
+        ordered = TRUE)
+    ) %>%
+    mutate(certainty = ifelse(trend_coarse == "uncertain", "uncertain trend",
+                              "certain trend"))
+
+  return(out)
+})
+names(summary_draw_list_log) <- names(model_msci_list)
+```
+
+
 ```{r plot-results, results="asis"}
 for (i in seq_along(summary_draw_list)) {
   name <- names(summary_draw_list)[i]
@@ -905,10 +1005,12 @@ write_csv(
 
 ```{r}
 draws_list_out <- lapply(traits_to_export, function(name) {
-  msci_draw_list[[name]] %>%
+  msci_draw_list_log[[name]] %>%
     rename(trait_value = !!sym(name)) %>%
     mutate(trait = name) %>%
-    left_join(binded_summary_dfs,
+    left_join(summary_draw_list_log[[name]] %>%
+                rename(trait_value = !!sym(name)) %>%
+                mutate(trait = name),
               by = join_by(trait_value, n_species, trait)) %>%
     select(trait, trait_value, n_species, msci.draw = msci, msci.median,
            msci.lower, msci.upper, trend_coarse, trend_fine)
@@ -917,5 +1019,5 @@ names(draws_list_out) <- traits_to_export
 ```
 
 ```{r}
-saveRDS(draws_list_out, "output/r_objects/msci_draw_list.rds")
+saveRDS(draws_list_out, "output/r_objects/msci_draw_list_log.rds")
 ```
