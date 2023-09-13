@@ -831,6 +831,8 @@ ggsave(file.path("media", "msci_voltinism_conference.jpg"),
 
 ```{r}
 p_migration <- msci_draw_list_log$Migration %>%
+  mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
@@ -912,6 +914,8 @@ ggsave(file.path("media", "msci_migration_conference.jpg"),
 
 ```{r}
 p_colourvariability <- msci_draw_list_log$colourVariability %>%
+  mutate(label = paste0(trait_value, "\n", "(n = ", n_species, ")"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
