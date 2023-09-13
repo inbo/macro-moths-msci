@@ -99,6 +99,8 @@ ggsave(file.path("media", "sci_barplot_conference.jpg"),
 # MSCI figures
 ## Set general functions and thresholds
 
+We specify some general plot specifications as functions.
+
 ```{r}
 index_labels <- function(x) {
   sprintf("%+.0f%%", 100 * (exp(x) - 1))
@@ -131,6 +133,8 @@ index_labels_rev <- function(digits = 2) {
   format(round(exp(index_breaks()), digits), nsmall = digits)
 }
 ```
+
+We set thresholds at -20% and +25% in the log scale.
 
 ```{r}
 min_threshold <- log(0.8)
