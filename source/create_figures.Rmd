@@ -245,6 +245,7 @@ ggsave(file.path("media", "msci_biotope_conference.jpg"),
 
 ## Larval food source
 
+We rename some trait values and order them according to the posterior median.
 We do not include trait value 'Diverse'.
 
 ```{r}
