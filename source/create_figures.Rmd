@@ -143,12 +143,12 @@ max_threshold <- log(1.25)
 ```{r}
 p_biotope <- msci_draw_list_log$Biotope %>%
   mutate(trait_value_new = case_when(
-    trait_value == "WoodlandDeciduous" ~ "Woodland (deciduous)",
-    trait_value == "WoodlandConiferous" ~ "Woodland (coniferous)",
-    trait_value == "HeathlandWet" ~ "Heathland (wet)",
-    trait_value == "HeathlandDry" ~ "Heathland (dry)",
-    trait_value == "GrasslandNutrientPoor" ~ "Grassland (nutrient poor)",
-    trait_value == "GrasslandNutrientRich" ~ "Grassland (nutrient rich)",
+    trait_value == "WoodlandDeciduous" ~ "Deciduous woodland",
+    trait_value == "WoodlandConiferous" ~ "Coniferous woodland",
+    trait_value == "HeathlandWet" ~ "Wet heathland",
+    trait_value == "HeathlandDry" ~ "Dry heathland",
+    trait_value == "GrasslandNutrientPoor" ~ "Nutrient-poor grassland",
+    trait_value == "GrasslandNutrientRich" ~ "Nutrient-rich grassland",
     trait_value == "Hedges & orchards" ~ "Hedges and orchards",
     TRUE ~ trait_value
     )
