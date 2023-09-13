@@ -144,6 +144,8 @@ max_threshold <- log(1.25)
 
 ## Biotope
 
+We rename some trait values and order them according to the posterior median.
+
 ```{r}
 p_biotope <- msci_draw_list_log$Biotope %>%
   mutate(trait_value_new = case_when(
