@@ -739,6 +739,17 @@ ggsave(file.path("media", "msci_hostplantspecificity_conference.jpg"),
 
 ```{r}
 p_voltinism <- msci_draw_list_log$Voltinism %>%
+  arrange(trait_value) %>%
+  rownames_to_column("order") %>%
+  mutate(order = as.numeric(order)) %>%
+  mutate(label = ifelse(trait_value == 1, 
+                        paste0(trait_value,
+                               " generation", "\n",
+                               "(n = ", n_species, ")"),
+                        paste0(trait_value,
+                               " generations", "\n",
+                               "(n = ", n_species, ")")),
+         label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
                 colour = alpha("white", 0)) +
