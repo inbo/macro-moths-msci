@@ -1003,7 +1003,7 @@ write_csv(
   )
 ```
 
-We also write out the posterior draws in the log scale to create figures.
+We also write out a list containing the posterior draws in the log scale to create figures.
 
 ```{r}
 draws_list_out <- lapply(traits_to_export, function(name) {
@@ -1021,6 +1021,5 @@ names(draws_list_out) <- traits_to_export
 ```
 
 ```{r}
-write_csv(do.call(rbind.data.frame, draws_list_out),
-          "output/msci_draws_log.csv")
+saveRDS(draws_list_out, "output/msci_draw_list_log.rds")
 ```
