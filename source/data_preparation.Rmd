@@ -343,9 +343,14 @@ species_traits_final %>%
 
 We write out the datasets.
 
-```{r}
+```{r data-dir}
 out_path <- file.path("data", "intermediate")
 
+# create data directory if not yet available
+dir.create(out_path, FALSE)
+```
+
+```{r}
 write_csv(
   species_traits_final_nozero,
   file.path(out_path, "prop_data_per_trait_nozero_intermed.csv")
