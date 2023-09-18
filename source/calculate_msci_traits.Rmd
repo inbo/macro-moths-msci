@@ -63,11 +63,11 @@ if (dir.exists(data_path)) {
 } else {
   # Create directory
   dir.create(data_path, showWarnings = FALSE)
-  
+
   # Read in data from zenodo
-  
+
   # Save data in directory
-  
+
 }
 ```
 
