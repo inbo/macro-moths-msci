@@ -1022,5 +1022,5 @@ names(draws_list_out) <- traits_to_export
 
 ```{r}
 write_csv(do.call(rbind.data.frame, draws_list_out),
-          "output/msci_draw_list_log.csv")
+          "output/msci_draws_log.csv")
 ```
