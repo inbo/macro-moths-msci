@@ -976,7 +976,7 @@ for (i in seq_along(summary_draw_combi_list)) {
 
 # Export results
 
-We write out a .csv table with summary statistics for the research paper.
+We write out a .csv table with summary statistics.
 We round to four decimals.
 
 ```{r}
@@ -995,13 +995,15 @@ binded_summary_dfs <- do.call(rbind.data.frame, organised_summary_dfs)
 ```
 
 ```{r}
+dir.create("output", showWarnings = FALSE)
 write_csv(
   binded_summary_dfs %>%
     mutate(across(starts_with("msci"), ~ round(.x, 4))),
-  "output/tables/msci_trait_summary.csv"
+  "output/msci_trait_summary.csv"
   )
 ```
 
+We also write out the posterior draws in the log scale to create figures.
 
 ```{r}
 draws_list_out <- lapply(traits_to_export, function(name) {
@@ -1019,5 +1021,6 @@ names(draws_list_out) <- traits_to_export
 ```
 
 ```{r}
-saveRDS(draws_list_out, "output/r_objects/msci_draw_list_log.rds")
+write_csv(do.call(rbind.data.frame, draws_list_out),
+          "output/msci_draw_list_log.csv")
 ```

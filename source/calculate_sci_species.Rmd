@@ -401,5 +401,6 @@ organised_summary_df <- summary_draw %>%
 ```
 
 ```{r}
-write_csv(organised_summary_df, "output/tables/sci_species_summary.csv")
+dir.create("output", showWarnings = FALSE)
+write_csv(organised_summary_df, "output/sci_species_summary.csv")
 ```
