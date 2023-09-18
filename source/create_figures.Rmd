@@ -42,16 +42,16 @@ Create nice figures for the conference and research paper.
 We load the data of the SCI and MSCI results.
 
 ```{r load-data}
-data_path1 <- file.path("output", "tables")
-data_path2 <- file.path("output", "r_objects")
-
 # SCI
-sci_species_summary <- read_csv(file.path(data_path1,
-                                          "sci_species_summary.csv"))
+sci_species_summary <- read_csv(file.path("output", "sci_species_summary.csv"))
 
 # MSCI
-msci_draw_list_log <- readRDS(file.path(data_path2,
-                                        "msci_draw_list_log.rds"))
+msci_draw_list_log <- readRDS(file.path("output", "msci_draw_list_log.rds"))
+```
+
+```{r media-dir}
+# create media directory if not yet available
+dir.create("media", FALSE)
 ```
 
 
