@@ -1,6 +1,7 @@
 <!-- badges: start -->
 ![GitHub](https://img.shields.io/github/license/inbo/macro-moths-msci)
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/inbo/macro-moths-msci/check-project)
+[![Release](https://img.shields.io/github/release/inbo/macro-moths-msci.svg)](https://github.com/inbo/macro-moths-msci/releases)
 ![GitHub repo size](https://img.shields.io/github/repo-size/inbo/macro-moths-msci)
 <!-- badges: end -->
 
