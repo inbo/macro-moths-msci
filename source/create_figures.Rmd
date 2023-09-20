@@ -74,7 +74,7 @@ sci_barplot <- sci_species_summary %>%
     geom_text(aes(label = after_stat(count)),
               stat = "count",
               vjust = -0.5,
-              size = 5) +
+              size = 6) +
     scale_x_discrete(drop = FALSE) +
     scale_fill_manual(values =  c("chartreuse3",
                                   "gold",
@@ -85,10 +85,10 @@ sci_barplot <- sci_species_summary %>%
     labs(y = "Number of species",
          x = "Trend") +
     theme(
-      axis.text.x = element_text(size = 16),
+      axis.text.x = element_text(size = 20),
       axis.title.x = element_blank(),
-      axis.text.y = element_text(size = 14),
-      axis.title.y = element_text(size = 18)
+      axis.text.y = element_text(size = 18),
+      axis.title.y = element_text(size = 22)
     )
 sci_barplot
 ```
