@@ -27,7 +27,9 @@ Investigation of species traits as a guidance for moth conservation in the highl
 
 ### Order of execution
 
-Follow the steps below to run the scripts in a logical order. You can skip any steps if desired, each script will create the necessary folders and download the necessary data from zenodo each time if required.
+Follow the steps below to run the scripts in a logical order.
+You can skip any steps if desired, each script will create the necessary folders and download the necessary data from zenodo each time if required.
+Open the R project file `macro-moths-msci.Rproj` before opening any scripts such that the relative paths in the scripts work properly.
 
 #### Step 1: data_preparation.Rmd
 
