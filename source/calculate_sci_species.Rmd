@@ -33,6 +33,7 @@ conflicted::conflicts_prefer(brms::qstudent_t)
 conflicted::conflicts_prefer(brms::rstudent_t)
 
 # Packages
+library(zen4R)
 library(tidyverse)
 library(brms)
 library(tidybayes)
@@ -53,21 +54,18 @@ Fit models and calculate SCI for all resident species.
 # Load data
 
 ```{r load-data}
+# Data path and create directory if necessary
 data_path <- file.path("data", "processed")
+dir.create(data_path, showWarnings = FALSE)
 
-if (dir.exists(data_path)) {
-  # Read in data from data path
-  species_traits_final <- read_csv(
-    file.path(data_path, "prop_data_per_trait.csv")
-    )
+# Download data from zenodo if necessary
+file_prop <- file.path(data_path, "prop_data_per_trait.csv")
+if (file.exists(file_prop)) {
+  species_traits_final <- read_csv(file_prop)
 } else {
-  # Create directory
-  dir.create(data_path, showWarnings = FALSE)
-
-  # Read in data from zenodo
-
-  # Save data in directory
-
+  download_zenodo("10.5281/zenodo.xxx", path = data_path,
+                  files = list("prop_data_per_trait.csv"))
+  species_traits_final <- read_csv(file_prop)
 }
 ```
 

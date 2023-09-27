@@ -27,6 +27,7 @@ conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
 
 # Packages
+library(zen4R)
 library(tidyverse)
 library(INBOtheme)
 theme_set(theme_inbo(transparent = TRUE))
@@ -42,11 +43,29 @@ Create nice figures for the conference and research paper.
 We load the data of the SCI and MSCI results.
 
 ```{r load-data}
-# SCI
-sci_species_summary <- read_csv(file.path("output", "sci_species_summary.csv"))
+# Create data directory if necessary
+dir.create("output", showWarnings = FALSE)
 
-# MSCI
-msci_draw_list_log <- readRDS(file.path("output", "msci_draw_list_log.rds"))
+# Download data from zenodo if necessary
+## SCI
+file_sci <- file.path("output", "sci_species_summary.csv")
+if (file.exists(file_sci)) {
+  sci_species_summary <- read_csv(file_sci)
+} else {
+  download_zenodo("10.5281/zenodo.xxx", path = "output",
+                  files = list("sci_species_summary.csv"))
+  sci_species_summary <- read_csv(file_sci)
+}
+
+## MSCI
+file_msci <- file.path("output", "msci_draw_list_log.rds")
+if (file.exists(file_msci)) {
+  msci_draw_list_log <- readRDS(file_msci)
+} else {
+  download_zenodo("10.5281/zenodo.xxx", path = "output",
+                  files = list("msci_draw_list_log.rds"))
+  msci_draw_list_log <- readRDS(file_msci)
+}
 ```
 
 ```{r media-dir}
