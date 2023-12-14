@@ -274,7 +274,8 @@ small_traits <- univar_summary %>%
   pull(trait_value)
 
 filtered_df <- species_traits_final_new %>%
-  filter(!trait_value %in% small_traits)
+  filter(!trait_value %in% small_traits,
+         trait_name != "Migration")
 
 combinations <- combn(unique(filtered_df$trait_name), 2)
 
@@ -414,7 +415,8 @@ small_traits_nozero <- univar_summary_nozero %>%
   pull(trait_value)
 
 filtered_df_nozero <- spec_traits_final_nozero_new %>%
-  filter(!trait_value %in% small_traits)
+  filter(!trait_value %in% small_traits,
+         trait_name != "Migration")
 
 combinations_nozero <- combn(unique(filtered_df$trait_name), 2)
 ```
