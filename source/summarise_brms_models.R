@@ -87,9 +87,11 @@ get_contrast_matrix <- function(model, combo) {
   return(rbind(ref_group, rest_group))
 }
 
-order_traits <- function(df) {
+order_traits <- function(df, var) {
+  require(data.table)
   out <- df
 
+  # Manual sorting where applicable
   if ("NutrientValueBiotope" %in% names(out)) {
     out <- out %>%
       mutate(NutrientValueBiotope = factor(.data$NutrientValueBiotope,
@@ -100,20 +102,18 @@ order_traits <- function(df) {
                                    "VeryNutrientRich"
                                  ), ordered = TRUE)
       )
-  }
-  if ("ForewingLength" %in% names(out)) {
+  } else if ("ForewingLength" %in% names(out)) {
     out <- out %>%
       mutate(ForewingLength = factor(.data$ForewingLength,
                            levels = c(
                              "VerySmall",
                              "Small",
-                             "Intermediate",
+                             "Medium",
                              "Large",
                              "VeryLarge"
                            ), ordered = TRUE)
       )
-  }
-  if ("Voltinism" %in% names(out)) {
+  } else if ("Voltinism" %in% names(out)) {
     out <- out %>%
       mutate(Voltinism = factor(.data$Voltinism,
                                    levels = c(
@@ -121,8 +121,7 @@ order_traits <- function(df) {
                                      "2"
                                    ), ordered = TRUE)
       )
-  }
-  if ("OverwinteringStage" %in% names(out)) {
+  } else if ("OverwinteringStage" %in% names(out)) {
     out <- out %>%
       mutate(OverwinteringStage = factor(.data$OverwinteringStage,
                                          levels = c(
@@ -132,8 +131,7 @@ order_traits <- function(df) {
                                            "Adult"
                                          ), ordered = TRUE)
       )
-  }
-  if ("HostPlantSpecificity" %in% names(out)) {
+  } else if ("HostPlantSpecificity" %in% names(out)) {
     out <- out %>%
       mutate(HostPlantSpecificity = factor(.data$HostPlantSpecificity,
                             levels = c(
@@ -142,8 +140,7 @@ order_traits <- function(df) {
                               "Polyphagous"
                             ), ordered = TRUE)
       )
-  }
-  if ("TempHum" %in% names(out)) {
+  } else if ("TempHum" %in% names(out)) {
     out <- out %>%
       mutate(TempHum = factor(.data$TempHum,
                               levels = c(
@@ -154,8 +151,7 @@ order_traits <- function(df) {
                                 "VeryHot_Dry"
                               ), ordered = TRUE)
       )
-  }
-  if ("FlightPeriod" %in% names(out)) {
+  } else if ("FlightPeriod" %in% names(out)) {
     out <- out %>%
       mutate(FlightPeriod = factor(.data$FlightPeriod,
                                   levels = c(
@@ -169,6 +165,15 @@ order_traits <- function(df) {
                                     "SpringSummerAutumn"
                                   ), ordered = TRUE)
       )
+  # Sort according to median effect for traits without logical ordering
+  } else {
+    out <- out %>%
+      group_by_at(var) %>%
+      mutate(msci_median = median(.data$msci)) %>%
+      ungroup() %>%
+      mutate("{var}" := reorder(!!sym(var), .data$msci_median, # nolint.
+                                decreasing = TRUE)) %>%
+      select(-c(.data$msci_median))
   }
 
   return(out)
