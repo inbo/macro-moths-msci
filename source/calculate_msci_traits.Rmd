@@ -360,7 +360,7 @@ msci_draw_list <- lapply(names(model_msci_list), function(name) {
                 distinct())
 
   # order factors
-  out <- order_traits(msci_df2)
+  out <- order_traits(msci_df2, name)
 
   return(out)
 })
@@ -457,7 +457,7 @@ msci_draw_list_log <- lapply(names(model_msci_list), function(name) {
                 distinct())
 
   # order factors
-  out <- order_traits(msci_df_log2)
+  out <- order_traits(msci_df_log2, name)
 
   return(out)
 })
