@@ -836,7 +836,7 @@ msci_draw_combi_list <- lapply(names(model_msci_combi_list), function(name) {
                 distinct())
 
   # order factors
-  out <- order_traits(msci_df2)
+  out <- order_traits(msci_df2, c(trait1, trait2))
 
   return(out)
 })
@@ -992,7 +992,8 @@ We round to four decimals.
 ```{r}
 traits_to_export <- c("Biotope", "LarvalFoodSource", "HostPlantSpecificity",
                       "OverwinteringStage", "Voltinism", "ForewingLength",
-                      "colourVariability", "Distribution", "Migration")
+                      "colourVariability", "Distribution", "Migration",
+                      "Proboscis")
 organised_summary_dfs <- lapply(traits_to_export, function(name) {
   summary_draw_list[[name]] %>%
     rename(trait_value = !!sym(name)) %>%
@@ -1000,17 +1001,27 @@ organised_summary_dfs <- lapply(traits_to_export, function(name) {
     select(trait, trait_value, n_species, msci.median, msci.lower, msci.upper,
            trend_coarse, trend_fine, .point, .interval, .width)
 })
-
+names(organised_summary_dfs) <- traits_to_export
 binded_summary_dfs <- do.call(rbind.data.frame, organised_summary_dfs)
 ```
 
 ```{r}
 dir.create("output", showWarnings = FALSE)
+
+# write out single csv for all traits
 write_csv(
   binded_summary_dfs %>%
     mutate(across(starts_with("msci"), ~ round(.x, 4))),
   "output/msci_trait_summary.csv"
   )
+
+# write out single csv for each trait
+for (trait in names(organised_summary_dfs)) {
+  df <- organised_summary_dfs[[trait]] %>%
+    mutate(across(starts_with("msci"), ~ round(.x, 4)))
+  csv_file <- paste0("output/", "msci_", trait, "_summary.csv")
+  write_csv(df, file = csv_file)
+}
 ```
 
 We also write out a list containing the posterior draws in the log scale to create figures.
