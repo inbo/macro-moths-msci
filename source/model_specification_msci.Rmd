@@ -33,6 +33,7 @@ conflicted::conflicts_prefer(brms::qstudent_t)
 conflicted::conflicts_prefer(brms::rstudent_t)
 
 # Packages
+library(zen4R)
 library(tidyverse)
 library(brms)
 library(tidybayes)
@@ -47,25 +48,29 @@ Test out model specifications and model fit.
 
 # Load data
 
-```{r}
+```{r load-data}
+# Data path and create directory if necessary
 data_path <- file.path("data", "processed")
+dir.create(data_path, showWarnings = FALSE)
 
-if (dir.exists(data_path)) {
-  # Read in data from data path
-  species_traits_final_nozero <- read_csv(
-    file.path(data_path, "prop_data_per_trait_nozero.csv")
-    )
-  species_traits_final <- read_csv(
-    file.path(data_path, "prop_data_per_trait.csv")
-    )
+# Download data from zenodo if necessary
+file_prop_nozero <- file.path(data_path,
+                              "prop_data_per_trait_nozero.csv")
+if (file.exists(file_prop_nozero)) {
+  species_traits_final_nozero <- read_csv(file_prop_nozero)
 } else {
-  # Create directory
-  dir.create(data_path, showWarnings = FALSE)
+  download_zenodo("10.5281/zenodo.8383839", path = data_path,
+                  files = list("prop_data_per_trait_nozero.csv"))
+  species_traits_final_nozero <- read_csv(file_prop_nozero)
+}
 
-  # Read in data from zenodo
-
-  # Save data in directory
-
+file_prop <- file.path(data_path, "prop_data_per_trait.csv")
+if (file.exists(file_prop)) {
+  species_traits_final <- read_csv(file_prop)
+} else {
+  download_zenodo("10.5281/zenodo.8383839", path = data_path,
+                  files = list("prop_data_per_trait.csv"))
+  species_traits_final <- read_csv(file_prop)
 }
 ```
 

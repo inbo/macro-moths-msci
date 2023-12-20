@@ -230,6 +230,7 @@ species_traits_df1 <- species_traits %>%
     TempHum,
     HabitatTemperature,
     HabitatHumidity,
+    Proboscis,
     Family
   ) %>%
   rename(Biotope = Biotope1,
@@ -258,6 +259,7 @@ species_traits_df2 <- species_traits_df2 %>%
     TempHum,
     HabitatTemperature,
     HabitatHumidity,
+    Proboscis,
     Family
   ) %>%
   rename(Biotope = Biotope2,

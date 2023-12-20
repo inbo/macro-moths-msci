@@ -27,6 +27,7 @@ conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::select)
 
 # Packages
+library(zen4R)
 library(tidyverse)
 library(INBOtheme)
 theme_set(theme_inbo(transparent = TRUE))
@@ -42,11 +43,29 @@ Create nice figures for the conference and research paper.
 We load the data of the SCI and MSCI results.
 
 ```{r load-data}
-# SCI
-sci_species_summary <- read_csv(file.path("output", "sci_species_summary.csv"))
+# Create data directory if necessary
+dir.create("output", showWarnings = FALSE)
 
-# MSCI
-msci_draw_list_log <- readRDS(file.path("output", "msci_draw_list_log.rds"))
+# Download data from zenodo if necessary
+## SCI
+file_sci <- file.path("output", "sci_species_summary.csv")
+if (file.exists(file_sci)) {
+  sci_species_summary <- read_csv(file_sci)
+} else {
+  download_zenodo("10.5281/zenodo.8383839", path = "output",
+                  files = list("sci_species_summary.csv"))
+  sci_species_summary <- read_csv(file_sci)
+}
+
+## MSCI
+file_msci <- file.path("output", "msci_draw_list_log.rds")
+if (file.exists(file_msci)) {
+  msci_draw_list_log <- readRDS(file_msci)
+} else {
+  download_zenodo("10.5281/zenodo.8383839", path = "output",
+                  files = list("msci_draw_list_log.rds"))
+  msci_draw_list_log <- readRDS(file_msci)
+}
 ```
 
 ```{r media-dir}
@@ -958,6 +977,89 @@ p_colourvariability1
 ```{r}
 ggsave(file.path("media", "msci_colourvariability_conference.jpg"),
        p_colourvariability1,
+       dpi = 300,
+       width = 8,
+       height = 4)
+```
+
+## Proboscis
+
+We sort the trait values according to the posterior mean.
+
+```{r}
+p_proboscis <- msci_draw_list_log$Proboscis %>%
+  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
+
+p_proboscis1 <- p_proboscis +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+    ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
+    )
+
+p_proboscis1
+```
+
+
+```{r}
+ggsave(file.path("media", "msci_proboscis_conference.jpg"),
+       p_proboscis1,
        dpi = 300,
        width = 8,
        height = 4)
