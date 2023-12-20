@@ -88,92 +88,119 @@ get_contrast_matrix <- function(model, combo) {
 }
 
 order_traits <- function(df, var) {
-  require(data.table)
   out <- df
+  # maak vector met ordered traits --> if any erin dan al die ifjes doen
+  # if any not erin dan if length = 1 median doen
+  # if lenth is 2 kijken hoeveel geordend moeten worden volgens median
+
+  ordered_traits <- c(
+    "NutrientValueBiotope",
+    "ForewingLength",
+    "Voltinism",
+    "OverwinteringStage",
+    "HostPlantSpecificity",
+    "TempHum",
+    "FlightPeriod"
+  )
 
   # Manual sorting where applicable
-  if ("NutrientValueBiotope" %in% names(out)) {
-    out <- out %>%
-      mutate(NutrientValueBiotope = factor(.data$NutrientValueBiotope,
-                                 levels = c(
-                                   "VeryNutrientPoor",
-                                   "NutrientPoor",
-                                   "NutrientRich",
-                                   "VeryNutrientRich"
-                                 ), ordered = TRUE)
-      )
-  } else if ("ForewingLength" %in% names(out)) {
-    out <- out %>%
-      mutate(ForewingLength = factor(.data$ForewingLength,
-                           levels = c(
-                             "VerySmall",
-                             "Small",
-                             "Medium",
-                             "Large",
-                             "VeryLarge"
-                           ), ordered = TRUE)
-      )
-  } else if ("Voltinism" %in% names(out)) {
-    out <- out %>%
-      mutate(Voltinism = factor(.data$Voltinism,
+  if (any(var %in% ordered_traits)) {
+    if ("NutrientValueBiotope" %in% names(out)) {
+      out <- out %>%
+        mutate(NutrientValueBiotope = factor(.data$NutrientValueBiotope,
                                    levels = c(
-                                     "1",
-                                     "2"
+                                     "VeryNutrientPoor",
+                                     "NutrientPoor",
+                                     "NutrientRich",
+                                     "VeryNutrientRich"
                                    ), ordered = TRUE)
-      )
-  } else if ("OverwinteringStage" %in% names(out)) {
-    out <- out %>%
-      mutate(OverwinteringStage = factor(.data$OverwinteringStage,
-                                         levels = c(
-                                           "Egg",
-                                           "Caterpillar",
-                                           "Pupa",
-                                           "Adult"
-                                         ), ordered = TRUE)
-      )
-  } else if ("HostPlantSpecificity" %in% names(out)) {
-    out <- out %>%
-      mutate(HostPlantSpecificity = factor(.data$HostPlantSpecificity,
-                            levels = c(
-                              "Monophagous",
-                              "Oligophagous",
-                              "Polyphagous"
-                            ), ordered = TRUE)
-      )
-  } else if ("TempHum" %in% names(out)) {
-    out <- out %>%
-      mutate(TempHum = factor(.data$TempHum,
+        )
+    }
+    if ("ForewingLength" %in% names(out)) {
+      out <- out %>%
+        mutate(ForewingLength = factor(.data$ForewingLength,
+                             levels = c(
+                               "VerySmall",
+                               "Small",
+                               "Medium",
+                               "Large",
+                               "VeryLarge"
+                             ), ordered = TRUE)
+        )
+    }
+    if ("Voltinism" %in% names(out)) {
+      out <- out %>%
+        mutate(Voltinism = factor(.data$Voltinism,
+                                     levels = c(
+                                       "1",
+                                       "2"
+                                     ), ordered = TRUE)
+        )
+    }
+    if ("OverwinteringStage" %in% names(out)) {
+      out <- out %>%
+        mutate(OverwinteringStage = factor(.data$OverwinteringStage,
+                                           levels = c(
+                                             "Egg",
+                                             "Caterpillar",
+                                             "Pupa",
+                                             "Adult"
+                                           ), ordered = TRUE)
+        )
+    }
+    if ("HostPlantSpecificity" %in% names(out)) {
+      out <- out %>%
+        mutate(HostPlantSpecificity = factor(.data$HostPlantSpecificity,
                               levels = c(
-                                "Cold_VeryWet",
-                                "Cold_Wet",
-                                "Hot_Wet",
-                                "Hot_Dry",
-                                "VeryHot_Dry"
+                                "Monophagous",
+                                "Oligophagous",
+                                "Polyphagous"
                               ), ordered = TRUE)
-      )
-  } else if ("FlightPeriod" %in% names(out)) {
-    out <- out %>%
-      mutate(FlightPeriod = factor(.data$FlightPeriod,
-                                  levels = c(
-                                    "Spring",
-                                    "SpringSummer",
-                                    "Summer",
-                                    "SummerAutumn",
-                                    "Autumn",
-                                    "Winter",
-                                    "AutumnSpring",
-                                    "SpringSummerAutumn"
-                                  ), ordered = TRUE)
-      )
+        )
+    }
+    if ("TempHum" %in% names(out)) {
+      out <- out %>%
+        mutate(TempHum = factor(.data$TempHum,
+                                levels = c(
+                                  "Cold_VeryWet",
+                                  "Cold_Wet",
+                                  "Hot_Wet",
+                                  "Hot_Dry",
+                                  "VeryHot_Dry"
+                                ), ordered = TRUE)
+        )
+    }
+    if ("FlightPeriod" %in% names(out)) {
+      out <- out %>%
+        mutate(FlightPeriod = factor(.data$FlightPeriod,
+                                    levels = c(
+                                      "Spring",
+                                      "SpringSummer",
+                                      "Summer",
+                                      "SummerAutumn",
+                                      "Autumn",
+                                      "Winter",
+                                      "AutumnSpring",
+                                      "SpringSummerAutumn"
+                                    ), ordered = TRUE)
+        )
+    }
+  }
+
   # Sort according to median effect for traits without logical ordering
-  } else {
-    out <- out %>%
-      group_by_at(var) %>%
-      mutate(msci_median = median(.data$msci)) %>%
-      ungroup() %>%
-      mutate("{var}" := reorder(!!sym(var), .data$msci_median, # nolint.
-                                decreasing = TRUE)) %>%
-      select(-c(.data$msci_median))
+  # only if there is one unordered trait
+  if (any(!var %in% ordered_traits)) {
+    unordered_var <- setdiff(var, ordered_traits)
+    if (length(unordered_var) == 1) {
+      out <- out %>%
+        group_by_at(unordered_var) %>%
+        mutate(msci_median = median(.data$msci)) %>%
+        ungroup() %>%
+        mutate("{unordered_var}" := reorder(!!sym(unordered_var), # nolint.
+                                            .data$msci_median,
+                                            decreasing = TRUE)) %>%
+        select(-c(.data$msci_median))
+    }
   }
 
   return(out)
