@@ -128,6 +128,7 @@ fit_msci_species <- brm(
   data = species_df, family = poisson(),
   chains = nchains, warmup = burnin, iter = niter, cores = nparallel,
   thin = thinning,
+  seed = seed,
   file = "source/brms_cache/fit_msci_species",
   file_refit = "on_change"
 )
