@@ -17,7 +17,7 @@ Veraghtert, Wim[^Natuurpunt]
 [^INBO]: Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw, Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium
 [^RIBES]: Radboud Institute for Biological and Environmental Sciences (RIBES), Radboud University, PO Box 9010, NL-6500 GL Nijmegen, The Netherlands
 [^Natuurpunt]: Natuurpunt Studie, Coxiestraat 11, B-2800 Mechelen, Belgium
-[^VUB]: WILD, Biology Department, Vrije Universiteit Brussel, Pleinlaan 2, B-1050 Brussels, Belgium
+[^VUB]: WILD, Biology Department, Vrije Universiteit Brussel (VUB), Pleinlaan 2, B-1050 Brussels, Belgium
 
 **keywords**: Global change; Insect decline; Life-history traits; Multi-Species Change Index (MSCI); Nature management; Nature policy; Pollinators; Threatened species
 
