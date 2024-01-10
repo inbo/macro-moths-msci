@@ -25,7 +25,7 @@ Veraghtert, Wim[^Natuurpunt]
 
 ### Description
 <!-- description: start -->
-Investigation of species traits as a guidance for moth conservation in the highly anthropogenic European region of Flanders based on multi-species change indices.
+Investigation of species traits as a guidance for moth conservation in the highly anthropogenic European region of Flanders based on Multi-Species Change Indices (MSCIs).
 <!-- description: end -->
 
 ### Order of execution
