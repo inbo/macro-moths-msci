@@ -19,7 +19,7 @@ Veraghtert, Wim[^Natuurpunt]
 [^Natuurpunt]: Natuurpunt Studie, Coxiestraat 11, B-2800 Mechelen, Belgium
 [^VUB]: WILD, Biology Department, Vrije Universiteit Brussel, Pleinlaan 2, B-1050 Brussels, Belgium
 
-**keywords**: moths; Flanders; species change index; multi-species index; traits; pollinators; conservation; threatened species
+**keywords**: Global change; Insect decline; Life-history traits; Multi-Species Change Index (MSCI); Nature management; Nature policy; Pollinators; Threatened species
 
 <!-- community: inbo -->
 
