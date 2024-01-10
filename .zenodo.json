@@ -1,16 +1,16 @@
 {
   "access_right": "open",
   "title": "Moth trends and traits in Flanders (northern Belgium)",
-  "description": "<p>Investigation of species traits as a guidance for moth conservation\nin the highly anthropogenic European region of Flanders based on\nmulti-species change indices.<\/p>",
+  "description": "<p>Investigation of species traits as a guidance for moth conservation\nin the highly anthropogenic European region of Flanders based on\nMulti-Species Change Indices (MSCIs).<\/p>",
   "keywords": [
-    "moths",
-    "Flanders",
-    "species change index",
-    "multi-species index",
-    "traits",
-    "pollinators",
-    "conservation",
-    "threatened species"
+    "Global change",
+    "Insect decline",
+    "Life-history traits",
+    "Multi-Species Change Index (MSCI)",
+    "Nature management",
+    "Nature policy",
+    "Pollinators",
+    "Threatened species"
   ],
   "upload_type": "software",
   "license": "CC-BY-4.0",
@@ -29,14 +29,33 @@
   ],
   "creators": [
     {
+      "name": "Maes, Dirk",
+      "affiliation": "Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw, Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium",
+      "orcid": "0000-0002-7947-3788"
+    },
+    {
       "name": "Langeraert, Ward",
       "affiliation": "Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw, Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium",
       "orcid": "0000-0002-5900-8109"
     },
     {
-      "name": "Maes, Dirk",
+      "name": "Onkelinx, Thierry",
       "affiliation": "Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw, Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium",
-      "orcid": "0000-0002-7947-3788"
+      "orcid": "0000-0001-8804-4216"
+    },
+    {
+      "name": "Van Calster, Hans",
+      "affiliation": "Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw, Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium",
+      "orcid": "0000-0001-8595-8426"
+    },
+    {
+      "name": "Veraghtert, Wim",
+      "affiliation": "Natuurpunt Studie, Coxiestraat 11, B-2800 Mechelen, Belgium"
+    },
+    {
+      "name": "Merckx, Thomas",
+      "affiliation": "WILD, Biology Department, Vrije Universiteit Brussel (VUB), Pleinlaan 2, B-1050 Brussels, Belgium",
+      "orcid": "0000-0002-6195-3302"
     }
   ],
   "communities": [

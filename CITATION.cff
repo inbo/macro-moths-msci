@@ -2,25 +2,43 @@ cff-version: 1.2.0
 message: If you use this software, please cite it using these metadata.
 title: Moth trends and traits in Flanders (northern Belgium)
 authors:
-- given-names: Ward
-  family-names: Langeraert
-  affiliation: Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw,
-    Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium
-  orcid: 0000-0002-5900-8109
 - given-names: Dirk
   family-names: Maes
   affiliation: Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw,
     Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium
   orcid: 0000-0002-7947-3788
+- given-names: Ward
+  family-names: Langeraert
+  affiliation: Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw,
+    Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium
+  orcid: 0000-0002-5900-8109
+- given-names: Thierry
+  family-names: Onkelinx
+  affiliation: Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw,
+    Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium
+  orcid: 0000-0001-8804-4216
+- given-names: Hans
+  family-names: Van Calster
+  affiliation: Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw,
+    Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium
+  orcid: 0000-0001-8595-8426
+- given-names: Wim
+  family-names: Veraghtert
+  affiliation: Natuurpunt Studie, Coxiestraat 11, B-2800 Mechelen, Belgium
+- given-names: Thomas
+  family-names: Merckx
+  affiliation: WILD, Biology Department, Vrije Universiteit Brussel (VUB), Pleinlaan
+    2, B-1050 Brussels, Belgium
+  orcid: 0000-0002-6195-3302
 keywords:
-- moths
-- Flanders
-- species change index
-- multi-species index
-- traits
-- pollinators
-- conservation
-- threatened species
+- Global change
+- Insect decline
+- Life-history traits
+- Multi-Species Change Index (MSCI)
+- Nature management
+- Nature policy
+- Pollinators
+- Threatened species
 contact:
 - given-names: Ward
   family-names: Langeraert
@@ -32,4 +50,5 @@ license: CC-BY-4.0
 repository-code: https://github.com/inbo/macro-moths-msci/
 type: software
 abstract: Investigation of species traits as a guidance for moth conservation in the
-  highly anthropogenic European region of Flanders based on multi-species change indices.
+  highly anthropogenic European region of Flanders based on Multi-Species Change Indices
+  (MSCIs).

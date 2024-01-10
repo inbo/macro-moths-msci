@@ -6,8 +6,12 @@
 
 # Moth trends and traits in Flanders (northern Belgium)
 
-[Langeraert, Ward![ORCID logo](https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png)](https://orcid.org/0000-0002-5900-8109)[^aut][^cre][^INBO]
 [Maes, Dirk![ORCID logo](https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png)](https://orcid.org/0000-0002-7947-3788)[^aut][^INBO]
+[Langeraert, Ward![ORCID logo](https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png)](https://orcid.org/0000-0002-5900-8109)[^aut][^cre][^INBO]
+[Onkelinx, Thierry![ORCID logo](https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png)](https://orcid.org/0000-0001-8804-4216)[^aut][^INBO]
+[Van Calster, Hans![ORCID logo](https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png)](https://orcid.org/0000-0001-8595-8426)[^aut][^INBO]
+Veraghtert, Wim[^aut][^Natuurpunt]
+[Merckx, Thomas![ORCID logo](https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png)](https://orcid.org/0000-0002-6195-3302)[^aut][^VUB]
 Research Institute for Nature and Forest (INBO)[^cph][^fnd]
 
 [^cph]: copyright holder
@@ -15,14 +19,17 @@ Research Institute for Nature and Forest (INBO)[^cph][^fnd]
 [^aut]: author
 [^cre]: contact person
 [^INBO]: Research Institute for Nature and Forest (INBO), Herman Teirlinckgebouw, Havenlaan 88 PO Box 73, B-1000 Brussels, Belgium
+[^RIBES]: Radboud Institute for Biological and Environmental Sciences (RIBES), Radboud University, PO Box 9010, NL-6500 GL Nijmegen, The Netherlands
+[^Natuurpunt]: Natuurpunt Studie, Coxiestraat 11, B-2800 Mechelen, Belgium
+[^VUB]: WILD, Biology Department, Vrije Universiteit Brussel (VUB), Pleinlaan 2, B-1050 Brussels, Belgium
 
-**keywords**: moths; Flanders; species change index; multi-species index; traits; pollinators; conservation; threatened species
+**keywords**: Global change; Insect decline; Life-history traits; Multi-Species Change Index (MSCI); Nature management; Nature policy; Pollinators; Threatened species
 
 <!-- community: inbo -->
 
 ### Description
 <!-- description: start -->
-Investigation of species traits as a guidance for moth conservation in the highly anthropogenic European region of Flanders based on multi-species change indices.
+Investigation of species traits as a guidance for moth conservation in the highly anthropogenic European region of Flanders based on Multi-Species Change Indices (MSCIs).
 <!-- description: end -->
 
 ### Order of execution
