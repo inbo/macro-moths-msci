@@ -267,11 +267,8 @@ p_biotope1
 
 
 ```{r}
-ggsave(file.path("media", "msci_biotope_conference.jpg"),
-       p_biotope1,
-       dpi = 300,
-       width = 8,
-       height = 8)
+save_figure(p_biotope1, "msci_biotope_conference", devices,
+            width = 8, height = 8)
 ```
 
 
@@ -360,11 +357,8 @@ p_larvalfoodsource1
 
 
 ```{r}
-ggsave(file.path("media", "msci_larvalfoodsource_conference.jpg"),
-       p_larvalfoodsource1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_larvalfoodsource1, "msci_larvalfoodsource_conference", devices,
+            width = 8, height = 4)
 ```
 
 
@@ -448,11 +442,8 @@ p_overwinteringstage1
 
 
 ```{r}
-ggsave(file.path("media", "msci_overwinteringstage_conference.jpg"),
-       p_overwinteringstage1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_overwinteringstage1, "msci_overwinteringstage_conference",
+            devices, width = 8, height = 4)
 ```
 
 ## Forewing length
@@ -552,11 +543,8 @@ p_forewinglength1
 
 
 ```{r}
-ggsave(file.path("media", "msci_forewinglength_conference.jpg"),
-       p_forewinglength1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_forewinglength1, "msci_forewinglength_conference", devices,
+            width = 8, height = 4)
 ```
 
 
@@ -637,11 +625,8 @@ p_distribution1
 
 
 ```{r}
-ggsave(file.path("media", "msci_distribution_conference.jpg"),
-       p_distribution1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_distribution1, "msci_distribution_conference", devices,
+            width = 8, height = 4)
 ```
 
 
@@ -724,11 +709,8 @@ p_hostplantspecificity1
 
 
 ```{r}
-ggsave(file.path("media", "msci_hostplantspecificity_conference.jpg"),
-       p_hostplantspecificity1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_hostplantspecificity1, "msci_hostplantspecificity_conference",
+            devices, width = 8, height = 4)
 ```
 
 
@@ -818,11 +800,8 @@ p_voltinism1
 
 
 ```{r}
-ggsave(file.path("media", "msci_voltinism_conference.jpg"),
-       p_voltinism1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_voltinism1, "msci_voltinism_conference", devices,
+            width = 8, height = 4)
 ```
 
 
@@ -903,11 +882,8 @@ p_migration1
 
 
 ```{r}
-ggsave(file.path("media", "msci_migration_conference.jpg"),
-       p_migration1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_migration1, "msci_migration_conference", devices,
+            width = 8, height = 4)
 ```
 
 
@@ -987,11 +963,8 @@ p_colourvariability1
 
 
 ```{r}
-ggsave(file.path("media", "msci_colourvariability_conference.jpg"),
-       p_colourvariability1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_colourvariability1, "msci_colourvariability_conference", devices,
+            width = 8, height = 4)
 ```
 
 ## Proboscis
@@ -1070,9 +1043,6 @@ p_proboscis1
 
 
 ```{r}
-ggsave(file.path("media", "msci_proboscis_conference.jpg"),
-       p_proboscis1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_proboscis1, "msci_proboscis_conference", devices,
+            width = 8, height = 4)
 ```
