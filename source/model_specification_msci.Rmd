@@ -51,7 +51,7 @@ Test out model specifications and model fit.
 ```{r load-data}
 # Data path and create directory if necessary
 data_path <- file.path("data", "processed")
-dir.create(data_path, showWarnings = FALSE)
+dir.create(data_path, showWarnings = FALSE, recursive = TRUE)
 
 # Download data from zenodo if necessary
 file_prop_nozero <- file.path(data_path,
@@ -59,7 +59,7 @@ file_prop_nozero <- file.path(data_path,
 if (file.exists(file_prop_nozero)) {
   species_traits_final_nozero <- read_csv(file_prop_nozero)
 } else {
-  download_zenodo("10.5281/zenodo.8383839", path = data_path,
+  download_zenodo("10.5281/zenodo.8383838", path = data_path,
                   files = list("prop_data_per_trait_nozero.csv"))
   species_traits_final_nozero <- read_csv(file_prop_nozero)
 }
@@ -68,7 +68,7 @@ file_prop <- file.path(data_path, "prop_data_per_trait.csv")
 if (file.exists(file_prop)) {
   species_traits_final <- read_csv(file_prop)
 } else {
-  download_zenodo("10.5281/zenodo.8383839", path = data_path,
+  download_zenodo("10.5281/zenodo.8383838", path = data_path,
                   files = list("prop_data_per_trait.csv"))
   species_traits_final <- read_csv(file_prop)
 }
@@ -113,7 +113,7 @@ Example for trait 'Photoperiod'. First for trait value 'DayActive'.
 
 ```{r}
 # create cache directory if not yet available
-dir.create(here("source", "brms_cache"), FALSE)
+dir.create(here("source", "brms_cache"), showWarnings = FALSE, recursive = TRUE)
 ```
 
 ```{r}

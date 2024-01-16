@@ -62,7 +62,7 @@ We load the data of the SCI and MSCI results.
 
 ```{r load-data}
 # Create data directory if necessary
-dir.create("output", showWarnings = FALSE)
+dir.create("output", showWarnings = FALSE, recursive = TRUE)
 
 # Download data from zenodo if necessary
 ## SCI
@@ -70,7 +70,7 @@ file_sci <- file.path("output", "sci_species_summary.csv")
 if (file.exists(file_sci)) {
   sci_species_summary <- read_csv(file_sci)
 } else {
-  download_zenodo("10.5281/zenodo.8383839", path = "output",
+  download_zenodo("10.5281/zenodo.8383838", path = "output",
                   files = list("sci_species_summary.csv"))
   sci_species_summary <- read_csv(file_sci)
 }
@@ -80,7 +80,7 @@ file_msci <- file.path("output", "msci_draw_list_log.rds")
 if (file.exists(file_msci)) {
   msci_draw_list_log <- readRDS(file_msci)
 } else {
-  download_zenodo("10.5281/zenodo.8383839", path = "output",
+  download_zenodo("10.5281/zenodo.8383838", path = "output",
                   files = list("msci_draw_list_log.rds"))
   msci_draw_list_log <- readRDS(file_msci)
 }
@@ -88,7 +88,7 @@ if (file.exists(file_msci)) {
 
 ```{r media-dir}
 # create media directory if not yet available
-dir.create("media", FALSE)
+dir.create("media", showWarnings = FALSE, recursive = TRUE)
 ```
 
 

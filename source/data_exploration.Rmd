@@ -46,7 +46,7 @@ Exploration of the data. Where are the bottlenecks? Missing data? ...
 ```{r load-data}
 # Data path and create directory if necessary
 data_path <- file.path("data", "intermediate")
-dir.create(data_path, showWarnings = FALSE)
+dir.create(data_path, showWarnings = FALSE, recursive = TRUE)
 
 # Download data from zenodo if necessary
 file_prop_nozero <- file.path(data_path,
@@ -54,7 +54,7 @@ file_prop_nozero <- file.path(data_path,
 if (file.exists(file_prop_nozero)) {
   species_traits_final_nozero <- read_csv(file_prop_nozero)
 } else {
-  download_zenodo("10.5281/zenodo.8383839", path = data_path,
+  download_zenodo("10.5281/zenodo.8383838", path = data_path,
                   files = list("prop_data_per_trait_nozero_intermed.csv"))
   species_traits_final_nozero <- read_csv(file_prop_nozero)
 }
@@ -63,7 +63,7 @@ file_prop <- file.path(data_path, "prop_data_per_trait_intermed.csv")
 if (file.exists(file_prop)) {
   species_traits_final <- read_csv(file_prop)
 } else {
-  download_zenodo("10.5281/zenodo.8383839", path = data_path,
+  download_zenodo("10.5281/zenodo.8383838", path = data_path,
                   files = list("prop_data_per_trait_intermed.csv"))
   species_traits_final <- read_csv(file_prop)
 }
@@ -612,7 +612,7 @@ out_df_nozero <- spec_traits_final_nozero_new %>%
 out_path <- file.path("data", "processed")
 
 # create data directory if not yet available
-dir.create(out_path, FALSE)
+dir.create(out_path, showWarnings = FALSE, recursive = TRUE)
 ```
 
 ```{r}

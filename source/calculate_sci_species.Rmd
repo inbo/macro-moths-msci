@@ -56,14 +56,14 @@ Fit models and calculate SCI for all resident species.
 ```{r load-data}
 # Data path and create directory if necessary
 data_path <- file.path("data", "processed")
-dir.create(data_path, showWarnings = FALSE)
+dir.create(data_path, showWarnings = FALSE, recursive = TRUE)
 
 # Download data from zenodo if necessary
 file_prop <- file.path(data_path, "prop_data_per_trait.csv")
 if (file.exists(file_prop)) {
   species_traits_final <- read_csv(file_prop)
 } else {
-  download_zenodo("10.5281/zenodo.8383839", path = data_path,
+  download_zenodo("10.5281/zenodo.8383838", path = data_path,
                   files = list("prop_data_per_trait.csv"))
   species_traits_final <- read_csv(file_prop)
 }
@@ -110,7 +110,7 @@ species_df <- species_df_raw %>%
 
 ```{r cache-dir}
 # create cache directory if not yet available
-dir.create(here("source", "brms_cache"), FALSE)
+dir.create(here("source", "brms_cache"), showWarnings = FALSE, recursive = TRUE)
 ```
 
 ```{r mcmc-params}
@@ -412,6 +412,6 @@ organised_summary_df <- summary_draw %>%
 ```
 
 ```{r}
-dir.create("output", showWarnings = FALSE)
+dir.create("output", showWarnings = FALSE, recursive = TRUE)
 write_csv(organised_summary_df, "output/sci_species_summary.csv")
 ```
