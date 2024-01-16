@@ -39,6 +39,16 @@ Create nice figures for the conference and research paper.
 
 ```{r}
 devices <- c("jpg", "tiff", "eps")
+
+save_figure <- function(x, file, devices, dpi = 300, width = 8, height = 6) {
+  sapply(devices, function(dev) {
+    ggsave(paste0(file.path("media", file), ".", dev),
+         x,
+         dpi = dpi,
+         width = width,
+         height = height)
+  })
+}
 ```
 
 
