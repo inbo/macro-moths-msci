@@ -38,6 +38,7 @@ theme_set(theme_inbo(transparent = TRUE))
 Create nice figures for the conference and research paper.
 
 ```{r}
+# Function to save figures using multiple devices
 save_figure <- function(x, file, devices, dpi = 300, width = 8, height = 6) {
   sapply(devices, function(dev) {
     ggsave(paste0(file.path("media", file), ".", dev),
@@ -50,6 +51,7 @@ save_figure <- function(x, file, devices, dpi = 300, width = 8, height = 6) {
 ```
 
 ```{r}
+# Devices to export
 devices <- c("jpg", "tiff", "eps")
 ```
 
