@@ -37,6 +37,24 @@ theme_set(theme_inbo(transparent = TRUE))
 
 Create nice figures for the conference and research paper.
 
+```{r}
+# Function to save figures using multiple devices
+save_figure <- function(plot, file, devices, ...) {
+  sapply(devices, function(dev) {
+    ggplot2::ggsave(
+      filename = paste0(file.path("media", file), ".", dev),
+      plot = plot,
+      ...
+      )
+  })
+}
+```
+
+```{r}
+# Devices to export
+devices <- c("jpg", "tiff", "eps")
+```
+
 
 # Load data
 
@@ -113,11 +131,8 @@ sci_barplot
 ```
 
 ```{r}
-ggsave(file.path("media", "sci_barplot_conference.jpg"),
-       sci_barplot,
-       dpi = 300,
-       width = 8,
-       height = 6)
+save_figure(sci_barplot, "sci_barplot_conference", devices,
+            dpi = 300, width = 8, height = 6)
 ```
 
 
@@ -255,11 +270,8 @@ p_biotope1
 
 
 ```{r}
-ggsave(file.path("media", "msci_biotope_conference.jpg"),
-       p_biotope1,
-       dpi = 300,
-       width = 8,
-       height = 8)
+save_figure(p_biotope1, "msci_biotope_conference", devices,
+            dpi = 300, width = 8, height = 8)
 ```
 
 
@@ -348,11 +360,8 @@ p_larvalfoodsource1
 
 
 ```{r}
-ggsave(file.path("media", "msci_larvalfoodsource_conference.jpg"),
-       p_larvalfoodsource1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_larvalfoodsource1, "msci_larvalfoodsource_conference", devices,
+            dpi = 300, width = 8, height = 4)
 ```
 
 
@@ -436,11 +445,8 @@ p_overwinteringstage1
 
 
 ```{r}
-ggsave(file.path("media", "msci_overwinteringstage_conference.jpg"),
-       p_overwinteringstage1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_overwinteringstage1, "msci_overwinteringstage_conference",
+            dpi = 300, devices, width = 8, height = 4)
 ```
 
 ## Forewing length
@@ -540,11 +546,8 @@ p_forewinglength1
 
 
 ```{r}
-ggsave(file.path("media", "msci_forewinglength_conference.jpg"),
-       p_forewinglength1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_forewinglength1, "msci_forewinglength_conference", devices,
+            dpi = 300, width = 8, height = 4)
 ```
 
 
@@ -625,11 +628,8 @@ p_distribution1
 
 
 ```{r}
-ggsave(file.path("media", "msci_distribution_conference.jpg"),
-       p_distribution1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_distribution1, "msci_distribution_conference", devices,
+            dpi = 300, width = 8, height = 4)
 ```
 
 
@@ -712,11 +712,8 @@ p_hostplantspecificity1
 
 
 ```{r}
-ggsave(file.path("media", "msci_hostplantspecificity_conference.jpg"),
-       p_hostplantspecificity1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_hostplantspecificity1, "msci_hostplantspecificity_conference",
+            dpi = 300, devices, width = 8, height = 4)
 ```
 
 
@@ -806,11 +803,8 @@ p_voltinism1
 
 
 ```{r}
-ggsave(file.path("media", "msci_voltinism_conference.jpg"),
-       p_voltinism1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_voltinism1, "msci_voltinism_conference", devices,
+            dpi = 300, width = 8, height = 4)
 ```
 
 
@@ -891,11 +885,8 @@ p_migration1
 
 
 ```{r}
-ggsave(file.path("media", "msci_migration_conference.jpg"),
-       p_migration1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_migration1, "msci_migration_conference", devices,
+            dpi = 300, width = 8, height = 4)
 ```
 
 
@@ -975,11 +966,8 @@ p_colourvariability1
 
 
 ```{r}
-ggsave(file.path("media", "msci_colourvariability_conference.jpg"),
-       p_colourvariability1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_colourvariability1, "msci_colourvariability_conference", devices,
+            dpi = 300, width = 8, height = 4)
 ```
 
 ## Proboscis
@@ -1058,9 +1046,6 @@ p_proboscis1
 
 
 ```{r}
-ggsave(file.path("media", "msci_proboscis_conference.jpg"),
-       p_proboscis1,
-       dpi = 300,
-       width = 8,
-       height = 4)
+save_figure(p_proboscis1, "msci_proboscis_conference", devices,
+            dpi = 300, width = 8, height = 4)
 ```
