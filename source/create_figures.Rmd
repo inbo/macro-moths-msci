@@ -39,14 +39,12 @@ Create nice figures for the conference and research paper.
 
 ```{r}
 # Function to save figures using multiple devices
-save_figure <- function(plot, file, devices, dpi = 300, width = 8, height = 6) {
+save_figure <- function(plot, file, devices, ...) {
   sapply(devices, function(dev) {
     ggplot2::ggsave(
       filename = paste0(file.path("media", file), ".", dev),
       plot = plot,
-      dpi = dpi,
-      width = width,
-      height = height
+      ...
       )
   })
 }
@@ -133,7 +131,8 @@ sci_barplot
 ```
 
 ```{r}
-save_figure(sci_barplot, "sci_barplot_conference", devices)
+save_figure(sci_barplot, "sci_barplot_conference", devices,
+            dpi = 300, width = 8, height = 6)
 ```
 
 
@@ -272,7 +271,7 @@ p_biotope1
 
 ```{r}
 save_figure(p_biotope1, "msci_biotope_conference", devices,
-            width = 8, height = 8)
+            dpi = 300, width = 8, height = 8)
 ```
 
 
@@ -362,7 +361,7 @@ p_larvalfoodsource1
 
 ```{r}
 save_figure(p_larvalfoodsource1, "msci_larvalfoodsource_conference", devices,
-            width = 8, height = 4)
+            dpi = 300, width = 8, height = 4)
 ```
 
 
@@ -447,7 +446,7 @@ p_overwinteringstage1
 
 ```{r}
 save_figure(p_overwinteringstage1, "msci_overwinteringstage_conference",
-            devices, width = 8, height = 4)
+            dpi = 300, devices, width = 8, height = 4)
 ```
 
 ## Forewing length
@@ -548,7 +547,7 @@ p_forewinglength1
 
 ```{r}
 save_figure(p_forewinglength1, "msci_forewinglength_conference", devices,
-            width = 8, height = 4)
+            dpi = 300, width = 8, height = 4)
 ```
 
 
@@ -630,7 +629,7 @@ p_distribution1
 
 ```{r}
 save_figure(p_distribution1, "msci_distribution_conference", devices,
-            width = 8, height = 4)
+            dpi = 300, width = 8, height = 4)
 ```
 
 
@@ -714,7 +713,7 @@ p_hostplantspecificity1
 
 ```{r}
 save_figure(p_hostplantspecificity1, "msci_hostplantspecificity_conference",
-            devices, width = 8, height = 4)
+            dpi = 300, devices, width = 8, height = 4)
 ```
 
 
@@ -805,7 +804,7 @@ p_voltinism1
 
 ```{r}
 save_figure(p_voltinism1, "msci_voltinism_conference", devices,
-            width = 8, height = 4)
+            dpi = 300, width = 8, height = 4)
 ```
 
 
@@ -887,7 +886,7 @@ p_migration1
 
 ```{r}
 save_figure(p_migration1, "msci_migration_conference", devices,
-            width = 8, height = 4)
+            dpi = 300, width = 8, height = 4)
 ```
 
 
@@ -968,7 +967,7 @@ p_colourvariability1
 
 ```{r}
 save_figure(p_colourvariability1, "msci_colourvariability_conference", devices,
-            width = 8, height = 4)
+            dpi = 300, width = 8, height = 4)
 ```
 
 ## Proboscis
@@ -1048,5 +1047,5 @@ p_proboscis1
 
 ```{r}
 save_figure(p_proboscis1, "msci_proboscis_conference", devices,
-            width = 8, height = 4)
+            dpi = 300, width = 8, height = 4)
 ```
