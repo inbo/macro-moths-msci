@@ -38,8 +38,6 @@ theme_set(theme_inbo(transparent = TRUE))
 Create nice figures for the conference and research paper.
 
 ```{r}
-devices <- c("jpg", "tiff", "eps")
-
 save_figure <- function(x, file, devices, dpi = 300, width = 8, height = 6) {
   sapply(devices, function(dev) {
     ggsave(paste0(file.path("media", file), ".", dev),
@@ -49,6 +47,10 @@ save_figure <- function(x, file, devices, dpi = 300, width = 8, height = 6) {
          height = height)
   })
 }
+```
+
+```{r}
+devices <- c("jpg", "tiff", "eps")
 ```
 
 
@@ -127,13 +129,7 @@ sci_barplot
 ```
 
 ```{r}
-sapply(devices, function(dev) {
-  ggsave(paste0(file.path("media", "sci_barplot_conference."), dev),
-       sci_barplot,
-       dpi = 300,
-       width = 8,
-       height = 6)
-  })
+save_figure(sci_barplot, "sci_barplot_conference", devices)
 ```
 
 
