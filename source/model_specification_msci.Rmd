@@ -59,7 +59,7 @@ file_prop_nozero <- file.path(data_path,
 if (file.exists(file_prop_nozero)) {
   species_traits_final_nozero <- read_csv(file_prop_nozero)
 } else {
-  download_zenodo("10.5281/zenodo.8383839", path = data_path,
+  download_zenodo("10.5281/zenodo.8383838", path = data_path,
                   files = list("prop_data_per_trait_nozero.csv"))
   species_traits_final_nozero <- read_csv(file_prop_nozero)
 }
@@ -68,7 +68,7 @@ file_prop <- file.path(data_path, "prop_data_per_trait.csv")
 if (file.exists(file_prop)) {
   species_traits_final <- read_csv(file_prop)
 } else {
-  download_zenodo("10.5281/zenodo.8383839", path = data_path,
+  download_zenodo("10.5281/zenodo.8383838", path = data_path,
                   files = list("prop_data_per_trait.csv"))
   species_traits_final <- read_csv(file_prop)
 }
