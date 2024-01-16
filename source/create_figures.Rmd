@@ -37,6 +37,10 @@ theme_set(theme_inbo(transparent = TRUE))
 
 Create nice figures for the conference and research paper.
 
+```{r}
+devices <- c("jpg", "tiff", "eps")
+```
+
 
 # Load data
 
@@ -113,11 +117,13 @@ sci_barplot
 ```
 
 ```{r}
-ggsave(file.path("media", "sci_barplot_conference.jpg"),
+sapply(devices, function(dev) {
+  ggsave(paste0(file.path("media", "sci_barplot_conference."), dev),
        sci_barplot,
        dpi = 300,
        width = 8,
        height = 6)
+  })
 ```
 
 
