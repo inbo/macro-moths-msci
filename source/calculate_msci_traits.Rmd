@@ -56,7 +56,7 @@ Fit models and calculate MSCI for specific traits and/or trait combinations.
 ```{r load-data}
 # Data path and create directory if necessary
 data_path <- file.path("data", "processed")
-dir.create(data_path, showWarnings = FALSE)
+dir.create(data_path, showWarnings = FALSE, recursive = TRUE)
 
 # Download data from zenodo if necessary
 file_prop <- file.path(data_path, "prop_data_per_trait.csv")
@@ -212,7 +212,7 @@ species_traits_final %>%
 
 ```{r}
 # create cache directory if not yet available
-dir.create(here("source", "brms_cache"), FALSE)
+dir.create(here("source", "brms_cache"), showWarnings = FALSE, recursive = TRUE)
 ```
 
 We set the MCMC parameters and make a list of model formulae as specified in `model_specification_msci.Rmd`.
@@ -1006,7 +1006,7 @@ binded_summary_dfs <- do.call(rbind.data.frame, organised_summary_dfs)
 ```
 
 ```{r}
-dir.create("output", showWarnings = FALSE)
+dir.create("output", showWarnings = FALSE, recursive = TRUE)
 
 # write out single csv for all traits
 write_csv(

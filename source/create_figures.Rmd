@@ -62,7 +62,7 @@ We load the data of the SCI and MSCI results.
 
 ```{r load-data}
 # Create data directory if necessary
-dir.create("output", showWarnings = FALSE)
+dir.create("output", showWarnings = FALSE, recursive = TRUE)
 
 # Download data from zenodo if necessary
 ## SCI
@@ -88,7 +88,7 @@ if (file.exists(file_msci)) {
 
 ```{r media-dir}
 # create media directory if not yet available
-dir.create("media", FALSE)
+dir.create("media", showWarnings = FALSE, recursive = TRUE)
 ```
 
 

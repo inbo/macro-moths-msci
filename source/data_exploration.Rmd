@@ -46,7 +46,7 @@ Exploration of the data. Where are the bottlenecks? Missing data? ...
 ```{r load-data}
 # Data path and create directory if necessary
 data_path <- file.path("data", "intermediate")
-dir.create(data_path, showWarnings = FALSE)
+dir.create(data_path, showWarnings = FALSE, recursive = TRUE)
 
 # Download data from zenodo if necessary
 file_prop_nozero <- file.path(data_path,
@@ -612,7 +612,7 @@ out_df_nozero <- spec_traits_final_nozero_new %>%
 out_path <- file.path("data", "processed")
 
 # create data directory if not yet available
-dir.create(out_path, FALSE)
+dir.create(out_path, showWarnings = FALSE, recursive = TRUE)
 ```
 
 ```{r}

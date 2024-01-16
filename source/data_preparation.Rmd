@@ -349,7 +349,7 @@ We write out the datasets.
 out_path <- file.path("data", "intermediate")
 
 # create data directory if not yet available
-dir.create(out_path, FALSE)
+dir.create(out_path, showWarnings = FALSE, recursive = TRUE)
 ```
 
 ```{r}

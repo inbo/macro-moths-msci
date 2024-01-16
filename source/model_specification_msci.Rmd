@@ -51,7 +51,7 @@ Test out model specifications and model fit.
 ```{r load-data}
 # Data path and create directory if necessary
 data_path <- file.path("data", "processed")
-dir.create(data_path, showWarnings = FALSE)
+dir.create(data_path, showWarnings = FALSE, recursive = TRUE)
 
 # Download data from zenodo if necessary
 file_prop_nozero <- file.path(data_path,
@@ -113,7 +113,7 @@ Example for trait 'Photoperiod'. First for trait value 'DayActive'.
 
 ```{r}
 # create cache directory if not yet available
-dir.create(here("source", "brms_cache"), FALSE)
+dir.create(here("source", "brms_cache"), showWarnings = FALSE, recursive = TRUE)
 ```
 
 ```{r}
