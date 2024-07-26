@@ -126,6 +126,28 @@ min_threshold <- log(0.8)
 max_threshold <- log(1.25)
 ```
 
+Translate trends.
+
+```{r}
+msci_draw_list_log <- lapply(msci_draw_list_log, function(df) {
+  df %>%
+    mutate(
+      trend_coarse = case_when(
+        trend_coarse == "increase" ~ "positief",
+        trend_coarse == "stable" ~ "stabiel",
+        trend_coarse == "decrease" ~ "negatief",
+        trend_coarse == "uncertain" ~ "onzeker"
+        ),
+      trend_coarse = factor(trend_coarse,
+                            levels = c("positief",
+                                       "stabiel",
+                                       "negatief",
+                                       "onzeker"),
+                            ordered = TRUE)
+      )
+})
+```
+
 
 # MSCI figures
 ## Biotope
@@ -156,7 +178,7 @@ p_biotope <- msci_draw_list_log$Biotope %>%
                linetype = "dotdash") +
     geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper,
                       colour = trend_coarse),
-                  linewidth = 1, width = 0.1) +
+                  linewidth = 1, width = 0.2) +
     geom_point(aes(x = msci.median),
                size = 2.2, colour = "black") +
     scale_colour_manual(values =  c("chartreuse3",
@@ -165,17 +187,13 @@ p_biotope <- msci_draw_list_log$Biotope %>%
                                     "skyblue"),
                         drop = FALSE) +
     labs(y = "",
-         x = "Multi-Species Change Index",
+         x = "Multi-soorten trendindex",
          colour = "Trend") +
     scale_x_continuous(
       breaks = index_breaks(),
       labels = index_labels,
       minor_breaks = minor_breaks(),
-      limits = c(-log(3.3), log(3.3)),
-      sec.axis = sec_axis(~ exp(.),
-        breaks = index_breaks_rev(),
-        labels = index_labels_rev(),
-        name = "Proportional change")
+      limits = c(-log(3.3), log(3.3))
       ) +
     theme(
       legend.position = c(1, 0),
