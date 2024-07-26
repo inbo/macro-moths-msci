@@ -135,36 +135,38 @@ We rename some trait values and sort them according to the posterior median.
 ```{r}
 p_biotope <- msci_draw_list_log$Biotope %>%
   mutate(trait_value_new = case_when(
-    trait_value == "WoodlandDeciduous" ~ "Deciduous woodland",
-    trait_value == "WoodlandConiferous" ~ "Coniferous woodland",
-    trait_value == "HeathlandWet" ~ "Wet heathland",
-    trait_value == "HeathlandDry" ~ "Dry heathland",
-    trait_value == "GrasslandNutrientPoor" ~ "Nutrient-poor grassland",
-    trait_value == "GrasslandNutrientRich" ~ "Nutrient-rich grassland",
-    trait_value == "Hedges & orchards" ~ "Hedges and orchards",
-    TRUE ~ trait_value
+    trait_value == "WoodlandDeciduous" ~ "Loofbossen",
+    trait_value == "WoodlandConiferous" ~ "Naaldbossen",
+    trait_value == "HeathlandWet" ~ "Natte heide",
+    trait_value == "HeathlandDry" ~ "Droge heide",
+    trait_value == "GrasslandNutrientPoor" ~ "Voedselarme graslanden",
+    trait_value == "GrasslandNutrientRich" ~ "Voedselrijke graslanden",
+    trait_value == "Hedges & orchards" ~ "Hagen en boomgaarden",
+    trait_value == "Coastal dunes" ~ "Kustduinen",
+    trait_value == "Generalist" ~ "Generalisten",
+    trait_value == "Marshes" ~ "Moerassen",
+    trait_value == "(Sub)urban" ~ "(Sub)urbaan",
     )
   ) %>%
   mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
-    geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
-    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
-                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper,
+                      colour = trend_coarse),
+                  linewidth = 1, width = 0.1) +
     geom_point(aes(x = msci.median),
                size = 2.2, colour = "black") +
-    scale_fill_manual(values =  c("chartreuse3",
-                                  "gold",
-                                  "firebrick1",
-                                  "skyblue"),
-                      drop = FALSE) +
+    scale_colour_manual(values =  c("chartreuse3",
+                                    "gold",
+                                    "firebrick1",
+                                    "skyblue"),
+                        drop = FALSE) +
     labs(y = "",
          x = "Multi-Species Change Index",
-         fill = "Trend") +
+         colour = "Trend") +
     scale_x_continuous(
       breaks = index_breaks(),
       labels = index_labels,
