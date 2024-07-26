@@ -1,0 +1,997 @@
+---
+title: "Create figures for Dutch article"
+author: "Ward Langeraert"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# Set up
+library(knitr)
+library(here)
+opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+opts_knit$set(root.dir = here::here())
+
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::select)
+
+# Packages
+library(zen4R)
+library(tidyverse)
+library(INBOtheme)
+theme_set(theme_inbo(transparent = TRUE))
+```
+
+# Goal
+
+Create nice figures for a Dutch article in 'natuur.focus'.
+
+```{r}
+# Function to save figures using multiple devices
+save_figure <- function(plot, file, devices, ...) {
+  sapply(devices, function(dev) {
+    ggplot2::ggsave(
+      filename = paste0(file.path("media", file), ".", dev),
+      plot = plot,
+      ...
+      )
+  })
+}
+```
+
+```{r}
+# Devices to export
+devices <- c("png")
+```
+
+
+# Load data
+
+We load the data of the MSCI results.
+
+```{r load-data}
+# Create data directory if necessary
+dir.create("output", showWarnings = FALSE, recursive = TRUE)
+
+# Download data from zenodo if necessary
+## MSCI
+file_msci <- file.path("output", "msci_draw_list_log.rds")
+if (file.exists(file_msci)) {
+  msci_draw_list_log <- readRDS(file_msci)
+} else {
+  download_zenodo("10.5281/zenodo.8383838", path = "output",
+                  files = list("msci_draw_list_log.rds"))
+  msci_draw_list_log <- readRDS(file_msci)
+}
+```
+
+```{r media-dir}
+# create media directory if not yet available
+dir.create("media", showWarnings = FALSE, recursive = TRUE)
+```
+
+
+# MSCI figures
+## Set general functions and thresholds
+
+We specify some general plot specifications as functions.
+
+```{r}
+index_labels <- function(x) {
+  sprintf("%+.0f%%", 100 * (exp(x) - 1))
+}
+
+index_breaks <- function() {
+  z <- 1 - c(
+    4 / 5, 3 / 4, 2 / 3, 1 / 2, 1 / 3, 1 / 5
+  )
+  z <- log(sort(z))
+  c(z, 0, -z)
+}
+
+minor_breaks <- function() {
+  breaks <- unique(abs(index_breaks()))
+  out <- vector(length = length(breaks) - 1)
+  i <- 1
+  while (i < length(breaks)) {
+    out[i] <- mean(c(breaks[i], breaks[i + 1]))
+    i <- i + 1
+  }
+  return(c(-out, out))
+}
+
+index_breaks_rev <- function() {
+  exp(index_breaks())
+}
+
+index_labels_rev <- function(digits = 2) {
+  format(round(exp(index_breaks()), digits), nsmall = digits)
+}
+```
+
+We set thresholds at -20% and +25% in the log scale.
+
+```{r}
+min_threshold <- log(0.8)
+max_threshold <- log(1.25)
+```
+
+
+## Biotope
+
+We rename some trait values and sort them according to the posterior median.
+
+```{r}
+p_biotope <- msci_draw_list_log$Biotope %>%
+  mutate(trait_value_new = case_when(
+    trait_value == "WoodlandDeciduous" ~ "Deciduous woodland",
+    trait_value == "WoodlandConiferous" ~ "Coniferous woodland",
+    trait_value == "HeathlandWet" ~ "Wet heathland",
+    trait_value == "HeathlandDry" ~ "Dry heathland",
+    trait_value == "GrasslandNutrientPoor" ~ "Nutrient-poor grassland",
+    trait_value == "GrasslandNutrientRich" ~ "Nutrient-rich grassland",
+    trait_value == "Hedges & orchards" ~ "Hedges and orchards",
+    TRUE ~ trait_value
+    )
+  ) %>%
+  mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
+
+p_biotope1 <- p_biotope +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.3, 0.3),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.4, 0.4),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.4, 0.4),
+           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.3, 0.3),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.4, 0.4),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.4, 0.4),
+           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 11),
+    axis.text.y = element_text(size = 13),
+    axis.title = element_text(size = 15)
+    ) +
+  theme(
+    legend.key.size = unit(0.7, "cm"), # Change legend key size
+    legend.key.height = unit(0.7, "cm"), # Change legend key height
+    legend.key.width = unit(0.7, "cm"), # Change legend key width
+    legend.title = element_text(size = 12), # Change legend title font size
+    legend.text = element_text(size = 10) # Change legend text font size
+    )
+
+p_biotope1
+```
+
+
+```{r}
+save_figure(p_biotope1, "msci_biotope_conference", devices,
+            dpi = 300, width = 8, height = 8)
+```
+
+
+## Larval food source
+
+We rename some trait values and sort them according to the posterior median.
+We do not include trait value 'Diverse'.
+
+```{r}
+p_larvalfoodsource <- msci_draw_list_log$LarvalFoodSource %>%
+  filter(trait_value != "Diverse") %>%
+  mutate(trait_value_new = case_when(
+    trait_value == "Shrubs_Trees" ~ "Shrubs and trees",
+    trait_value == "Lichens_Mosses" ~ "Lichens and mosses",
+    TRUE ~ trait_value
+    )
+  ) %>%
+  mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
+
+p_larvalfoodsource1 <- p_larvalfoodsource +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+    ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
+    )
+
+p_larvalfoodsource1
+```
+
+
+```{r}
+save_figure(p_larvalfoodsource1, "msci_larvalfoodsource_conference", devices,
+            dpi = 300, width = 8, height = 4)
+```
+
+
+## Overwintering stage
+
+We sort the trait values according to a logical order.
+
+```{r}
+p_overwinteringstage <- msci_draw_list_log$OverwinteringStage %>%
+  arrange(trait_value) %>%
+  rownames_to_column("order") %>%
+  mutate(order = as.numeric(order)) %>%
+  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
+         label = reorder(label, order,  decreasing = TRUE)) %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
+
+p_overwinteringstage1 <- p_overwinteringstage +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+    ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
+    )
+
+p_overwinteringstage1
+```
+
+
+```{r}
+save_figure(p_overwinteringstage1, "msci_overwinteringstage_conference",
+            dpi = 300, devices, width = 8, height = 4)
+```
+
+## Forewing length
+
+We rename some trait values and sort them according to a logical order.
+
+```{r}
+trait_value_wing <- as.character(msci_draw_list_log$ForewingLength$trait_value)
+trait_value_split <- strsplit(trait_value_wing, "(?<=[a-z])(?=[A-Z])",
+                              perl = TRUE)
+trait_value_wing_new <- sapply(trait_value_split, function(vec) {
+  if (length(vec) == 2) {
+    out <- paste(vec[1], tolower(vec[2]))
+  } else {
+    out <- vec
+  }
+
+  return(out)
+  }
+)
+```
+
+```{r}
+p_forewinglength <- msci_draw_list_log$ForewingLength %>%
+  mutate(trait_value_new = trait_value_wing_new) %>%
+  arrange(trait_value) %>%
+  rownames_to_column("order") %>%
+  mutate(order = as.numeric(order)) %>%
+  mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
+         label = reorder(label, order,  decreasing = TRUE)) %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
+
+p_forewinglength1 <- p_forewinglength +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+    ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
+    )
+
+p_forewinglength1
+```
+
+
+```{r}
+save_figure(p_forewinglength1, "msci_forewinglength_conference", devices,
+            dpi = 300, width = 8, height = 4)
+```
+
+
+## Distribution
+
+We sort the trait values according to the posterior mean.
+
+```{r}
+p_distribution <- msci_draw_list_log$Distribution %>%
+  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
+
+p_distribution1 <- p_distribution +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+    ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
+    )
+
+p_distribution1
+```
+
+
+```{r}
+save_figure(p_distribution1, "msci_distribution_conference", devices,
+            dpi = 300, width = 8, height = 4)
+```
+
+
+## Host plant specificity
+
+We sort the trait values them according to a logical order.
+
+```{r}
+p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
+  arrange(trait_value) %>%
+  rownames_to_column("order") %>%
+  mutate(order = as.numeric(order)) %>%
+  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
+         label = reorder(label, order,  decreasing = TRUE)) %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
+
+p_hostplantspecificity1 <- p_hostplantspecificity +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+    ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
+    )
+
+p_hostplantspecificity1
+```
+
+
+```{r}
+save_figure(p_hostplantspecificity1, "msci_hostplantspecificity_conference",
+            dpi = 300, devices, width = 8, height = 4)
+```
+
+
+## Voltinism
+
+We rename some trait values and sort them according to a logical order.
+
+```{r}
+p_voltinism <- msci_draw_list_log$Voltinism %>%
+  arrange(trait_value) %>%
+  rownames_to_column("order") %>%
+  mutate(order = as.numeric(order)) %>%
+  mutate(label = ifelse(trait_value == "1",
+                        paste0(trait_value,
+                               " generation", "\n",
+                               "[n = ", n_species, "]"),
+                        paste0(trait_value,
+                               " generations", "\n",
+                               "[n = ", n_species, "]")),
+         label = reorder(label, order,  decreasing = TRUE)) %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
+
+p_voltinism1 <- p_voltinism +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+  ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
+  )
+
+p_voltinism1
+```
+
+
+```{r}
+save_figure(p_voltinism1, "msci_voltinism_conference", devices,
+            dpi = 300, width = 8, height = 4)
+```
+
+
+## Migration
+
+We sort the trait values according to the posterior mean.
+
+```{r}
+p_migration <- msci_draw_list_log$Migration %>%
+  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")
+      ) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
+
+p_migration1 <- p_migration +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+    ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
+    )
+
+p_migration1
+```
+
+
+```{r}
+save_figure(p_migration1, "msci_migration_conference", devices,
+            dpi = 300, width = 8, height = 4)
+```
+
+
+## Colour variability
+
+We sort the trait values according to the posterior mean.
+
+```{r}
+p_colourvariability <- msci_draw_list_log$colourVariability %>%
+  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
+
+p_colourvariability1 <- p_colourvariability +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+    ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
+    )
+
+p_colourvariability1
+```
+
+
+```{r}
+save_figure(p_colourvariability1, "msci_colourvariability_conference", devices,
+            dpi = 300, width = 8, height = 4)
+```
+
+## Proboscis
+
+We sort the trait values according to the posterior mean.
+
+```{r}
+p_proboscis <- msci_draw_list_log$Proboscis %>%
+  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
+  ggplot(aes(y = label)) +
+    geom_violin(aes(x = msci.draw, fill = trend_coarse),
+                colour = alpha("white", 0)) +
+    geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
+    geom_vline(xintercept = c(min_threshold, max_threshold),
+               linetype = "dotdash") +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
+                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_point(aes(x = msci.median),
+               size = 2.2, colour = "black") +
+    scale_fill_manual(values =  c("chartreuse3",
+                                  "gold",
+                                  "firebrick1",
+                                  "skyblue"),
+                      drop = FALSE) +
+    labs(y = "",
+         x = "Multi-Species Change Index",
+         fill = "Trend") +
+    scale_x_continuous(
+      breaks = index_breaks(),
+      labels = index_labels,
+      minor_breaks = minor_breaks(),
+      limits = c(-log(3.3), log(3.3)),
+      sec.axis = sec_axis(~ exp(.),
+        breaks = index_breaks_rev(),
+        labels = index_labels_rev(),
+        name = "Proportional change")) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0),
+      legend.background = element_rect(fill = "white", color = "darkgrey"),
+      legend.margin = margin(6, 6, 6, 6)
+      )
+
+p_proboscis1 <- p_proboscis +
+  annotate("text", label = c("increase", "strong increase"),
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "left") +
+  annotate("segment",
+           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
+           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  annotate("text", label = c("decrease", "strong decrease"),
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           size = 2.5, hjust = "right") +
+  annotate("segment",
+           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
+           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
+           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+  expand_limits(y = c(0.001, 0)) +
+  theme(
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+    ) +
+  theme(
+    legend.key.size = unit(0.5, "cm"), # Change legend key size
+    legend.key.height = unit(0.5, "cm"), # Change legend key height
+    legend.key.width = unit(0.5, "cm"), # Change legend key width
+    legend.title = element_text(size = 10), # Change legend title font size
+    legend.text = element_text(size = 8) # Change legend text font size
+    )
+
+p_proboscis1
+```
+
+
+```{r}
+save_figure(p_proboscis1, "msci_proboscis_conference", devices,
+            dpi = 300, width = 8, height = 4)
+```
