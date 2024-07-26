@@ -178,7 +178,7 @@ p_biotope <- msci_draw_list_log$Biotope %>%
                linetype = "dotdash") +
     geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper,
                       colour = trend_coarse),
-                  linewidth = 1.2, width = 0.25) +
+                  linewidth = 1.2, width = 0.25, show.legend = TRUE) +
     geom_point(aes(x = msci.median),
                size = 2.2, colour = "black") +
     scale_colour_manual(values =  c("chartreuse3",
@@ -250,40 +250,36 @@ We do not include trait value 'Diverse'.
 p_larvalfoodsource <- msci_draw_list_log$LarvalFoodSource %>%
   filter(trait_value != "Diverse") %>%
   mutate(trait_value_new = case_when(
-    trait_value == "Shrubs_Trees" ~ "Shrubs and trees",
-    trait_value == "Lichens_Mosses" ~ "Lichens and mosses",
-    TRUE ~ trait_value
+    trait_value == "Shrubs_Trees" ~ "Struiken of bomen",
+    trait_value == "Lichens_Mosses" ~ "Korstmossen of mossen",
+    trait_value == "Forbs" ~ "Kruiden",
+    trait_value == "Grasses" ~ "Grassen"
     )
   ) %>%
   mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
-    geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
-    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
-                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper,
+                      colour = trend_coarse),
+                  linewidth = 1.2, width = 0.25, show.legend = TRUE) +
     geom_point(aes(x = msci.median),
                size = 2.2, colour = "black") +
-    scale_fill_manual(values =  c("chartreuse3",
-                                  "gold",
-                                  "firebrick1",
-                                  "skyblue"),
-                      drop = FALSE) +
+    scale_colour_manual(values =  c("chartreuse3",
+                                    "gold",
+                                    "firebrick1",
+                                    "skyblue"),
+                        drop = FALSE) +
     labs(y = "",
-         x = "Multi-Species Change Index",
-         fill = "Trend") +
+         x = "Multi-soorten trendindex",
+         colour = "Trend") +
     scale_x_continuous(
       breaks = index_breaks(),
       labels = index_labels,
       minor_breaks = minor_breaks(),
-      limits = c(-log(3.3), log(3.3)),
-      sec.axis = sec_axis(~ exp(.),
-        breaks = index_breaks_rev(),
-        labels = index_labels_rev(),
-        name = "Proportional change")
+      limits = c(-log(3.3), log(3.3))
       ) +
     theme(
       legend.position = c(1, 0),
@@ -293,32 +289,32 @@ p_larvalfoodsource <- msci_draw_list_log$LarvalFoodSource %>%
       )
 
 p_larvalfoodsource1 <- p_larvalfoodsource +
-  annotate("text", label = c("increase", "strong increase"),
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+  annotate("text", label = "toename",
+           x = 0 + 0.02, y = 0.3,
            size = 2.5, hjust = "left") +
   annotate("segment",
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
-           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
-           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
-  annotate("text", label = c("decrease", "strong decrease"),
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           x = 0 + 0.02, y = 0.4,
+           xend = 0 + 0.1, yend = 0.4,
+           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
+  annotate("text", label = "afname",
+           x = 0 - 0.02, y = 0.3,
            size = 2.5, hjust = "right") +
   annotate("segment",
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
-           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
-           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+           x = 0 - 0.02, y = 0.4,
+           xend = 0 - 0.1, yend = 0.4,
+           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
   expand_limits(y = c(0.001, 0)) +
   theme(
-    axis.text.x = element_text(size = 10),
-    axis.text.y = element_text(size = 12),
-    axis.title = element_text(size = 14)
+    axis.text.x = element_text(size = 11),
+    axis.text.y = element_text(size = 13),
+    axis.title = element_text(size = 15)
     ) +
   theme(
-    legend.key.size = unit(0.5, "cm"), # Change legend key size
-    legend.key.height = unit(0.5, "cm"), # Change legend key height
-    legend.key.width = unit(0.5, "cm"), # Change legend key width
-    legend.title = element_text(size = 10), # Change legend title font size
-    legend.text = element_text(size = 8) # Change legend text font size
+    legend.key.size = unit(0.7, "cm"), # Change legend key size
+    legend.key.height = unit(0.7, "cm"), # Change legend key height
+    legend.key.width = unit(0.7, "cm"), # Change legend key width
+    legend.title = element_text(size = 12), # Change legend title font size
+    legend.text = element_text(size = 10) # Change legend text font size
     )
 
 p_larvalfoodsource1
@@ -395,32 +391,32 @@ p_forewinglength <- msci_draw_list_log$ForewingLength %>%
       )
 
 p_forewinglength1 <- p_forewinglength +
-  annotate("text", label = c("increase", "strong increase"),
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+  annotate("text", label = "toename",
+           x = 0 + 0.02, y = 0.3,
            size = 2.5, hjust = "left") +
   annotate("segment",
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
-           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
-           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
-  annotate("text", label = c("decrease", "strong decrease"),
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           x = 0 + 0.02, y = 0.4,
+           xend = 0 + 0.1, yend = 0.4,
+           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
+  annotate("text", label = "afname",
+           x = 0 - 0.02, y = 0.3,
            size = 2.5, hjust = "right") +
   annotate("segment",
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
-           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
-           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+           x = 0 - 0.02, y = 0.4,
+           xend = 0 - 0.1, yend = 0.4,
+           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
   expand_limits(y = c(0.001, 0)) +
   theme(
-    axis.text.x = element_text(size = 10),
-    axis.text.y = element_text(size = 12),
-    axis.title = element_text(size = 14)
+    axis.text.x = element_text(size = 11),
+    axis.text.y = element_text(size = 13),
+    axis.title = element_text(size = 15)
     ) +
   theme(
-    legend.key.size = unit(0.5, "cm"), # Change legend key size
-    legend.key.height = unit(0.5, "cm"), # Change legend key height
-    legend.key.width = unit(0.5, "cm"), # Change legend key width
-    legend.title = element_text(size = 10), # Change legend title font size
-    legend.text = element_text(size = 8) # Change legend text font size
+    legend.key.size = unit(0.7, "cm"), # Change legend key size
+    legend.key.height = unit(0.7, "cm"), # Change legend key height
+    legend.key.width = unit(0.7, "cm"), # Change legend key width
+    legend.title = element_text(size = 12), # Change legend title font size
+    legend.text = element_text(size = 10) # Change legend text font size
     )
 
 p_forewinglength1
@@ -479,32 +475,32 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
       )
 
 p_hostplantspecificity1 <- p_hostplantspecificity +
-  annotate("text", label = c("increase", "strong increase"),
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+  annotate("text", label = "toename",
+           x = 0 + 0.02, y = 0.3,
            size = 2.5, hjust = "left") +
   annotate("segment",
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
-           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
-           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
-  annotate("text", label = c("decrease", "strong decrease"),
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           x = 0 + 0.02, y = 0.4,
+           xend = 0 + 0.1, yend = 0.4,
+           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
+  annotate("text", label = "afname",
+           x = 0 - 0.02, y = 0.3,
            size = 2.5, hjust = "right") +
   annotate("segment",
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
-           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
-           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+           x = 0 - 0.02, y = 0.4,
+           xend = 0 - 0.1, yend = 0.4,
+           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
   expand_limits(y = c(0.001, 0)) +
   theme(
-    axis.text.x = element_text(size = 10),
-    axis.text.y = element_text(size = 12),
-    axis.title = element_text(size = 14)
+    axis.text.x = element_text(size = 11),
+    axis.text.y = element_text(size = 13),
+    axis.title = element_text(size = 15)
     ) +
   theme(
-    legend.key.size = unit(0.5, "cm"), # Change legend key size
-    legend.key.height = unit(0.5, "cm"), # Change legend key height
-    legend.key.width = unit(0.5, "cm"), # Change legend key width
-    legend.title = element_text(size = 10), # Change legend title font size
-    legend.text = element_text(size = 8) # Change legend text font size
+    legend.key.size = unit(0.7, "cm"), # Change legend key size
+    legend.key.height = unit(0.7, "cm"), # Change legend key height
+    legend.key.width = unit(0.7, "cm"), # Change legend key width
+    legend.title = element_text(size = 12), # Change legend title font size
+    legend.text = element_text(size = 10) # Change legend text font size
     )
 
 p_hostplantspecificity1
@@ -561,32 +557,32 @@ p_migration <- msci_draw_list_log$Migration %>%
       )
 
 p_migration1 <- p_migration +
-  annotate("text", label = c("increase", "strong increase"),
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.25, 0.25),
+  annotate("text", label = "toename",
+           x = 0 + 0.02, y = 0.3,
            size = 2.5, hjust = "left") +
   annotate("segment",
-           x = c(0 + 0.02, max_threshold + 0.02), y = c(0.35, 0.35),
-           xend = c(0 + 0.1, max_threshold + 0.1), yend = c(0.35, 0.35),
-           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
-  annotate("text", label = c("decrease", "strong decrease"),
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.25, 0.25),
+           x = 0 + 0.02, y = 0.4,
+           xend = 0 + 0.1, yend = 0.4,
+           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
+  annotate("text", label = "afname",
+           x = 0 - 0.02, y = 0.3,
            size = 2.5, hjust = "right") +
   annotate("segment",
-           x = c(0 - 0.02, min_threshold - 0.02), y = c(0.35, 0.35),
-           xend = c(0 - 0.1, min_threshold - 0.1), yend = c(0.35, 0.35),
-           arrow = arrow(type = "closed", length = unit(0.01, "npc"))) +
+           x = 0 - 0.02, y = 0.4,
+           xend = 0 - 0.1, yend = 0.4,
+           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
   expand_limits(y = c(0.001, 0)) +
   theme(
-    axis.text.x = element_text(size = 10),
-    axis.text.y = element_text(size = 12),
-    axis.title = element_text(size = 14)
+    axis.text.x = element_text(size = 11),
+    axis.text.y = element_text(size = 13),
+    axis.title = element_text(size = 15)
     ) +
   theme(
-    legend.key.size = unit(0.5, "cm"), # Change legend key size
-    legend.key.height = unit(0.5, "cm"), # Change legend key height
-    legend.key.width = unit(0.5, "cm"), # Change legend key width
-    legend.title = element_text(size = 10), # Change legend title font size
-    legend.text = element_text(size = 8) # Change legend text font size
+    legend.key.size = unit(0.7, "cm"), # Change legend key size
+    legend.key.height = unit(0.7, "cm"), # Change legend key height
+    legend.key.width = unit(0.7, "cm"), # Change legend key width
+    legend.title = element_text(size = 12), # Change legend title font size
+    legend.text = element_text(size = 10) # Change legend text font size
     )
 
 p_migration1
