@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: If you use this software, please cite it using these metadata.
-title: Moth trends and traits in Flanders (northern Belgium)
+title: "Moth trends and traits in Flanders (northern Belgium)"
 authors:
 - given-names: Dirk
   family-names: Maes
@@ -49,6 +49,6 @@ doi: ~
 license: CC-BY-4.0
 repository-code: https://github.com/inbo/macro-moths-msci/
 type: software
-abstract: Investigation of species traits as a guidance for moth conservation in the
-  highly anthropogenic European region of Flanders based on Multi-Species Change Indices
-  (MSCIs).
+abstract: "Investigation of species traits as a guidance for moth conservation in
+  the highly anthropogenic European region of Flanders based on Multi-Species Change
+  Indices (MSCIs)."
