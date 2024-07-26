@@ -350,11 +350,19 @@ trait_value_wing_new <- sapply(trait_value_split, function(vec) {
 ```{r}
 p_forewinglength <- msci_draw_list_log$ForewingLength %>%
   mutate(trait_value_new = trait_value_wing_new) %>%
+  mutate(trait_value_new = case_when(
+    trait_value_new == "Very small" ~ "Zeer klein",
+    trait_value_new == "Small" ~ "Klein",
+    trait_value_new == "Medium" ~ "Middelmatig",
+    trait_value_new == "Large" ~ "Groot",
+    trait_value_new == "Very large" ~ "Zeer groot"
+    )
+  ) %>%
   arrange(trait_value) %>%
   rownames_to_column("order") %>%
   mutate(order = as.numeric(order)) %>%
   mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
-         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
+         label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
@@ -430,11 +438,17 @@ We sort the trait values them according to a logical order.
 
 ```{r}
 p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
+  mutate(trait_value_new = case_when(
+    trait_value == "Monophagous" ~ "Monofaag",
+    trait_value == "Oligophagous" ~ "Oligofaag",
+    trait_value == "Polyphagous" ~ "Polyfaag"
+    )
+  ) %>%
   arrange(trait_value) %>%
   rownames_to_column("order") %>%
   mutate(order = as.numeric(order)) %>%
   mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
-         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
+         label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
@@ -510,6 +524,11 @@ We sort the trait values according to the posterior mean.
 
 ```{r}
 p_migration <- msci_draw_list_log$Migration %>%
+  mutate(trait_value_new = case_when(
+    trait_value == "Migrant" ~ "Trekvlinder",
+    trait_value == "Resident" ~ "Standvlinder"
+    )
+  ) %>%
   mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
