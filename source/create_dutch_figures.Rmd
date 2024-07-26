@@ -354,34 +354,29 @@ p_forewinglength <- msci_draw_list_log$ForewingLength %>%
   rownames_to_column("order") %>%
   mutate(order = as.numeric(order)) %>%
   mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
-         label = reorder(label, order,  decreasing = TRUE)) %>%
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
-    geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
-    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
-                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper,
+                      colour = trend_coarse),
+                  linewidth = 1.2, width = 0.25, show.legend = TRUE) +
     geom_point(aes(x = msci.median),
                size = 2.2, colour = "black") +
-    scale_fill_manual(values =  c("chartreuse3",
-                                  "gold",
-                                  "firebrick1",
-                                  "skyblue"),
-                      drop = FALSE) +
+    scale_colour_manual(values =  c("chartreuse3",
+                                    "gold",
+                                    "firebrick1",
+                                    "skyblue"),
+                        drop = FALSE) +
     labs(y = "",
-         x = "Multi-Species Change Index",
-         fill = "Trend") +
+         x = "Multi-soorten trendindex",
+         colour = "Trend") +
     scale_x_continuous(
       breaks = index_breaks(),
       labels = index_labels,
       minor_breaks = minor_breaks(),
-      limits = c(-log(3.3), log(3.3)),
-      sec.axis = sec_axis(~ exp(.),
-        breaks = index_breaks_rev(),
-        labels = index_labels_rev(),
-        name = "Proportional change")
+      limits = c(-log(3.3), log(3.3))
       ) +
     theme(
       legend.position = c(1, 0),
@@ -438,35 +433,31 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
   arrange(trait_value) %>%
   rownames_to_column("order") %>%
   mutate(order = as.numeric(order)) %>%
-  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
-         label = reorder(label, order,  decreasing = TRUE)) %>%
+  mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
+         label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
-    geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
-    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
-                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper,
+                      colour = trend_coarse),
+                  linewidth = 1.2, width = 0.25, show.legend = TRUE) +
     geom_point(aes(x = msci.median),
                size = 2.2, colour = "black") +
-    scale_fill_manual(values =  c("chartreuse3",
-                                  "gold",
-                                  "firebrick1",
-                                  "skyblue"),
-                      drop = FALSE) +
+    scale_colour_manual(values =  c("chartreuse3",
+                                    "gold",
+                                    "firebrick1",
+                                    "skyblue"),
+                        drop = FALSE) +
     labs(y = "",
-         x = "Multi-Species Change Index",
-         fill = "Trend") +
+         x = "Multi-soorten trendindex",
+         colour = "Trend") +
     scale_x_continuous(
       breaks = index_breaks(),
       labels = index_labels,
       minor_breaks = minor_breaks(),
-      limits = c(-log(3.3), log(3.3)),
-      sec.axis = sec_axis(~ exp(.),
-        breaks = index_breaks_rev(),
-        labels = index_labels_rev(),
-        name = "Proportional change")) +
+      limits = c(-log(3.3), log(3.3))
+      ) +
     theme(
       legend.position = c(1, 0),
       legend.justification = c(1, 0),
@@ -519,35 +510,30 @@ We sort the trait values according to the posterior mean.
 
 ```{r}
 p_migration <- msci_draw_list_log$Migration %>%
-  mutate(label = paste0(trait_value, "\n", "[n = ", n_species, "]"),
+  mutate(label = paste0(trait_value_new, "\n", "[n = ", n_species, "]"),
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
-    geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
-    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper),
-                  linewidth = 1, colour = "black", width = 0.1) +
+    geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper,
+                      colour = trend_coarse),
+                  linewidth = 1.2, width = 0.25, show.legend = TRUE) +
     geom_point(aes(x = msci.median),
                size = 2.2, colour = "black") +
-    scale_fill_manual(values =  c("chartreuse3",
-                                  "gold",
-                                  "firebrick1",
-                                  "skyblue"),
-                      drop = FALSE) +
+    scale_colour_manual(values =  c("chartreuse3",
+                                    "gold",
+                                    "firebrick1",
+                                    "skyblue"),
+                        drop = FALSE) +
     labs(y = "",
-         x = "Multi-Species Change Index",
-         fill = "Trend") +
+         x = "Multi-soorten trendindex",
+         colour = "Trend") +
     scale_x_continuous(
       breaks = index_breaks(),
       labels = index_labels,
       minor_breaks = minor_breaks(),
-      limits = c(-log(3.3), log(3.3)),
-      sec.axis = sec_axis(~ exp(.),
-        breaks = index_breaks_rev(),
-        labels = index_labels_rev(),
-        name = "Proportional change")
+      limits = c(-log(3.3), log(3.3))
       ) +
     theme(
       legend.position = c(1, 0),
