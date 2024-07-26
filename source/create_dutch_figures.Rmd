@@ -178,7 +178,7 @@ p_biotope <- msci_draw_list_log$Biotope %>%
                linetype = "dotdash") +
     geom_errorbar(aes(xmin = msci.lower, xmax = msci.upper,
                       colour = trend_coarse),
-                  linewidth = 1, width = 0.2) +
+                  linewidth = 1.2, width = 0.25) +
     geom_point(aes(x = msci.median),
                size = 2.2, colour = "black") +
     scale_colour_manual(values =  c("chartreuse3",
