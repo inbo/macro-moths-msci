@@ -216,7 +216,7 @@ p_biotope1
 
 
 ```{r}
-save_figure(p_biotope1, "msci_biotope_conference", devices,
+save_figure(p_biotope1, "msci_biotope_nl", devices,
             dpi = 300, width = 8, height = 8)
 ```
 
@@ -306,7 +306,7 @@ p_larvalfoodsource1
 
 
 ```{r}
-save_figure(p_larvalfoodsource1, "msci_larvalfoodsource_conference", devices,
+save_figure(p_larvalfoodsource1, "msci_larvalfoodsource_nl", devices,
             dpi = 300, width = 8, height = 4)
 ```
 
@@ -408,7 +408,7 @@ p_forewinglength1
 
 
 ```{r}
-save_figure(p_forewinglength1, "msci_forewinglength_conference", devices,
+save_figure(p_forewinglength1, "msci_forewinglength_nl", devices,
             dpi = 300, width = 8, height = 4)
 ```
 
@@ -492,7 +492,7 @@ p_hostplantspecificity1
 
 
 ```{r}
-save_figure(p_hostplantspecificity1, "msci_hostplantspecificity_conference",
+save_figure(p_hostplantspecificity1, "msci_hostplantspecificity_nl",
             dpi = 300, devices, width = 8, height = 4)
 ```
 
@@ -574,6 +574,6 @@ p_migration1
 
 
 ```{r}
-save_figure(p_migration1, "msci_migration_conference", devices,
+save_figure(p_migration1, "msci_migration_nl", devices,
             dpi = 300, width = 8, height = 4)
 ```
