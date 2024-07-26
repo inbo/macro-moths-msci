@@ -82,8 +82,7 @@ dir.create("media", showWarnings = FALSE, recursive = TRUE)
 ```
 
 
-# MSCI figures
-## Set general functions and thresholds
+# Set general functions and thresholds
 
 We specify some general plot specifications as functions.
 
@@ -128,6 +127,7 @@ max_threshold <- log(1.25)
 ```
 
 
+# MSCI figures
 ## Biotope
 
 We rename some trait values and sort them according to the posterior median.
