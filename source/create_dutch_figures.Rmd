@@ -35,7 +35,7 @@ theme_set(theme_inbo(transparent = TRUE))
 
 # Goal
 
-Create simplified figures for a Dutch article in "natuur.focus".
+Create simplified figures for a Dutch article in "NatuurFocus".
 
 ```{r}
 # Function to save figures using multiple devices
