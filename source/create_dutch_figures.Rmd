@@ -207,15 +207,15 @@ p_biotope1 <- p_biotope +
            x = 0 + 0.02, y = 0.3,
            size = 2.5, hjust = "left") +
   annotate("segment",
-           x = 0 + 0.02, y = 0.4,
-           xend = 0 + 0.1, yend = 0.4,
+           x = 0 + 0.02, y = 0.5,
+           xend = 0 + 0.15, yend = 0.5,
            arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
   annotate("text", label = "achteruitgang",
            x = 0 - 0.02, y = 0.3,
            size = 2.5, hjust = "right") +
   annotate("segment",
-           x = 0 - 0.02, y = 0.4,
-           xend = 0 - 0.1, yend = 0.4,
+           x = 0 - 0.02, y = 0.5,
+           xend = 0 - 0.15, yend = 0.5,
            arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
   expand_limits(y = c(0.001, 0)) +
   theme(
@@ -237,7 +237,7 @@ p_biotope1
 
 ```{r}
 save_figure(p_biotope1, "msci_biotope_nl", devices,
-            dpi = 300, width = 8, height = 8)
+            dpi = 300, width = 8, height = 6)
 ```
 
 
