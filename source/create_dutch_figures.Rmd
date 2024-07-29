@@ -193,7 +193,7 @@ p_biotope <- msci_draw_list_log$Biotope %>%
       breaks = index_breaks(),
       labels = index_labels,
       minor_breaks = minor_breaks(),
-      limits = c(-log(3.3), log(3.3))
+      limits = c(-log(2), log(2))
       ) +
     theme(
       legend.position = c(1, 0),
@@ -203,14 +203,14 @@ p_biotope <- msci_draw_list_log$Biotope %>%
       )
 
 p_biotope1 <- p_biotope +
-  annotate("text", label = "toename",
+  annotate("text", label = "vooruitgang",
            x = 0 + 0.02, y = 0.3,
            size = 2.5, hjust = "left") +
   annotate("segment",
            x = 0 + 0.02, y = 0.4,
            xend = 0 + 0.1, yend = 0.4,
            arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
-  annotate("text", label = "afname",
+  annotate("text", label = "achteruitgang",
            x = 0 - 0.02, y = 0.3,
            size = 2.5, hjust = "right") +
   annotate("segment",
