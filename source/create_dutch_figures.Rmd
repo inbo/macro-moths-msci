@@ -133,15 +133,15 @@ msci_draw_list_log <- lapply(msci_draw_list_log, function(df) {
   df %>%
     mutate(
       trend_coarse = case_when(
-        trend_coarse == "increase" ~ "positief",
+        trend_coarse == "increase" ~ "vooruitgang",
         trend_coarse == "stable" ~ "stabiel",
-        trend_coarse == "decrease" ~ "negatief",
+        trend_coarse == "decrease" ~ "achteruitgang",
         trend_coarse == "uncertain" ~ "onzeker"
         ),
       trend_coarse = factor(trend_coarse,
-                            levels = c("positief",
+                            levels = c("vooruitgang",
                                        "stabiel",
-                                       "negatief",
+                                       "achteruitgang",
                                        "onzeker"),
                             ordered = TRUE)
       )
@@ -193,7 +193,7 @@ p_biotope <- msci_draw_list_log$Biotope %>%
       breaks = index_breaks(),
       labels = index_labels,
       minor_breaks = minor_breaks(),
-      limits = c(-log(3.3), log(3.3))
+      limits = c(-log(3), log(3))
       ) +
     theme(
       legend.position = c(1, 0),
@@ -203,21 +203,6 @@ p_biotope <- msci_draw_list_log$Biotope %>%
       )
 
 p_biotope1 <- p_biotope +
-  annotate("text", label = "toename",
-           x = 0 + 0.02, y = 0.3,
-           size = 2.5, hjust = "left") +
-  annotate("segment",
-           x = 0 + 0.02, y = 0.4,
-           xend = 0 + 0.1, yend = 0.4,
-           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
-  annotate("text", label = "afname",
-           x = 0 - 0.02, y = 0.3,
-           size = 2.5, hjust = "right") +
-  annotate("segment",
-           x = 0 - 0.02, y = 0.4,
-           xend = 0 - 0.1, yend = 0.4,
-           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
-  expand_limits(y = c(0.001, 0)) +
   theme(
     axis.text.x = element_text(size = 11),
     axis.text.y = element_text(size = 13),
@@ -237,7 +222,7 @@ p_biotope1
 
 ```{r}
 save_figure(p_biotope1, "msci_biotope_nl", devices,
-            dpi = 300, width = 8, height = 8)
+            dpi = 300, width = 8, height = 6)
 ```
 
 
@@ -279,7 +264,7 @@ p_larvalfoodsource <- msci_draw_list_log$LarvalFoodSource %>%
       breaks = index_breaks(),
       labels = index_labels,
       minor_breaks = minor_breaks(),
-      limits = c(-log(3.3), log(3.3))
+      limits = c(-log(3), log(3))
       ) +
     theme(
       legend.position = c(1, 0),
@@ -289,21 +274,6 @@ p_larvalfoodsource <- msci_draw_list_log$LarvalFoodSource %>%
       )
 
 p_larvalfoodsource1 <- p_larvalfoodsource +
-  annotate("text", label = "toename",
-           x = 0 + 0.02, y = 0.3,
-           size = 2.5, hjust = "left") +
-  annotate("segment",
-           x = 0 + 0.02, y = 0.4,
-           xend = 0 + 0.1, yend = 0.4,
-           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
-  annotate("text", label = "afname",
-           x = 0 - 0.02, y = 0.3,
-           size = 2.5, hjust = "right") +
-  annotate("segment",
-           x = 0 - 0.02, y = 0.4,
-           xend = 0 - 0.1, yend = 0.4,
-           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
-  expand_limits(y = c(0.001, 0)) +
   theme(
     axis.text.x = element_text(size = 11),
     axis.text.y = element_text(size = 13),
@@ -323,7 +293,7 @@ p_larvalfoodsource1
 
 ```{r}
 save_figure(p_larvalfoodsource1, "msci_larvalfoodsource_nl", devices,
-            dpi = 300, width = 8, height = 4)
+            dpi = 300, width = 8, height = 3.5)
 ```
 
 
@@ -384,7 +354,7 @@ p_forewinglength <- msci_draw_list_log$ForewingLength %>%
       breaks = index_breaks(),
       labels = index_labels,
       minor_breaks = minor_breaks(),
-      limits = c(-log(3.3), log(3.3))
+      limits = c(-log(3), log(3))
       ) +
     theme(
       legend.position = c(1, 0),
@@ -394,21 +364,6 @@ p_forewinglength <- msci_draw_list_log$ForewingLength %>%
       )
 
 p_forewinglength1 <- p_forewinglength +
-  annotate("text", label = "toename",
-           x = 0 + 0.02, y = 0.3,
-           size = 2.5, hjust = "left") +
-  annotate("segment",
-           x = 0 + 0.02, y = 0.4,
-           xend = 0 + 0.1, yend = 0.4,
-           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
-  annotate("text", label = "afname",
-           x = 0 - 0.02, y = 0.3,
-           size = 2.5, hjust = "right") +
-  annotate("segment",
-           x = 0 - 0.02, y = 0.4,
-           xend = 0 - 0.1, yend = 0.4,
-           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
-  expand_limits(y = c(0.001, 0)) +
   theme(
     axis.text.x = element_text(size = 11),
     axis.text.y = element_text(size = 13),
@@ -428,7 +383,7 @@ p_forewinglength1
 
 ```{r}
 save_figure(p_forewinglength1, "msci_forewinglength_nl", devices,
-            dpi = 300, width = 8, height = 4)
+            dpi = 300, width = 8, height = 3.5)
 ```
 
 
@@ -470,7 +425,7 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
       breaks = index_breaks(),
       labels = index_labels,
       minor_breaks = minor_breaks(),
-      limits = c(-log(3.3), log(3.3))
+      limits = c(-log(3), log(3))
       ) +
     theme(
       legend.position = c(1, 0),
@@ -480,21 +435,6 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
       )
 
 p_hostplantspecificity1 <- p_hostplantspecificity +
-  annotate("text", label = "toename",
-           x = 0 + 0.02, y = 0.3,
-           size = 2.5, hjust = "left") +
-  annotate("segment",
-           x = 0 + 0.02, y = 0.4,
-           xend = 0 + 0.1, yend = 0.4,
-           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
-  annotate("text", label = "afname",
-           x = 0 - 0.02, y = 0.3,
-           size = 2.5, hjust = "right") +
-  annotate("segment",
-           x = 0 - 0.02, y = 0.4,
-           xend = 0 - 0.1, yend = 0.4,
-           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
-  expand_limits(y = c(0.001, 0)) +
   theme(
     axis.text.x = element_text(size = 11),
     axis.text.y = element_text(size = 13),
@@ -513,8 +453,8 @@ p_hostplantspecificity1
 
 
 ```{r}
-save_figure(p_hostplantspecificity1, "msci_hostplantspecificity_nl",
-            dpi = 300, devices, width = 8, height = 4)
+save_figure(p_hostplantspecificity1, "msci_hostplantspecificity_nl", devices,
+            dpi = 300, width = 8, height = 3.5)
 ```
 
 
@@ -552,7 +492,7 @@ p_migration <- msci_draw_list_log$Migration %>%
       breaks = index_breaks(),
       labels = index_labels,
       minor_breaks = minor_breaks(),
-      limits = c(-log(3.3), log(3.3))
+      limits = c(-log(3), log(3))
       ) +
     theme(
       legend.position = c(1, 0),
@@ -562,21 +502,6 @@ p_migration <- msci_draw_list_log$Migration %>%
       )
 
 p_migration1 <- p_migration +
-  annotate("text", label = "toename",
-           x = 0 + 0.02, y = 0.3,
-           size = 2.5, hjust = "left") +
-  annotate("segment",
-           x = 0 + 0.02, y = 0.4,
-           xend = 0 + 0.1, yend = 0.4,
-           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
-  annotate("text", label = "afname",
-           x = 0 - 0.02, y = 0.3,
-           size = 2.5, hjust = "right") +
-  annotate("segment",
-           x = 0 - 0.02, y = 0.4,
-           xend = 0 - 0.1, yend = 0.4,
-           arrow = arrow(type = "closed", length = unit(0.005, "npc"))) +
-  expand_limits(y = c(0.001, 0)) +
   theme(
     axis.text.x = element_text(size = 11),
     axis.text.y = element_text(size = 13),
@@ -596,5 +521,5 @@ p_migration1
 
 ```{r}
 save_figure(p_migration1, "msci_migration_nl", devices,
-            dpi = 300, width = 8, height = 4)
+            dpi = 300, width = 8, height = 3.5)
 ```
