@@ -203,7 +203,7 @@ p_biotope <- msci_draw_list_log$Biotope %>%
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
+                colour = alpha("white", 0), show.legend = TRUE) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
@@ -293,7 +293,7 @@ p_larvalfoodsource <- msci_draw_list_log$LarvalFoodSource %>%
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
+                colour = alpha("white", 0), show.legend = TRUE) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
@@ -378,7 +378,7 @@ p_overwinteringstage <- msci_draw_list_log$OverwinteringStage %>%
          label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
+                colour = alpha("white", 0), show.legend = TRUE) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
@@ -479,7 +479,7 @@ p_forewinglength <- msci_draw_list_log$ForewingLength %>%
          label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
+                colour = alpha("white", 0), show.legend = TRUE) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
@@ -561,7 +561,7 @@ p_distribution <- msci_draw_list_log$Distribution %>%
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
+                colour = alpha("white", 0), show.legend = TRUE) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
@@ -646,7 +646,7 @@ p_hostplantspecificity <- msci_draw_list_log$HostPlantSpecificity %>%
          label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
+                colour = alpha("white", 0), show.legend = TRUE) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
@@ -736,7 +736,7 @@ p_voltinism <- msci_draw_list_log$Voltinism %>%
          label = reorder(label, order,  decreasing = TRUE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
+                colour = alpha("white", 0), show.legend = TRUE) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
@@ -818,7 +818,7 @@ p_migration <- msci_draw_list_log$Migration %>%
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
+                colour = alpha("white", 0), show.legend = TRUE) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
@@ -900,7 +900,7 @@ p_colourvariability <- msci_draw_list_log$colourVariability %>%
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
+                colour = alpha("white", 0), show.legend = TRUE) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
@@ -980,7 +980,7 @@ p_proboscis <- msci_draw_list_log$Proboscis %>%
          label = reorder(label, msci.median,  decreasing = FALSE)) %>%
   ggplot(aes(y = label)) +
     geom_violin(aes(x = msci.draw, fill = trend_coarse),
-                colour = alpha("white", 0)) +
+                colour = alpha("white", 0), show.legend = TRUE) +
     geom_vline(xintercept = 0, linetype = "longdash", colour = "black") +
     geom_vline(xintercept = c(min_threshold, max_threshold),
                linetype = "dotdash") +
